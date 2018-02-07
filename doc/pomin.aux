@@ -1,0 +1,122 @@
+\relax 
+\citation{PoissonWill}
+\citation{Kopeikin}
+\citation{Hamers}
+\citation{MikkolaMerritt}
+\citation{Blanchet}
+\citation{EOB}
+\citation{Futamase2007,Itoh2009,Schafer1987,LoustoNakano2008,Kupi2006,Aarseth2007,Will2013,Will2014}
+\citation{Blanchet}
+\citation{Blanchet,EOB,Westpfahl1979,Portilla1979,Portilla1980,Beletal1981,Westpfahl1985,Westpfahletal1987}
+\citation{PM}
+\citation{ZschockeSoffel}
+\citation{PM}
+\citation{Schafer1986}
+\citation{Schafer1986}
+\citation{Schafer1986}
+\citation{MTW,ADM62,ADM62b}
+\newlabel{FirstPage}{{}{1}{}{}{}}
+\@writefile{toc}{\contentsline {title}{$\mathtt  {PoMiN}$: A Post-Minkowskian $N$-Body Solver}{1}{}}
+\@writefile{toc}{\contentsline {abstract}{Abstract}{1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {II}Analytical Background}{1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A}The Hamiltonian}{1}{}}
+\citation{GoldsteinCM}
+\citation{PM}
+\newlabel{SC2-LSBHamiltonian}{{2.1}{2}{}{}{}}
+\newlabel{SC2-LSBHamiltonianDefns}{{2.2}{2}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B}Splitting the Hamiltonian}{2}{}}
+\newlabel{ThetaXi}{{2.3}{2}{}{}{}}
+\newlabel{HamiltonianDecomp}{{2.4}{2}{}{}{}}
+\newlabel{HamiltonianPart1}{{2.5}{2}{}{}{}}
+\newlabel{HamiltonianPart2}{{2.6}{3}{}{}{}}
+\newlabel{HamiltonianPart3}{{2.7}{3}{}{}{}}
+\newlabel{HamiltonianPart3MasslessLimit}{{2.8}{3}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C}Formal Derivative Methods}{3}{}}
+\newlabel{HamiltonEquations}{{2.9}{3}{}{}{}}
+\newlabel{eqn:10}{{2.11}{3}{}{}{}}
+\citation{Courant}
+\newlabel{PhiSet}{{2.12}{4}{}{}{}}
+\newlabel{PhiDerivSet}{{2.13}{4}{}{}{}}
+\newlabel{HamiltonEquations2}{{2.15}{4}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}Numerical Methods and Tests}{4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A}Overview of Numerical Methods}{4}{}}
+\newlabel{sec_num_methods}{{III\tmspace  +\thinmuskip {.1667em}A}{4}{}{}{}}
+\citation{BaumgarteShapiro}
+\citation{Alcubierre}
+\citation{Richardson1910,Alcubierre,BaumgarteShapiro,Choptuik}
+\citation{Choptuik}
+\newlabel{CFL-Condition}{{3.1}{5}{}{}{}}
+\newlabel{AdaptiveTimestepFormula}{{3.2}{5}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B}Convergence Tests}{5}{}}
+\newlabel{sec_convergence}{{III\tmspace  +\thinmuskip {.1667em}B}{5}{}{}{}}
+\newlabel{eqn:16}{{3.3}{5}{}{}{}}
+\newlabel{eqn:17}{{3.4}{5}{}{}{}}
+\newlabel{QFactor}{{3.5}{5}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces The results of six convergence tests we performed. In each plot, we have plotted (using dots) the convergence factor $Q$ (for the quantity $\textbf  {p}^2$ of a particle in the system) against the smallest timestep used to compute $Q$. The timestep are given in units of $h$, where $h$ is the largest timestep used in the convergence test. For each plot, the values of $h$ (in natural units $c=G=1$) are as follows: for (a), $h=6.15 \times 10^{13}$; for (b), $h=2.70 \times 10^{13}$; and for plots (c) through (f), $h=0.05$. In plot (a), the initial number of timesteps is $200$, in plot (b), the initial number of timesteps is 1000, and in plots (c)-(f), the initial number of timesteps is $5$. We have performed a fit to an exponential curve which we have included in the plots.}}{6}{}}
+\newlabel{FIG-ConvergenceTests}{{1}{6}{}{}{}}
+\citation{PM}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces This table lists the value of the convergence factor $Q$ for $\textbf  {p}^2$ lighter massive particle in the five particle test of Fig. 1{}{}{}\hbox {}f, with respect to the smallest timestep (here, $h=0.05$) used to compute the convergence factor $Q$.}}{7}{}}
+\newlabel{TAB-ConvergenceFive}{{I}{7}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C}Analytical Momentum Exchange and Conservation of Momentum Tests}{7}{}}
+\newlabel{sec_analytical}{{III\tmspace  +\thinmuskip {.1667em}C}{7}{}{}{}}
+\newlabel{delta_p}{{3.6}{7}{}{}{}}
+\newlabel{relerror}{{3.7}{7}{}{}{}}
+\newlabel{FIG-ScTMixed}{{2a}{8}{}{}{}}
+\newlabel{sub@FIG-ScTMixed}{{(a)}{a}}
+\newlabel{FIG-ScTMassless}{{2b}{8}{}{}{}}
+\newlabel{sub@FIG-ScTMassless}{{(b)}{b}}
+\newlabel{FIG-ScTMassive}{{2c}{8}{}{}{}}
+\newlabel{sub@FIG-ScTMassive}{{(c)}{c}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Plots of the relative error (3.7{}{}{}\hbox {}) between the momentum exchange $\Delta p_{num}$ as computed by $\mathtt  {PoMiN}$ and the analytical momentum exchange $\Delta p_{an}$, as a function of the impact parameter $b$. In each case, the initial conditions were chosen so that the initial trajectories of the particles are antiparallel and offset by the impact parameter $b$, with an initial separation distance (in the direction of motion) of $10^5 b$. Also, the initial momenta and masses were chosen so that the total mass-energy is $1$ (we work in the natural units $G=1$, and $c=1$). In the massive-massive scattering case (2c{}{}{}\hbox {}), we used a mass ratio of $\pi /4$; $m_2= \pi / 4 \tmspace  +\thinmuskip {.1667em} m_1$.}}{8}{}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces {}}}{8}{}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces {}}}{8}{}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(c)}{\ignorespaces {}}}{8}{}}
+\newlabel{FIG-ScatteringTestsRelativeError}{{2}{8}{}{}{}}
+\citation{circumbinary_planet}
+\citation{Jupiter_microlensing}
+\citation{Loeb1}
+\citation{Loeb2}
+\bibdata{pominNotes,pomin}
+\bibcite{PoissonWill}{{1}{2014}{{Poisson\ and\ Will}}{{}}}
+\bibcite{Kopeikin}{{2}{2011}{{Kopeikin\ \emph  {et~al.}}}{{Kopeikin, Efroimsky,\ and\ Kaplan}}}
+\bibcite{Hamers}{{3}{2014}{{Hamers\ \emph  {et~al.}}}{{Hamers, Portegies~Zwart,\ and\ Merritt}}}
+\bibcite{MikkolaMerritt}{{4}{2008}{{Mikkola\ and\ Merritt}}{{}}}
+\bibcite{Blanchet}{{5}{2014}{{Blanchet}}{{}}}
+\bibcite{EOB}{{6}{2016}{{Damour}}{{}}}
+\bibcite{Futamase2007}{{7}{2007}{{Futamase\ and\ Itoh}}{{}}}
+\bibcite{Itoh2009}{{8}{2009}{{Itoh}}{{}}}
+\bibcite{Schafer1987}{{9}{1987}{{Schäfer}}{{}}}
+\bibcite{LoustoNakano2008}{{10}{2008}{{Lousto\ and\ Nakano}}{{}}}
+\bibcite{Kupi2006}{{11}{2006}{{Kupi\ \emph  {et~al.}}}{{Kupi, Amaro-Seoane,\ and\ Spurzem}}}
+\bibcite{Aarseth2007}{{12}{2007}{{Aarseth}}{{}}}
+\bibcite{Will2013}{{13}{2014{}}{{Will}}{{}}}
+\bibcite{Will2014}{{14}{2014{}}{{Will}}{{}}}
+\bibcite{Westpfahl1979}{{15}{1979}{{Westpfahl\ and\ Goller}}{{}}}
+\bibcite{Portilla1979}{{16}{1979}{{Portilla}}{{}}}
+\bibcite{Portilla1980}{{17}{1980}{{Portilla}}{{}}}
+\bibcite{Beletal1981}{{18}{1981}{{Bel\ \emph  {et~al.}}}{{Bel, Damour, Deruelle, Ibanez,\ and\ Martin}}}
+\bibcite{Westpfahl1985}{{19}{1985}{{Westpfahl}}{{}}}
+\bibcite{Westpfahletal1987}{{20}{1987}{{Westpfahl\ \emph  {et~al.}}}{{Westpfahl, Mohles,\ and\ Simonis}}}
+\bibcite{PM}{{21}{2008}{{Ledvinka\ \emph  {et~al.}}}{{Ledvinka, Sch{\"a}fer,\ and\ Bi{\v c}{\'a}k}}}
+\bibcite{ZschockeSoffel}{{22}{2014}{{Zschocke\ and\ Soffel}}{{}}}
+\bibcite{Schafer1986}{{23}{1986}{{Sch{\"a}fer}}{{}}}
+\bibcite{MTW}{{24}{1973}{{Misner\ \emph  {et~al.}}}{{Misner, Thorne,\ and\ Wheeler}}}
+\bibcite{ADM62}{{25}{1962}{{Arnowitt\ \emph  {et~al.}}}{{Arnowitt, Deser,\ and\ Misner}}}
+\bibcite{ADM62b}{{25}{2008}{{Arnowitt\ \emph  {et~al.}}}{{Arnowitt, Deser,\ and\ Misner}}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Applications and Future Work}{9}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {}Acknowledgments}{9}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {}References}{9}{}}
+\bibcite{GoldsteinCM}{{26}{2002}{{Goldstein\ \emph  {et~al.}}}{{Goldstein, Poole,\ and\ Safko}}}
+\bibcite{Courant}{{27}{1967}{{Courant\ \emph  {et~al.}}}{{Courant, Friedrichs,\ and\ Lewy}}}
+\bibcite{BaumgarteShapiro}{{28}{2010}{{Baumgarte\ and\ Shapiro}}{{}}}
+\bibcite{Alcubierre}{{29}{2008}{{Alcubierre}}{{}}}
+\bibcite{Richardson1910}{{30}{1910}{{Richardson}}{{}}}
+\bibcite{Choptuik}{{31}{2006}{{Choptuik}}{{}}}
+\bibcite{circumbinary_planet}{{32}{2016}{{{Bennett}\ \emph  {et~al.}}}{{{Bennett}, {Rhie}, {Udalski}, {Gould}, {Tsapras}, {Kubas}, {Bond}, {Greenhill}, {Cassan}, {Rattenbury}, {Boyajian}, {Luhn}, {Penny}, {Anderson}, {Abe}, {Bhattacharya}, {Botzler}, {Donachie}, {Freeman}, {Fukui}, {Hirao}, {Itow}, {Koshimoto}, {Li}, {Ling}, {Masuda}, {Matsubara}, {Muraki}, {Nagakane}, {Ohnishi}, {Oyokawa}, {Perrott}, {Saito}, {Sharan}, {Sullivan}, {Sumi}, {Suzuki}, {Tristram}, {Yonehara}, {Yock}, {MOA Collaboration}, {Szyma{\'n}ski}, {Soszy{\'n}ski}, {Ulaczyk}, {Wyrzykowski}, {OGLE Collaboration}, {Allen}, {DePoy}, {Gal-Yam}, {Gaudi}, {Han}, {Monard}, {Ofek}, {Pogge}, {{$\mu $}FUN Collaboration}, {Street}, {Bramich}, {Dominik}, {Horne}, {Snodgrass}, {Steele}, {Robonet Collaboration}, {Albrow}, {Bachelet}, {Batista}, {Beaulieu}, {Brillant}, {Caldwell}, {Cole}, {Coutures}, {Dieters}, {Dominis Prester}, {Donatowicz}, {Fouqu{\'e}}, {Hundertmark}, {J{\o }rgensen}, {Kains}, {Kane}, {Marquette}, {Menzies}, {Pollard}, {Ranc}, {Sahu}, {Wambsganss}, {Williams}, {Zub},\ and\ {PLANET Collaboration}}}}
+\bibcite{Jupiter_microlensing}{{33}{2008}{{{Gaudi}\ \emph  {et~al.}}}{{{Gaudi}, {Bennett}, {Udalski}, {Gould}, {Christie}, {Maoz}, {Dong}, {McCormick}, {Szyma{\'n}ski}, {Tristram}, {Nikolaev}, {Paczy{\'n}ski}, {Kubiak}, {Pietrzy{\'n}ski}, {Soszy{\'n}ski}, {Szewczyk}, {Ulaczyk}, {Wyrzykowski}, {OGLE Collaboration}, {DePoy}, {Han}, {Kaspi}, {Lee}, {Mallia}, {Natusch}, {Pogge}, {Park}, {{$\mu $}-Fun Collabortion}, {Abe}, {Bond}, {Botzler}, {Fukui}, {Hearnshaw}, {Itow}, {Kamiya}, {Korpela}, {Kilmartin}, {Lin}, {Masuda}, {Matsubara}, {Motomura}, {Muraki}, {Nakamura}, {Okumura}, {Ohnishi}, {Rattenbury}, {Sako}, {Saito}, {Sato}, {Skuljan}, {Sullivan}, {Sumi}, {Sweatman}, {Yock}, {MOA Collaboration}, {Albrow}, {Allan}, {Beaulieu}, {Burgdorf}, {Cook}, {Coutures}, {Dominik}, {Dieters}, {Fouqu{\'e}}, {Greenhill}, {Horne}, {Steele}, {Tsapras}, {Planet Collaboration}, {RoboNet Collaborations}, {Chaboyer}, {Crocker}, {Frank},\ and\ {Macintosh}}}}
+\bibcite{Loeb1}{{34}{2015}{{Guillochon\ and\ Loeb}}{{}}}
+\bibcite{Loeb2}{{35}{2015}{{Loeb\ and\ Guillochon}}{{}}}
+\bibstyle{apsrev4-1}
+\newlabel{LastBibItem}{{35}{10}{}{}{}}
+\newlabel{LastPage}{{}{10}{}{}{}}

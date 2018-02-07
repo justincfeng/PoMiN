@@ -1,0 +1,50 @@
+################################################################################
+# CONVERGENCE TESTS
+################################################################################
+
+cd ..
+
+# To run the convergence tests, run the following from the source directory:
+
+grep orbit-0.50 input/input.csv | bash validation/conv/autorun.sh > validation/conv/results/raw/conv_Orbit-050.txt
+
+grep orbit-0.95 input/input.csv | bash validation/conv/autorun.sh > validation/conv/results/raw/conv_Orbit-095.txt
+
+grep SCMS1- input/input.csv | bash validation/conv/autorun.sh > validation/conv/results/raw/conv_SCMS1.txt
+
+grep SCML1- input/input.csv | bash validation/conv/autorun.sh > validation/conv/results/raw/conv_SCML1.txt
+
+grep SCMX1- input/input.csv | bash validation/conv/autorun.sh > validation/conv/results/raw/conv_SCMX1.txt
+
+grep FiveParticles input/input.csv | bash validation/conv/autorun.sh > validation/conv/results/conv_Five.txt > validation/conv/results/raw/conv_Five.txt
+
+# Each line corresponds to a set of initial data found in input/input.csv
+# The outputs may be found in the directory: validation/conv/results/raw/
+
+
+################################################################################
+# MOMENTUM EXCHANGE SCATTERING TESTS
+################################################################################
+
+# To run the scattering tests, first run make in the source directory:
+
+make
+
+# Next, run the following command lines from the source directory:
+
+grep CMScatter_b input/MXIC/inputscatter_b_massive.csv | bash validation/MXScatter/MXScatterTest.sh > validation/MXScatter/results/raw/scatter_b_massive.csv
+
+grep CMScatter_b input/MXIC/inputscatter_b_massless.csv | bash validation/MXScatter/MXScatterTest.sh > validation/MXScatter/results/raw/scatter_b_massless.csv
+
+grep CMScatter_b input/MXIC/inputscatter_b_mixed.csv | bash validation/MXScatter/MXScatterTest.sh > validation/MXScatter/results/raw/scatter_b_mixed.csv
+
+# To insert a header into these files, run the following:
+
+echo 'Impact Parameter,Analytical dp,Numerical dp,Percent difference' | cat - validation/MXScatter/results/raw/scatter_b_massive.csv > temp && mv temp validation/MXScatter/results/raw/scatter_b_massive.csv
+
+echo 'Impact Parameter,Analytical dp,Numerical dp,Percent difference' | cat - validation/MXScatter/results/raw/scatter_b_massless.csv > temp && mv temp validation/MXScatter/results/raw/scatter_b_massless.csv
+
+echo 'Impact Parameter,Analytical dp,Numerical dp,Percent difference' | cat - validation/MXScatter/results/raw/scatter_b_mixed.csv > temp && mv temp validation/MXScatter/results/raw/scatter_b_mixed.csv
+
+# The outputs may be found in the directory: validation/MXScatter/results/raw/
+

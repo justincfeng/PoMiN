@@ -1,0 +1,2 @@
+Description,Start Time,End Time,Timestep,Iterations,Courant Number,Gravitational Constant,Speed of Light,mass_1,qx_1,qy_1,qz_1,px_1,py_1,pz_1,mass_2,qx_2,qy_2,qz_2,px_2,py_2,pz_2
+CMScatter,0,2.e17,2.e12,0,0.01,1,1,0,-1.e17,-2.e12,0,0.02800000000000000058286708792820718372241,0,0,0,1.e17,2.e12,0,-0.02800000000000000058286708792820718372241,0,0

@@ -1,0 +1,566 @@
+%merlin.mbs apsrev4-1.bst 2010-07-25 4.21a (PWD, AO, DPC) hacked
+%Control: key (0)
+%Control: author (72) initials jnrlst
+%Control: editor formatted (1) identically to author
+%Control: production of article title (-1) disabled
+%Control: page (0) single
+%Control: year (1) truncated
+%Control: production of eprint (0) enabled
+\begin{thebibliography}{36}%
+\makeatletter
+\providecommand \@ifxundefined [1]{%
+ \@ifx{#1\undefined}
+}%
+\providecommand \@ifnum [1]{%
+ \ifnum #1\expandafter \@firstoftwo
+ \else \expandafter \@secondoftwo
+ \fi
+}%
+\providecommand \@ifx [1]{%
+ \ifx #1\expandafter \@firstoftwo
+ \else \expandafter \@secondoftwo
+ \fi
+}%
+\providecommand \natexlab [1]{#1}%
+\providecommand \enquote  [1]{``#1''}%
+\providecommand \bibnamefont  [1]{#1}%
+\providecommand \bibfnamefont [1]{#1}%
+\providecommand \citenamefont [1]{#1}%
+\providecommand \href@noop [0]{\@secondoftwo}%
+\providecommand \href [0]{\begingroup \@sanitize@url \@href}%
+\providecommand \@href[1]{\@@startlink{#1}\@@href}%
+\providecommand \@@href[1]{\endgroup#1\@@endlink}%
+\providecommand \@sanitize@url [0]{\catcode `\\12\catcode `\$12\catcode
+  `\&12\catcode `\#12\catcode `\^12\catcode `\_12\catcode `\%12\relax}%
+\providecommand \@@startlink[1]{}%
+\providecommand \@@endlink[0]{}%
+\providecommand \url  [0]{\begingroup\@sanitize@url \@url }%
+\providecommand \@url [1]{\endgroup\@href {#1}{\urlprefix }}%
+\providecommand \urlprefix  [0]{URL }%
+\providecommand \Eprint [0]{\href }%
+\providecommand \doibase [0]{http://dx.doi.org/}%
+\providecommand \selectlanguage [0]{\@gobble}%
+\providecommand \bibinfo  [0]{\@secondoftwo}%
+\providecommand \bibfield  [0]{\@secondoftwo}%
+\providecommand \translation [1]{[#1]}%
+\providecommand \BibitemOpen [0]{}%
+\providecommand \bibitemStop [0]{}%
+\providecommand \bibitemNoStop [0]{.\EOS\space}%
+\providecommand \EOS [0]{\spacefactor3000\relax}%
+\providecommand \BibitemShut  [1]{\csname bibitem#1\endcsname}%
+\let\auto@bib@innerbib\@empty
+%</preamble>
+\bibitem [{\citenamefont {Poisson}\ and\ \citenamefont
+  {Will}(2014)}]{PoissonWill}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {E.}~\bibnamefont
+  {Poisson}}\ and\ \bibinfo {author} {\bibfnamefont {C.~M.}\ \bibnamefont
+  {Will}},\ }\href@noop {} {\emph {\bibinfo {title} {Gravity: Newtonian,
+  Post-Newtonian, Relativistic}}}\ (\bibinfo  {publisher} {Cambridge University
+  Press},\ \bibinfo {year} {2014})\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Kopeikin}\ \emph {et~al.}(2011)\citenamefont
+  {Kopeikin}, \citenamefont {Efroimsky},\ and\ \citenamefont
+  {Kaplan}}]{Kopeikin}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {S.}~\bibnamefont
+  {Kopeikin}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont {Efroimsky}},
+  \ and\ \bibinfo {author} {\bibfnamefont {G.}~\bibnamefont {Kaplan}},\
+  }\href@noop {} {\emph {\bibinfo {title} {Relativistic Celestial Mechanics of
+  the Solar System}}}\ (\bibinfo  {publisher} {Wiley},\ \bibinfo {year}
+  {2011})\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Hamers}\ \emph {et~al.}(2014)\citenamefont {Hamers},
+  \citenamefont {Portegies~Zwart},\ and\ \citenamefont {Merritt}}]{Hamers}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {A.~S.}\ \bibnamefont
+  {Hamers}}, \bibinfo {author} {\bibfnamefont {S.~F.}\ \bibnamefont
+  {Portegies~Zwart}}, \ and\ \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont
+  {Merritt}},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal}
+  {MNRAS}\ }\textbf {\bibinfo {volume} {443}} (\bibinfo {year} {2014})},\
+  \bibinfo {note} {\url{http://arxiv.org/abs/1406.2846v1}}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Mikkola}\ and\ \citenamefont
+  {Merritt}(2008)}]{MikkolaMerritt}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {S.}~\bibnamefont
+  {Mikkola}}\ and\ \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont
+  {Merritt}},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {The
+  Astronomical Journal}\ }\textbf {\bibinfo {volume} {135}},\ \bibinfo {pages}
+  {2398} (\bibinfo {year} {2008})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Blanchet}(2014)}]{Blanchet}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {L.}~\bibnamefont
+  {Blanchet}},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal}
+  {Living Rev. Relativ.}\ }\textbf {\bibinfo {volume} {17}} (\bibinfo {year}
+  {2014})},\ \bibinfo {note}
+  {\url{https://doi.org/10.12942/lrr-2014-2}}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Damour}(2016)}]{EOB}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {T.}~\bibnamefont
+  {Damour}},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {Phys.
+  Rev. D}\ }\textbf {\bibinfo {volume} {94}} (\bibinfo {year}
+  {2016})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Futamase}\ and\ \citenamefont
+  {Itoh}(2007)}]{Futamase2007}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {T.}~\bibnamefont
+  {Futamase}}\ and\ \bibinfo {author} {\bibfnamefont {Y.}~\bibnamefont
+  {Itoh}},\ }\href {\doibase 10.12942/lrr-2007-2} {\bibfield  {journal}
+  {\bibinfo  {journal} {Living Reviews in Relativity}\ }\textbf {\bibinfo
+  {volume} {10}},\ \bibinfo {pages} {2} (\bibinfo {year} {2007})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Itoh}(2009)}]{Itoh2009}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {Y.}~\bibnamefont
+  {Itoh}},\ }\href {\doibase 10.1103/PhysRevD.80.124003} {\bibfield  {journal}
+  {\bibinfo  {journal} {Phys. Rev. D}\ }\textbf {\bibinfo {volume} {80}},\
+  \bibinfo {pages} {124003} (\bibinfo {year} {2009})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Schäfer}(1987)}]{Schafer1987}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {G.}~\bibnamefont
+  {Schäfer}},\ }\href {\doibase https://doi.org/10.1016/0375-9601(87)90389-6}
+  {\bibfield  {journal} {\bibinfo  {journal} {Physics Letters A}\ }\textbf
+  {\bibinfo {volume} {123}},\ \bibinfo {pages} {336 } (\bibinfo {year}
+  {1987})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Lousto}\ and\ \citenamefont
+  {Nakano}(2008)}]{LoustoNakano2008}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {C.~O.}\ \bibnamefont
+  {Lousto}}\ and\ \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont
+  {Nakano}},\ }\href {http://stacks.iop.org/0264-9381/25/i=19/a=195019}
+  {\bibfield  {journal} {\bibinfo  {journal} {Classical and Quantum Gravity}\
+  }\textbf {\bibinfo {volume} {25}},\ \bibinfo {pages} {195019} (\bibinfo
+  {year} {2008})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Kupi}\ \emph {et~al.}(2006)\citenamefont {Kupi},
+  \citenamefont {Amaro-Seoane},\ and\ \citenamefont {Spurzem}}]{Kupi2006}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {G.}~\bibnamefont
+  {Kupi}}, \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Amaro-Seoane}},
+  \ and\ \bibinfo {author} {\bibfnamefont {R.}~\bibnamefont {Spurzem}},\ }\href
+  {\doibase 10.1111/j.1745-3933.2006.00205.x} {\bibfield  {journal} {\bibinfo
+  {journal} {Monthly Notices of the Royal Astronomical Society: Letters}\
+  }\textbf {\bibinfo {volume} {371}},\ \bibinfo {pages} {L45} (\bibinfo {year}
+  {2006})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Aarseth}(2007)}]{Aarseth2007}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {S.~J.}\ \bibnamefont
+  {Aarseth}},\ }\href {\doibase 10.1111/j.1365-2966.2007.11774.x} {\bibfield
+  {journal} {\bibinfo  {journal} {Monthly Notices of the Royal Astronomical
+  Society}\ }\textbf {\bibinfo {volume} {378}},\ \bibinfo {pages} {285}
+  (\bibinfo {year} {2007})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Will}(2014{\natexlab{a}})}]{Will2013}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {C.~M.}\ \bibnamefont
+  {Will}},\ }\href {\doibase 10.1103/PhysRevD.89.044043} {\bibfield  {journal}
+  {\bibinfo  {journal} {Phys. Rev. D}\ }\textbf {\bibinfo {volume} {89}},\
+  \bibinfo {pages} {044043} (\bibinfo {year} {2014}{\natexlab{a}})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Will}(2014{\natexlab{b}})}]{Will2014}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {C.~M.}\ \bibnamefont
+  {Will}},\ }\href {http://stacks.iop.org/0264-9381/31/i=24/a=244001}
+  {\bibfield  {journal} {\bibinfo  {journal} {Classical and Quantum Gravity}\
+  }\textbf {\bibinfo {volume} {31}},\ \bibinfo {pages} {244001} (\bibinfo
+  {year} {2014}{\natexlab{b}})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Westpfahl}\ and\ \citenamefont
+  {Goller}(1979)}]{Westpfahl1979}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {K.}~\bibnamefont
+  {Westpfahl}}\ and\ \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Goller}},\ }\href {\doibase 10.1007/BF02817047} {\bibfield  {journal}
+  {\bibinfo  {journal} {Lettere al Nuovo Cimento (1971-1985)}\ }\textbf
+  {\bibinfo {volume} {26}},\ \bibinfo {pages} {573} (\bibinfo {year}
+  {1979})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Portilla}(1979)}]{Portilla1979}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Portilla}},\ }\href {http://stacks.iop.org/0305-4470/12/i=7/a=025}
+  {\bibfield  {journal} {\bibinfo  {journal} {Journal of Physics A:
+  Mathematical and General}\ }\textbf {\bibinfo {volume} {12}},\ \bibinfo
+  {pages} {1075} (\bibinfo {year} {1979})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Portilla}(1980)}]{Portilla1980}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Portilla}},\ }\href {http://stacks.iop.org/0305-4470/13/i=12/a=017}
+  {\bibfield  {journal} {\bibinfo  {journal} {Journal of Physics A:
+  Mathematical and General}\ }\textbf {\bibinfo {volume} {13}},\ \bibinfo
+  {pages} {3677} (\bibinfo {year} {1980})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Bel}\ \emph {et~al.}(1981)\citenamefont {Bel},
+  \citenamefont {Damour}, \citenamefont {Deruelle}, \citenamefont {Ibanez},\
+  and\ \citenamefont {Martin}}]{Beletal1981}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {L.}~\bibnamefont
+  {Bel}}, \bibinfo {author} {\bibfnamefont {T.}~\bibnamefont {Damour}},
+  \bibinfo {author} {\bibfnamefont {N.}~\bibnamefont {Deruelle}}, \bibinfo
+  {author} {\bibfnamefont {J.}~\bibnamefont {Ibanez}}, \ and\ \bibinfo {author}
+  {\bibfnamefont {J.}~\bibnamefont {Martin}},\ }\href {\doibase
+  10.1007/BF00756073} {\bibfield  {journal} {\bibinfo  {journal} {General
+  Relativity and Gravitation}\ }\textbf {\bibinfo {volume} {13}},\ \bibinfo
+  {pages} {963} (\bibinfo {year} {1981})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Westpfahl}(1985)}]{Westpfahl1985}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {K.}~\bibnamefont
+  {Westpfahl}},\ }\href {\doibase 10.1002/prop.2190330802} {\bibfield
+  {journal} {\bibinfo  {journal} {Fortschritte der Physik/Progress of Physics}\
+  }\textbf {\bibinfo {volume} {33}},\ \bibinfo {pages} {417} (\bibinfo {year}
+  {1985})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Westpfahl}\ \emph {et~al.}(1987)\citenamefont
+  {Westpfahl}, \citenamefont {Mohles},\ and\ \citenamefont
+  {Simonis}}]{Westpfahletal1987}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {K.}~\bibnamefont
+  {Westpfahl}}, \bibinfo {author} {\bibfnamefont {R.}~\bibnamefont {Mohles}}, \
+  and\ \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Simonis}},\ }\href
+  {http://stacks.iop.org/0264-9381/4/i=5/a=006} {\bibfield  {journal} {\bibinfo
+   {journal} {Classical and Quantum Gravity}\ }\textbf {\bibinfo {volume}
+  {4}},\ \bibinfo {pages} {L185} (\bibinfo {year} {1987})}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Ledvinka}\ \emph {et~al.}(2008)\citenamefont
+  {Ledvinka}, \citenamefont {Sch{\"a}fer},\ and\ \citenamefont {Bi{\v
+  c}{\'a}k}}]{PM}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {T.}~\bibnamefont
+  {Ledvinka}}, \bibinfo {author} {\bibfnamefont {G.}~\bibnamefont
+  {Sch{\"a}fer}}, \ and\ \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont
+  {Bi{\v c}{\'a}k}},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal}
+  {Physical Review Letters}\ }\textbf {\bibinfo {volume} {100}},\ \bibinfo
+  {pages} {251101} (\bibinfo {year} {2008})},\ \bibinfo {note}
+  {\url{http://link.aps.org/doi/10.1103/PhysRevLett.100.251101}}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {Zschocke}\ and\ \citenamefont
+  {Soffel}(2014)}]{ZschockeSoffel}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {S.}~\bibnamefont
+  {Zschocke}}\ and\ \bibinfo {author} {\bibfnamefont {M.~H.}\ \bibnamefont
+  {Soffel}},\ }\href {http://stacks.iop.org/0264-9381/31/i=17/a=175001}
+  {\bibfield  {journal} {\bibinfo  {journal} {Classical and Quantum Gravity}\
+  }\textbf {\bibinfo {volume} {31}},\ \bibinfo {pages} {175001} (\bibinfo
+  {year} {2014})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Sch{\"a}fer}(1986)}]{Schafer1986}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {G.}~\bibnamefont
+  {Sch{\"a}fer}},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal}
+  {General Relativity and Gravitation}\ }\textbf {\bibinfo {volume} {18}},\
+  \bibinfo {pages} {255} (\bibinfo {year} {1986})},\ \bibinfo {note}
+  {\url{http://dx.doi.org/10.1007/BF00765886}}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Misner}\ \emph {et~al.}(1973)\citenamefont {Misner},
+  \citenamefont {Thorne},\ and\ \citenamefont {Wheeler}}]{MTW}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {C.~W.}\ \bibnamefont
+  {Misner}}, \bibinfo {author} {\bibfnamefont {K.~S.}\ \bibnamefont {Thorne}},
+  \ and\ \bibinfo {author} {\bibfnamefont {J.~A.}\ \bibnamefont {Wheeler}},\
+  }\href@noop {} {\emph {\bibinfo {title} {Gravitation}}}\ (\bibinfo
+  {publisher} {W. H. Freeman},\ \bibinfo {year} {1973})\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Arnowitt}\ \emph {et~al.}(1962)\citenamefont
+  {Arnowitt}, \citenamefont {Deser},\ and\ \citenamefont {Misner}}]{ADM62}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {R.}~\bibnamefont
+  {Arnowitt}}, \bibinfo {author} {\bibfnamefont {S.}~\bibnamefont {Deser}}, \
+  and\ \bibinfo {author} {\bibfnamefont {C.~W.}\ \bibnamefont {Misner}},\ }in\
+  \href@noop {} {\emph {\bibinfo {booktitle} {Gravitation: An Introduction to
+  Current Research}}},\ \bibinfo {editor} {edited by\ \bibinfo {editor}
+  {\bibfnamefont {L.}~\bibnamefont {Witten}}}\ (\bibinfo  {publisher} {Wiley,
+  New York},\ \bibinfo {year} {1962})\ pp.\ \bibinfo {pages}
+  {227--265}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Arnowitt}\ \emph {et~al.}(2008)\citenamefont
+  {Arnowitt}, \citenamefont {Deser},\ and\ \citenamefont {Misner}}]{ADM62b}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {R.}~\bibnamefont
+  {Arnowitt}}, \bibinfo {author} {\bibfnamefont {S.}~\bibnamefont {Deser}}, \
+  and\ \bibinfo {author} {\bibfnamefont {C.~W.}\ \bibnamefont {Misner}},\
+  }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {General Relativity
+  and Gravitation}\ }\textbf {\bibinfo {volume} {40}},\ \bibinfo {pages} {1997}
+  (\bibinfo {year} {2008})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Goldstein}\ \emph {et~al.}(2002)\citenamefont
+  {Goldstein}, \citenamefont {Poole},\ and\ \citenamefont
+  {Safko}}]{GoldsteinCM}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {H.}~\bibnamefont
+  {Goldstein}}, \bibinfo {author} {\bibfnamefont {C.}~\bibnamefont {Poole}}, \
+  and\ \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont {Safko}},\
+  }\href@noop {} {\emph {\bibinfo {title} {Classical Mechanics}}}\ (\bibinfo
+  {publisher} {Addison Wesley},\ \bibinfo {year} {2002})\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Courant}\ \emph {et~al.}(1967)\citenamefont
+  {Courant}, \citenamefont {Friedrichs},\ and\ \citenamefont {Lewy}}]{Courant}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {R.}~\bibnamefont
+  {Courant}}, \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont {Friedrichs}},
+  \ and\ \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont {Lewy}},\
+  }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal} {IBM Journal of
+  Research and Development}\ }\textbf {\bibinfo {volume} {11}},\ \bibinfo
+  {pages} {215} (\bibinfo {year} {1967})},\ \bibinfo {note}
+  {\url{http://dx.doi.org/10.1147/rd.112.0215}}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Baumgarte}\ and\ \citenamefont
+  {Shapiro}(2010)}]{BaumgarteShapiro}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {T.}~\bibnamefont
+  {Baumgarte}}\ and\ \bibinfo {author} {\bibfnamefont {S.}~\bibnamefont
+  {Shapiro}},\ }\href@noop {} {\emph {\bibinfo {title} {Numerical Relativity:
+  Solving Einstein's Equations on the Computer}}}\ (\bibinfo  {publisher}
+  {Cambridge University Press},\ \bibinfo {year} {2010})\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Alcubierre}(2008)}]{Alcubierre}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Alcubierre}},\ }\href@noop {} {\emph {\bibinfo {title} {Introduction to 3+1
+  Numerical Relativity}}}\ (\bibinfo  {publisher} {OUP Oxford},\ \bibinfo
+  {year} {2008})\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Richardson}(1910)}]{Richardson1910}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {L.~F.}\ \bibnamefont
+  {Richardson}},\ }\href {\doibase 10.1098/rspa.1910.0020} {\bibfield
+  {journal} {\bibinfo  {journal} {Proceedings of the Royal Society of London A:
+  Mathematical, Physical and Engineering Sciences}\ }\textbf {\bibinfo {volume}
+  {83}},\ \bibinfo {pages} {335} (\bibinfo {year} {1910})},\ \Eprint
+  {http://arxiv.org/abs/http://rspa.royalsocietypublishing.org/content/83/563/335.full.pdf}
+  {http://rspa.royalsocietypublishing.org/content/83/563/335.full.pdf}
+  \BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Choptuik}(2006)}]{Choptuik}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.~W.}\ \bibnamefont
+  {Choptuik}},\ }\href@noop {} {\bibfield  {journal} {\bibinfo  {journal}
+  {Lectures for VII Mexican School on Gravitation and Mathematical Physics}\ }
+  (\bibinfo {year} {2006})},\ \bibinfo {note}
+  {\url{http://laplace.physics.ubc.ca/People/matt/Teaching/06Mexico/mexico06.pdf}}\BibitemShut
+  {NoStop}%
+\bibitem [{\citenamefont {{Bennett}}\ \emph {et~al.}(2016)\citenamefont
+  {{Bennett}}, \citenamefont {{Rhie}}, \citenamefont {{Udalski}}, \citenamefont
+  {{Gould}}, \citenamefont {{Tsapras}}, \citenamefont {{Kubas}}, \citenamefont
+  {{Bond}}, \citenamefont {{Greenhill}}, \citenamefont {{Cassan}},
+  \citenamefont {{Rattenbury}}, \citenamefont {{Boyajian}}, \citenamefont
+  {{Luhn}}, \citenamefont {{Penny}}, \citenamefont {{Anderson}}, \citenamefont
+  {{Abe}}, \citenamefont {{Bhattacharya}}, \citenamefont {{Botzler}},
+  \citenamefont {{Donachie}}, \citenamefont {{Freeman}}, \citenamefont
+  {{Fukui}}, \citenamefont {{Hirao}}, \citenamefont {{Itow}}, \citenamefont
+  {{Koshimoto}}, \citenamefont {{Li}}, \citenamefont {{Ling}}, \citenamefont
+  {{Masuda}}, \citenamefont {{Matsubara}}, \citenamefont {{Muraki}},
+  \citenamefont {{Nagakane}}, \citenamefont {{Ohnishi}}, \citenamefont
+  {{Oyokawa}}, \citenamefont {{Perrott}}, \citenamefont {{Saito}},
+  \citenamefont {{Sharan}}, \citenamefont {{Sullivan}}, \citenamefont {{Sumi}},
+  \citenamefont {{Suzuki}}, \citenamefont {{Tristram}}, \citenamefont
+  {{Yonehara}}, \citenamefont {{Yock}}, \citenamefont {{MOA Collaboration}},
+  \citenamefont {{Szyma{\'n}ski}}, \citenamefont {{Soszy{\'n}ski}},
+  \citenamefont {{Ulaczyk}}, \citenamefont {{Wyrzykowski}}, \citenamefont
+  {{OGLE Collaboration}}, \citenamefont {{Allen}}, \citenamefont {{DePoy}},
+  \citenamefont {{Gal-Yam}}, \citenamefont {{Gaudi}}, \citenamefont {{Han}},
+  \citenamefont {{Monard}}, \citenamefont {{Ofek}}, \citenamefont {{Pogge}},
+  \citenamefont {{{$\mu$}FUN Collaboration}}, \citenamefont {{Street}},
+  \citenamefont {{Bramich}}, \citenamefont {{Dominik}}, \citenamefont
+  {{Horne}}, \citenamefont {{Snodgrass}}, \citenamefont {{Steele}},
+  \citenamefont {{Robonet Collaboration}}, \citenamefont {{Albrow}},
+  \citenamefont {{Bachelet}}, \citenamefont {{Batista}}, \citenamefont
+  {{Beaulieu}}, \citenamefont {{Brillant}}, \citenamefont {{Caldwell}},
+  \citenamefont {{Cole}}, \citenamefont {{Coutures}}, \citenamefont
+  {{Dieters}}, \citenamefont {{Dominis Prester}}, \citenamefont {{Donatowicz}},
+  \citenamefont {{Fouqu{\'e}}}, \citenamefont {{Hundertmark}}, \citenamefont
+  {{J{\o}rgensen}}, \citenamefont {{Kains}}, \citenamefont {{Kane}},
+  \citenamefont {{Marquette}}, \citenamefont {{Menzies}}, \citenamefont
+  {{Pollard}}, \citenamefont {{Ranc}}, \citenamefont {{Sahu}}, \citenamefont
+  {{Wambsganss}}, \citenamefont {{Williams}}, \citenamefont {{Zub}},\ and\
+  \citenamefont {{PLANET Collaboration}}}]{circumbinary_planet}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {D.~P.}\ \bibnamefont
+  {{Bennett}}}, \bibinfo {author} {\bibfnamefont {S.~H.}\ \bibnamefont
+  {{Rhie}}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {{Udalski}}},
+  \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {{Gould}}}, \bibinfo
+  {author} {\bibfnamefont {Y.}~\bibnamefont {{Tsapras}}}, \bibinfo {author}
+  {\bibfnamefont {D.}~\bibnamefont {{Kubas}}}, \bibinfo {author} {\bibfnamefont
+  {I.~A.}\ \bibnamefont {{Bond}}}, \bibinfo {author} {\bibfnamefont
+  {J.}~\bibnamefont {{Greenhill}}}, \bibinfo {author} {\bibfnamefont
+  {A.}~\bibnamefont {{Cassan}}}, \bibinfo {author} {\bibfnamefont {N.~J.}\
+  \bibnamefont {{Rattenbury}}}, \bibinfo {author} {\bibfnamefont {T.~S.}\
+  \bibnamefont {{Boyajian}}}, \bibinfo {author} {\bibfnamefont
+  {J.}~\bibnamefont {{Luhn}}}, \bibinfo {author} {\bibfnamefont {M.~T.}\
+  \bibnamefont {{Penny}}}, \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont
+  {{Anderson}}}, \bibinfo {author} {\bibfnamefont {F.}~\bibnamefont {{Abe}}},
+  \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {{Bhattacharya}}},
+  \bibinfo {author} {\bibfnamefont {C.~S.}\ \bibnamefont {{Botzler}}}, \bibinfo
+  {author} {\bibfnamefont {M.}~\bibnamefont {{Donachie}}}, \bibinfo {author}
+  {\bibfnamefont {M.}~\bibnamefont {{Freeman}}}, \bibinfo {author}
+  {\bibfnamefont {A.}~\bibnamefont {{Fukui}}}, \bibinfo {author} {\bibfnamefont
+  {Y.}~\bibnamefont {{Hirao}}}, \bibinfo {author} {\bibfnamefont
+  {Y.}~\bibnamefont {{Itow}}}, \bibinfo {author} {\bibfnamefont
+  {N.}~\bibnamefont {{Koshimoto}}}, \bibinfo {author} {\bibfnamefont
+  {M.~C.~A.}\ \bibnamefont {{Li}}}, \bibinfo {author} {\bibfnamefont {C.~H.}\
+  \bibnamefont {{Ling}}}, \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont
+  {{Masuda}}}, \bibinfo {author} {\bibfnamefont {Y.}~\bibnamefont
+  {{Matsubara}}}, \bibinfo {author} {\bibfnamefont {Y.}~\bibnamefont
+  {{Muraki}}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {{Nagakane}}}, \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont
+  {{Ohnishi}}}, \bibinfo {author} {\bibfnamefont {H.}~\bibnamefont
+  {{Oyokawa}}}, \bibinfo {author} {\bibfnamefont {Y.~C.}\ \bibnamefont
+  {{Perrott}}}, \bibinfo {author} {\bibfnamefont {T.}~\bibnamefont {{Saito}}},
+  \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {{Sharan}}}, \bibinfo
+  {author} {\bibfnamefont {D.~J.}\ \bibnamefont {{Sullivan}}}, \bibinfo
+  {author} {\bibfnamefont {T.}~\bibnamefont {{Sumi}}}, \bibinfo {author}
+  {\bibfnamefont {D.}~\bibnamefont {{Suzuki}}}, \bibinfo {author}
+  {\bibfnamefont {P.~J.}\ \bibnamefont {{Tristram}}}, \bibinfo {author}
+  {\bibfnamefont {A.}~\bibnamefont {{Yonehara}}}, \bibinfo {author}
+  {\bibfnamefont {P.~C.~M.}\ \bibnamefont {{Yock}}}, \bibinfo {author}
+  {\bibnamefont {{MOA Collaboration}}}, \bibinfo {author} {\bibfnamefont
+  {M.~K.}\ \bibnamefont {{Szyma{\'n}ski}}}, \bibinfo {author} {\bibfnamefont
+  {I.}~\bibnamefont {{Soszy{\'n}ski}}}, \bibinfo {author} {\bibfnamefont
+  {K.}~\bibnamefont {{Ulaczyk}}}, \bibinfo {author} {\bibfnamefont
+  {{\L}.}~\bibnamefont {{Wyrzykowski}}}, \bibinfo {author} {\bibnamefont {{OGLE
+  Collaboration}}}, \bibinfo {author} {\bibfnamefont {W.}~\bibnamefont
+  {{Allen}}}, \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {{DePoy}}},
+  \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {{Gal-Yam}}}, \bibinfo
+  {author} {\bibfnamefont {B.~S.}\ \bibnamefont {{Gaudi}}}, \bibinfo {author}
+  {\bibfnamefont {C.}~\bibnamefont {{Han}}}, \bibinfo {author} {\bibfnamefont
+  {I.~A.~G.}\ \bibnamefont {{Monard}}}, \bibinfo {author} {\bibfnamefont
+  {E.}~\bibnamefont {{Ofek}}}, \bibinfo {author} {\bibfnamefont {R.~W.}\
+  \bibnamefont {{Pogge}}}, \bibinfo {author} {\bibnamefont {{{$\mu$}FUN
+  Collaboration}}}, \bibinfo {author} {\bibfnamefont {R.~A.}\ \bibnamefont
+  {{Street}}}, \bibinfo {author} {\bibfnamefont {D.~M.}\ \bibnamefont
+  {{Bramich}}}, \bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {{Dominik}}}, \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont {{Horne}}},
+  \bibinfo {author} {\bibfnamefont {C.}~\bibnamefont {{Snodgrass}}}, \bibinfo
+  {author} {\bibfnamefont {I.~A.}\ \bibnamefont {{Steele}}}, \bibinfo {author}
+  {\bibnamefont {{Robonet Collaboration}}}, \bibinfo {author} {\bibfnamefont
+  {M.~D.}\ \bibnamefont {{Albrow}}}, \bibinfo {author} {\bibfnamefont
+  {E.}~\bibnamefont {{Bachelet}}}, \bibinfo {author} {\bibfnamefont
+  {V.}~\bibnamefont {{Batista}}}, \bibinfo {author} {\bibfnamefont {J.-P.}\
+  \bibnamefont {{Beaulieu}}}, \bibinfo {author} {\bibfnamefont
+  {S.}~\bibnamefont {{Brillant}}}, \bibinfo {author} {\bibfnamefont {J.~A.~R.}\
+  \bibnamefont {{Caldwell}}}, \bibinfo {author} {\bibfnamefont
+  {A.}~\bibnamefont {{Cole}}}, \bibinfo {author} {\bibfnamefont
+  {C.}~\bibnamefont {{Coutures}}}, \bibinfo {author} {\bibfnamefont
+  {S.}~\bibnamefont {{Dieters}}}, \bibinfo {author} {\bibfnamefont
+  {D.}~\bibnamefont {{Dominis Prester}}}, \bibinfo {author} {\bibfnamefont
+  {J.}~\bibnamefont {{Donatowicz}}}, \bibinfo {author} {\bibfnamefont
+  {P.}~\bibnamefont {{Fouqu{\'e}}}}, \bibinfo {author} {\bibfnamefont
+  {M.}~\bibnamefont {{Hundertmark}}}, \bibinfo {author} {\bibfnamefont {U.~G.}\
+  \bibnamefont {{J{\o}rgensen}}}, \bibinfo {author} {\bibfnamefont
+  {N.}~\bibnamefont {{Kains}}}, \bibinfo {author} {\bibfnamefont {S.~R.}\
+  \bibnamefont {{Kane}}}, \bibinfo {author} {\bibfnamefont {J.-B.}\
+  \bibnamefont {{Marquette}}}, \bibinfo {author} {\bibfnamefont
+  {J.}~\bibnamefont {{Menzies}}}, \bibinfo {author} {\bibfnamefont {K.~R.}\
+  \bibnamefont {{Pollard}}}, \bibinfo {author} {\bibfnamefont {C.}~\bibnamefont
+  {{Ranc}}}, \bibinfo {author} {\bibfnamefont {K.~C.}\ \bibnamefont {{Sahu}}},
+  \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont {{Wambsganss}}}, \bibinfo
+  {author} {\bibfnamefont {A.}~\bibnamefont {{Williams}}}, \bibinfo {author}
+  {\bibfnamefont {M.}~\bibnamefont {{Zub}}}, \ and\ \bibinfo {author}
+  {\bibnamefont {{PLANET Collaboration}}},\ }\href {\doibase
+  10.3847/0004-6256/152/5/125} {\bibfield  {journal} {\bibinfo  {journal} {The
+  Astronomical Journal}\ }\textbf {\bibinfo {volume} {152}},\ \bibinfo {eid}
+  {125} (\bibinfo {year} {2016})},\ \Eprint {http://arxiv.org/abs/1609.06720}
+  {arXiv:1609.06720 [astro-ph.EP]} \BibitemShut {NoStop}%
+\bibitem [{\citenamefont {{Gaudi}}\ \emph {et~al.}(2008)\citenamefont
+  {{Gaudi}}, \citenamefont {{Bennett}}, \citenamefont {{Udalski}},
+  \citenamefont {{Gould}}, \citenamefont {{Christie}}, \citenamefont {{Maoz}},
+  \citenamefont {{Dong}}, \citenamefont {{McCormick}}, \citenamefont
+  {{Szyma{\'n}ski}}, \citenamefont {{Tristram}}, \citenamefont {{Nikolaev}},
+  \citenamefont {{Paczy{\'n}ski}}, \citenamefont {{Kubiak}}, \citenamefont
+  {{Pietrzy{\'n}ski}}, \citenamefont {{Soszy{\'n}ski}}, \citenamefont
+  {{Szewczyk}}, \citenamefont {{Ulaczyk}}, \citenamefont {{Wyrzykowski}},
+  \citenamefont {{OGLE Collaboration}}, \citenamefont {{DePoy}}, \citenamefont
+  {{Han}}, \citenamefont {{Kaspi}}, \citenamefont {{Lee}}, \citenamefont
+  {{Mallia}}, \citenamefont {{Natusch}}, \citenamefont {{Pogge}}, \citenamefont
+  {{Park}}, \citenamefont {{{$\mu$}-Fun Collabortion}}, \citenamefont {{Abe}},
+  \citenamefont {{Bond}}, \citenamefont {{Botzler}}, \citenamefont {{Fukui}},
+  \citenamefont {{Hearnshaw}}, \citenamefont {{Itow}}, \citenamefont
+  {{Kamiya}}, \citenamefont {{Korpela}}, \citenamefont {{Kilmartin}},
+  \citenamefont {{Lin}}, \citenamefont {{Masuda}}, \citenamefont {{Matsubara}},
+  \citenamefont {{Motomura}}, \citenamefont {{Muraki}}, \citenamefont
+  {{Nakamura}}, \citenamefont {{Okumura}}, \citenamefont {{Ohnishi}},
+  \citenamefont {{Rattenbury}}, \citenamefont {{Sako}}, \citenamefont
+  {{Saito}}, \citenamefont {{Sato}}, \citenamefont {{Skuljan}}, \citenamefont
+  {{Sullivan}}, \citenamefont {{Sumi}}, \citenamefont {{Sweatman}},
+  \citenamefont {{Yock}}, \citenamefont {{MOA Collaboration}}, \citenamefont
+  {{Albrow}}, \citenamefont {{Allan}}, \citenamefont {{Beaulieu}},
+  \citenamefont {{Burgdorf}}, \citenamefont {{Cook}}, \citenamefont
+  {{Coutures}}, \citenamefont {{Dominik}}, \citenamefont {{Dieters}},
+  \citenamefont {{Fouqu{\'e}}}, \citenamefont {{Greenhill}}, \citenamefont
+  {{Horne}}, \citenamefont {{Steele}}, \citenamefont {{Tsapras}}, \citenamefont
+  {{Planet Collaboration}}, \citenamefont {{RoboNet Collaborations}},
+  \citenamefont {{Chaboyer}}, \citenamefont {{Crocker}}, \citenamefont
+  {{Frank}},\ and\ \citenamefont {{Macintosh}}}]{Jupiter_microlensing}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {B.~S.}\ \bibnamefont
+  {{Gaudi}}}, \bibinfo {author} {\bibfnamefont {D.~P.}\ \bibnamefont
+  {{Bennett}}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont
+  {{Udalski}}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {{Gould}}},
+  \bibinfo {author} {\bibfnamefont {G.~W.}\ \bibnamefont {{Christie}}},
+  \bibinfo {author} {\bibfnamefont {D.}~\bibnamefont {{Maoz}}}, \bibinfo
+  {author} {\bibfnamefont {S.}~\bibnamefont {{Dong}}}, \bibinfo {author}
+  {\bibfnamefont {J.}~\bibnamefont {{McCormick}}}, \bibinfo {author}
+  {\bibfnamefont {M.~K.}\ \bibnamefont {{Szyma{\'n}ski}}}, \bibinfo {author}
+  {\bibfnamefont {P.~J.}\ \bibnamefont {{Tristram}}}, \bibinfo {author}
+  {\bibfnamefont {S.}~\bibnamefont {{Nikolaev}}}, \bibinfo {author}
+  {\bibfnamefont {B.}~\bibnamefont {{Paczy{\'n}ski}}}, \bibinfo {author}
+  {\bibfnamefont {M.}~\bibnamefont {{Kubiak}}}, \bibinfo {author}
+  {\bibfnamefont {G.}~\bibnamefont {{Pietrzy{\'n}ski}}}, \bibinfo {author}
+  {\bibfnamefont {I.}~\bibnamefont {{Soszy{\'n}ski}}}, \bibinfo {author}
+  {\bibfnamefont {O.}~\bibnamefont {{Szewczyk}}}, \bibinfo {author}
+  {\bibfnamefont {K.}~\bibnamefont {{Ulaczyk}}}, \bibinfo {author}
+  {\bibfnamefont {{\L}.}~\bibnamefont {{Wyrzykowski}}}, \bibinfo {author}
+  {\bibnamefont {{OGLE Collaboration}}}, \bibinfo {author} {\bibfnamefont
+  {D.~L.}\ \bibnamefont {{DePoy}}}, \bibinfo {author} {\bibfnamefont
+  {C.}~\bibnamefont {{Han}}}, \bibinfo {author} {\bibfnamefont
+  {S.}~\bibnamefont {{Kaspi}}}, \bibinfo {author} {\bibfnamefont {C.-U.}\
+  \bibnamefont {{Lee}}}, \bibinfo {author} {\bibfnamefont {F.}~\bibnamefont
+  {{Mallia}}}, \bibinfo {author} {\bibfnamefont {T.}~\bibnamefont {{Natusch}}},
+  \bibinfo {author} {\bibfnamefont {R.~W.}\ \bibnamefont {{Pogge}}}, \bibinfo
+  {author} {\bibfnamefont {B.-G.}\ \bibnamefont {{Park}}}, \bibinfo {author}
+  {\bibnamefont {{{$\mu$}-Fun Collabortion}}}, \bibinfo {author} {\bibfnamefont
+  {F.}~\bibnamefont {{Abe}}}, \bibinfo {author} {\bibfnamefont {I.~A.}\
+  \bibnamefont {{Bond}}}, \bibinfo {author} {\bibfnamefont {C.~S.}\
+  \bibnamefont {{Botzler}}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont
+  {{Fukui}}}, \bibinfo {author} {\bibfnamefont {J.~B.}\ \bibnamefont
+  {{Hearnshaw}}}, \bibinfo {author} {\bibfnamefont {Y.}~\bibnamefont {{Itow}}},
+  \bibinfo {author} {\bibfnamefont {K.}~\bibnamefont {{Kamiya}}}, \bibinfo
+  {author} {\bibfnamefont {A.~V.}\ \bibnamefont {{Korpela}}}, \bibinfo {author}
+  {\bibfnamefont {P.~M.}\ \bibnamefont {{Kilmartin}}}, \bibinfo {author}
+  {\bibfnamefont {W.}~\bibnamefont {{Lin}}}, \bibinfo {author} {\bibfnamefont
+  {K.}~\bibnamefont {{Masuda}}}, \bibinfo {author} {\bibfnamefont
+  {Y.}~\bibnamefont {{Matsubara}}}, \bibinfo {author} {\bibfnamefont
+  {M.}~\bibnamefont {{Motomura}}}, \bibinfo {author} {\bibfnamefont
+  {Y.}~\bibnamefont {{Muraki}}}, \bibinfo {author} {\bibfnamefont
+  {S.}~\bibnamefont {{Nakamura}}}, \bibinfo {author} {\bibfnamefont
+  {T.}~\bibnamefont {{Okumura}}}, \bibinfo {author} {\bibfnamefont
+  {K.}~\bibnamefont {{Ohnishi}}}, \bibinfo {author} {\bibfnamefont {N.~J.}\
+  \bibnamefont {{Rattenbury}}}, \bibinfo {author} {\bibfnamefont
+  {T.}~\bibnamefont {{Sako}}}, \bibinfo {author} {\bibfnamefont
+  {T.}~\bibnamefont {{Saito}}}, \bibinfo {author} {\bibfnamefont
+  {S.}~\bibnamefont {{Sato}}}, \bibinfo {author} {\bibfnamefont
+  {L.}~\bibnamefont {{Skuljan}}}, \bibinfo {author} {\bibfnamefont {D.~J.}\
+  \bibnamefont {{Sullivan}}}, \bibinfo {author} {\bibfnamefont
+  {T.}~\bibnamefont {{Sumi}}}, \bibinfo {author} {\bibfnamefont {W.~L.}\
+  \bibnamefont {{Sweatman}}}, \bibinfo {author} {\bibfnamefont {P.~C.~M.}\
+  \bibnamefont {{Yock}}}, \bibinfo {author} {\bibnamefont {{MOA
+  Collaboration}}}, \bibinfo {author} {\bibfnamefont {M.~D.}\ \bibnamefont
+  {{Albrow}}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont {{Allan}}},
+  \bibinfo {author} {\bibfnamefont {J.-P.}\ \bibnamefont {{Beaulieu}}},
+  \bibinfo {author} {\bibfnamefont {M.~J.}\ \bibnamefont {{Burgdorf}}},
+  \bibinfo {author} {\bibfnamefont {K.~H.}\ \bibnamefont {{Cook}}}, \bibinfo
+  {author} {\bibfnamefont {C.}~\bibnamefont {{Coutures}}}, \bibinfo {author}
+  {\bibfnamefont {M.}~\bibnamefont {{Dominik}}}, \bibinfo {author}
+  {\bibfnamefont {S.}~\bibnamefont {{Dieters}}}, \bibinfo {author}
+  {\bibfnamefont {P.}~\bibnamefont {{Fouqu{\'e}}}}, \bibinfo {author}
+  {\bibfnamefont {J.}~\bibnamefont {{Greenhill}}}, \bibinfo {author}
+  {\bibfnamefont {K.}~\bibnamefont {{Horne}}}, \bibinfo {author} {\bibfnamefont
+  {I.}~\bibnamefont {{Steele}}}, \bibinfo {author} {\bibfnamefont
+  {Y.}~\bibnamefont {{Tsapras}}}, \bibinfo {author} {\bibnamefont {{Planet
+  Collaboration}}}, \bibinfo {author} {\bibnamefont {{RoboNet
+  Collaborations}}}, \bibinfo {author} {\bibfnamefont {B.}~\bibnamefont
+  {{Chaboyer}}}, \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont
+  {{Crocker}}}, \bibinfo {author} {\bibfnamefont {S.}~\bibnamefont {{Frank}}},
+  \ and\ \bibinfo {author} {\bibfnamefont {B.}~\bibnamefont {{Macintosh}}},\
+  }\href {\doibase 10.1126/science.1151947} {\bibfield  {journal} {\bibinfo
+  {journal} {Science}\ }\textbf {\bibinfo {volume} {319}},\ \bibinfo {pages}
+  {927} (\bibinfo {year} {2008})},\ \Eprint {http://arxiv.org/abs/0802.1920}
+  {arXiv:0802.1920} \BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Guillochon}\ and\ \citenamefont
+  {Loeb}(2015)}]{Loeb1}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {J.}~\bibnamefont
+  {Guillochon}}\ and\ \bibinfo {author} {\bibfnamefont {A.}~\bibnamefont
+  {Loeb}},\ }\href@noop {} {\  (\bibinfo {year} {2015})},\ \bibinfo {note}
+  {arXiv:1411.5022v2}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Loeb}\ and\ \citenamefont
+  {Guillochon}(2015)}]{Loeb2}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {A.}~\bibnamefont
+  {Loeb}}\ and\ \bibinfo {author} {\bibfnamefont {J.}~\bibnamefont
+  {Guillochon}},\ }\href@noop {} {\enquote {\bibinfo {title} {Observational
+  cosmology with semi-relativistic stars},}\ } (\bibinfo {year} {2015}),\
+  \bibinfo {note} {arXiv:1411.5030v3}\BibitemShut {NoStop}%
+\end{thebibliography}%
