@@ -1,4 +1,4 @@
-gcc -std=gnu99 -Wall pmcode.c -lquadmath -lrt -DQUAD -o pmcode
+gcc -std=gnu99 -Wall pomin.c -lquadmath -lrt -DQUAD -o pomin
 gcc -std=gnu99 -Wall -o ./validation/conv/convergence.exe ./validation/conv/convergence.c -lquadmath
 1
 2

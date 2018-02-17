@@ -16,7 +16,7 @@ set format x "$10^{%T}$"
 set format y "$10^{%T}$"
 
 # Set labels
-set ylabel "Relative Error (Percent)" offset 2.2,0,0
+set ylabel "Relative Error ($\\%$)" offset 2.2,0,0
 set xlabel "Impact Parameter $b$" offset 0,0.5,0
 
 # Set how the data is separated in the file
