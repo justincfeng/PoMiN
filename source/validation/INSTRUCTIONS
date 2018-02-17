@@ -16,7 +16,7 @@ grep SCML1- input/input.csv | bash validation/conv/autorun.sh > validation/conv/
 
 grep SCMX1- input/input.csv | bash validation/conv/autorun.sh > validation/conv/results/raw/conv_SCMX1.txt
 
-grep FiveParticles input/input.csv | bash validation/conv/autorun.sh > validation/conv/results/conv_Five.txt > validation/conv/results/raw/conv_Five.txt
+grep FiveParticles input/input.csv | bash validation/conv/autorun.sh > validation/conv/results/raw/conv_Five.txt
 
 # Each line corresponds to a set of initial data found in input/input.csv
 # The outputs may be found in the directory: validation/conv/results/raw/

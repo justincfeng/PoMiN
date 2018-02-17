@@ -32,22 +32,22 @@ while read line; do
 	pfin=$(echo $EndL | awk -F, '{print $7}')
 
 	# Compute impact parameter
-	b=$(echo $hb | awk -M -v PREC="quad" '{bi=2*$1; printf("%0.40e", bi)}')
+	b=$(echo $hb | awk -v PREC="quad" '{bi=2*$1; printf("%0.40e", bi)}')
 
 	# Compute energy of particle 1
-	E1=$(echo $m1 $p | awk -M -v PREC="quad" '{en = sqrt(($1)^2+($2)^2); printf("%0.40e", en)}')
+	E1=$(echo $m1 $p | awk -v PREC="quad" '{en = sqrt(($1)^2+($2)^2); printf("%0.40e", en)}')
 
 	# Compute energy of particle 2
-	E2=$(echo $m2 $p | awk -M -v PREC="quad" '{en = sqrt(($1)^2+($2)^2); printf("%0.40e", en)}')
+	E2=$(echo $m2 $p | awk -v PREC="quad" '{en = sqrt(($1)^2+($2)^2); printf("%0.40e", en)}')
 
 	# Compute theoretical change in momentum
-    pDT=$(echo $hb $p $E1 $E2 | awk -M -v PREC="quad" '{pd = ($3**2*$4**2*(1 + (1/($3**2) + 1/($4**2) + 4/($3*$4))*$2**2 + $2**4/($3**2*$4**2)))/($1*($3 + $4)*$2); printf("%0.40e", pd)}')
+    pDT=$(echo $hb $p $E1 $E2 | awk -v PREC="quad" '{pd = ($3**2*$4**2*(1 + (1/($3**2) + 1/($4**2) + 4/($3*$4))*$2**2 + $2**4/($3**2*$4**2)))/($1*($3 + $4)*$2); printf("%0.40e", pd)}')
 
 	# Compute difference between initial and final y-momentum
-	pDIFF=$(echo $pfin $pstrt | awk -M -v PREC="quad" '{diff = $1-$2; printf("%0.40e", diff)}')
+	pDIFF=$(echo $pfin $pstrt | awk -v PREC="quad" '{diff = $1-$2; printf("%0.40e", diff)}')
 
 	# Compute % difference between analytical and numerical result
-	Res=$(echo $pDT $pDIFF | awk -M -v PREC="quad" '{R = 100*(sqrt(($1-$2)^2)/$1); printf("%0.40e", R)}')
+	Res=$(echo $pDT $pDIFF | awk -v PREC="quad" '{R = 100*(sqrt(($1-$2)^2)/$1); printf("%0.40e", R)}')
 
 	# Send results to stdout	
 	echo $b,$pDT,$pDIFF,$Res
