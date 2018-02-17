@@ -6,7 +6,7 @@ PoMiN: a Post-Minkowskian N-Body Solver
 N-body code which solves Hamilton's equations for a system of particles using
 the N-body Hamiltonian in the following paper:
 
-https://arxiv.org/abs/1003.0561[Ledvinka, T., Schafer, G., Bicak, J., Phys. Rev. Lett. 100, 251101 (2008)]
+https://arxiv.org/abs/1003.0561 [Ledvinka, T., Schafer, G., Bicak, J., Phys. Rev. Lett. 100, 251101 (2008)]
 
 The Hamiltonian presented in the paper above models a system of weakly
 gravitating point particles. It is fully special relativistic, but includes
@@ -28,18 +28,24 @@ Also see the *EXAMPLES* section for some useful uses.
 
 ## Options
 
--d
-    Print debug (e.g., auxiliary values and metadata) information to stdout.
+Print debug (e.g., auxiliary values and metadata) information to stdout.  
 
--v
-    Print verbose (e.g., wall-time) information to stderr.
+    -d  
 
--p <parts>
-    Use parts of the Hamiltonian instead of 123; that is, which of the three parts of the Hamiltonian to use;
-        1    to use H1 only
-        12   to use H1+H2
-        13   to use H1+H3 or
-        123  to use H1+H2+H3 (default)
+Print verbose (e.g., wall-time) information to stderr.  
+
+    -v  
+
+Which parts of the Hamiltonian to use:  
+
+    -p <parts>  
+    
+    where <parts> is one of the following (see paper for definitions of H1, H2, H3):  
+
+    1    to use H1 only  
+    12   to use H1+H2  
+    13   to use H1+H3 or  
+    123  to use H1+H2+H3 (full Hamiltonian, default)  
 
 
 ## Input
@@ -50,20 +56,20 @@ Input must be read from stdin as one line in the following format:
     light,mass_1,qx_1,qy_1,qz_1,px_1,py_1,pz_1,mass_2,qx_2,...
 
 
-INPUT,                  TYPE,    DESCRIPTION
-description,            string,  ignored by program--except it cannot be empty
-start-time,             float,   time to start at (physics time)
-end-time,               float,   time to end at (physics time)
-timestep,               float,   (maximum) length of each computational iteration
-iterations,             integer, upper bound of iterations (0 = unbounded)
-courant-number,         float,   adaptive-timestep parameter (0 = off)
-gravitational-constant, float,   you know: G
-speed-of-light,         float,   that'd be: c
-mass_1,                 float,   mass of particle 1
-qx_1,                   float,   x-position of particle 1
-...,                    ...,     ...
-py_3,                   float,   y-momentum of particle 3
-...,                    ...,     ...
+    INPUT,                  TYPE,    DESCRIPTION  
+    description,            string,  ignored by program--except it cannot be empty  
+    start-time,             float,   time to start at (physics time)  
+    end-time,               float,   time to end at (physics time)  
+    timestep,               float,   (maximum) length of each computational iteration  
+    iterations,             integer, upper bound of iterations (0 = unbounded)  
+    courant-number,         float,   adaptive-timestep parameter (0 = off)  
+    gravitational-constant, float,   you know: G  
+    speed-of-light,         float,   that'd be: c  
+    mass_1,                 float,   mass of particle 1  
+    qx_1,                   float,   x-position of particle 1  
+    ...,                    ...,     ...  
+    py_3,                   float,   y-momentum of particle 3  
+    ...,                    ...,     ...  
 
 NOTE: the 'courant-number' is the ratio of the change in distance between the
 two closest particles (in a single timestep) to the distance between those
@@ -88,7 +94,15 @@ this form:
 
     iteration_#,time,qx_1,qy_1,qz_1,px_1,py_1,pz_1,qx_2,qy_2,...
 
-### Debug
+## Validation
+
+To run the validation tests, see the INSTRUCTIONS file in the following directory:
+
+    source/validation
+    
+The INSTRUCTIONS file itself may be run as a shell script in validation directory.
+
+## Debug
 
 If the debug flag is given, some metadata and other variables are also printed:
 
@@ -105,7 +119,7 @@ where 'H' and 'dH' are the values of the Hamiltonian (H1+H2+H3) and its
 derivative at that given time, followed by the components of the derivative of
 each particle's position along the three Cartesian axes.
 
-### Notes
+## Notes
 
 +stdin+ (standard in) and +stdout+ (standard out) are special names for two
 ordinary files. To get input to (and output from) pomin all you have
@@ -141,7 +155,7 @@ All of this sounds like more work than necessary but, in fact, it makes the
 program much more robust and useful.
 
 
-### Obtainting
+### Obtaining
 
 The Git repository can be obtained through the SSH protocol with
 
