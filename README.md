@@ -102,6 +102,9 @@ To run the validation tests, see the INSTRUCTIONS file in the following director
     
 The INSTRUCTIONS file itself may be run as a shell script in validation directory.
 
+The validation tests in the paper were performed using gcc 5.4.0 and GNU Awk 4.1.3;
+they may not run properly with older versions of gcc and Awk.
+
 ## Debug
 
 If the debug flag is given, some metadata and other variables are also printed:
