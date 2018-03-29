@@ -6,7 +6,7 @@
 %Control: page (0) single
 %Control: year (1) truncated
 %Control: production of eprint (0) enabled
-\begin{thebibliography}{36}%
+\begin{thebibliography}{39}%
 \makeatletter
 \providecommand \@ifxundefined [1]{%
  \@ifx{#1\undefined}
@@ -114,13 +114,13 @@
   {Itoh}},\ }\href {\doibase 10.1103/PhysRevD.80.124003} {\bibfield  {journal}
   {\bibinfo  {journal} {Phys. Rev. D}\ }\textbf {\bibinfo {volume} {80}},\
   \bibinfo {pages} {124003} (\bibinfo {year} {2009})}\BibitemShut {NoStop}%
-\bibitem [{\citenamefont {Schäfer}(1987)}]{Schafer1987}%
+\bibitem [{\citenamefont {Sch{\"a}fer}(1987)}]{Schafer1987}%
   \BibitemOpen
   \bibfield  {author} {\bibinfo {author} {\bibfnamefont {G.}~\bibnamefont
-  {Schäfer}},\ }\href {\doibase https://doi.org/10.1016/0375-9601(87)90389-6}
-  {\bibfield  {journal} {\bibinfo  {journal} {Physics Letters A}\ }\textbf
-  {\bibinfo {volume} {123}},\ \bibinfo {pages} {336 } (\bibinfo {year}
-  {1987})}\BibitemShut {NoStop}%
+  {Sch{\"a}fer}},\ }\href {\doibase
+  https://doi.org/10.1016/0375-9601(87)90389-6} {\bibfield  {journal} {\bibinfo
+   {journal} {Physics Letters A}\ }\textbf {\bibinfo {volume} {123}},\ \bibinfo
+  {pages} {336 } (\bibinfo {year} {1987})}\BibitemShut {NoStop}%
 \bibitem [{\citenamefont {Lousto}\ and\ \citenamefont
   {Nakano}(2008)}]{LoustoNakano2008}%
   \BibitemOpen
@@ -140,6 +140,15 @@
   {journal} {Monthly Notices of the Royal Astronomical Society: Letters}\
   }\textbf {\bibinfo {volume} {371}},\ \bibinfo {pages} {L45} (\bibinfo {year}
   {2006})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Brem}\ \emph {et~al.}(2013)\citenamefont {Brem},
+  \citenamefont {Amaro-Seoane},\ and\ \citenamefont {Spurzem}}]{Bremetal2013}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {P.}~\bibnamefont
+  {Brem}}, \bibinfo {author} {\bibfnamefont {P.}~\bibnamefont {Amaro-Seoane}},
+  \ and\ \bibinfo {author} {\bibfnamefont {R.}~\bibnamefont {Spurzem}},\ }\href
+  {\doibase 10.1093/mnras/stt1220} {\bibfield  {journal} {\bibinfo  {journal}
+  {MNRAS}\ }\textbf {\bibinfo {volume} {434}},\ \bibinfo {pages} {2999}
+  (\bibinfo {year} {2013})}\BibitemShut {NoStop}%
 \bibitem [{\citenamefont {Aarseth}(2007)}]{Aarseth2007}%
   \BibitemOpen
   \bibfield  {author} {\bibinfo {author} {\bibfnamefont {S.~J.}\ \bibnamefont
@@ -235,6 +244,23 @@
   {\bibfield  {journal} {\bibinfo  {journal} {Classical and Quantum Gravity}\
   }\textbf {\bibinfo {volume} {31}},\ \bibinfo {pages} {175001} (\bibinfo
   {year} {2014})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Shadwick}\ \emph {et~al.}(1998)\citenamefont
+  {Shadwick}, \citenamefont {Bowman},\ and\ \citenamefont
+  {Morrison}}]{Shadwicketal1995}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {B.~A.}\ \bibnamefont
+  {Shadwick}}, \bibinfo {author} {\bibfnamefont {J.~C.}\ \bibnamefont
+  {Bowman}}, \ and\ \bibinfo {author} {\bibfnamefont {P.~J.}\ \bibnamefont
+  {Morrison}},\ }\href {http://www.jstor.org/stable/118406} {\bibfield
+  {journal} {\bibinfo  {journal} {SIAM Journal on Applied Mathematics}\
+  }\textbf {\bibinfo {volume} {59}},\ \bibinfo {pages} {1112} (\bibinfo {year}
+  {1998})}\BibitemShut {NoStop}%
+\bibitem [{\citenamefont {Tao}(2016)}]{Tao2016}%
+  \BibitemOpen
+  \bibfield  {author} {\bibinfo {author} {\bibfnamefont {M.}~\bibnamefont
+  {Tao}},\ }\href {\doibase 10.1103/PhysRevE.94.043303} {\bibfield  {journal}
+  {\bibinfo  {journal} {Phys. Rev. E}\ }\textbf {\bibinfo {volume} {94}},\
+  \bibinfo {pages} {043303} (\bibinfo {year} {2016})}\BibitemShut {NoStop}%
 \bibitem [{\citenamefont {Sch{\"a}fer}(1986)}]{Schafer1986}%
   \BibitemOpen
   \bibfield  {author} {\bibinfo {author} {\bibfnamefont {G.}~\bibnamefont
