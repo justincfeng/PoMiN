@@ -10,7 +10,6 @@
 
 \bibliographystyle{apsrev4-1}
 
-%The name of the code is now PoMiN
 \newcommand{\codename}{\mathtt{PoMiN}}
 
 \begin{document}
@@ -31,6 +30,8 @@
 \affiliation{Theory Group, Department of Physics, University of Texas at Austin}
 
 %\date{\today}
+
+\preprint{UTTG-02-18}
 
 \begin{abstract}
 In this paper, we introduce $\codename$, a lightweight $N$-body code based on the Post-Minkowskian $N$-body Hamiltonian of Ledvinka, Sch{\"a}fer, and Bi{\v c}{\'a}k, which includes General Relativistic effects up to first order in Newton's constant $G$, and all orders in the speed of light $c$. $\codename \> $  is written in $\mathtt{C}$ and uses a fourth-order Runge-Kutta integration scheme. $\codename$ has also been written to handle an arbitrary number of particles (both massive and massless), with a computational complexity that scales as $O(N^2)$. We describe the methods we used to simplify and organize the Hamiltonian, and the tests we performed (convergence, conservation, and analytical comparison tests) to validate the code.
