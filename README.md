@@ -197,7 +197,7 @@ To use as input a line from a file (of any size) called +input.csv+ with “test
 one” in the description field and only save every other output line (and the
 header, line #1):
 
-    grep “test one” cat input.csv | pomin | awk 'NR == 1 || NR % 2 == 0' > output.csv
+    grep “test one” input.csv | pomin | awk 'NR == 1 || NR % 2 == 0' > output.csv
 
 To run all of the lines (except the header) from a file and split their outputs
 into seperate files:
