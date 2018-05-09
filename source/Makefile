@@ -1,12 +1,7 @@
-# Makefile for the PoMiN.
+# Makefile for PoMiN
 
-# Some useful flags for turning warnings into errors.
-CFLAGS= -std=gnu99 -Wall
-#-c -Wall -Wextra # -Wfloat-equal -Wundef -Wshadow \
-				-Wpointer-arith -Wcast-align -Wstrict-prototypes -Wstrict-overflow=5 \
-				-Wwrite-strings -Waggregate-return -Wcast-qual -Wswitch-default \
-				-Wswitch-enum -Wconversion -Wunreachable-code -Wformat=2 \
-				-O -save-temps --pedantic -Werror
+CC=gcc
+CFLAGS= -std=gnu99 
 
 PROGRAM=pomin.c
 EXECPATH=/usr/local/bin/
@@ -19,7 +14,6 @@ UNAME := $(shell uname)
 
 # Set OS-specific flags
 ifeq ($(UNAME), Darwin)
-CC=gcc-4.8
 CFLAGS += -DDARWIN
 else
 CC=gcc
