@@ -160,9 +160,9 @@ program much more robust and useful.
 
 ### Obtaining
 
-The Git repository can be obtained through the SSH protocol with
+The Git repository can be obtained through the HTTPS protocol with
 
-    git clone git@github.com:jchristopherfeng/PoMiN.git
+    git clone https://github.com/justincfeng/PoMiN.git
 
 
 ### Compiling
@@ -211,7 +211,7 @@ To print only the first and last lines of output:
 
 ## Authors
 
-Developed in the Center for Relativity at the University of Texas at Austin, Department of Physics.
+Developed at the University of Texas at Austin by the following authors:
 
 Mark Baumann <markb@physics.utexas.edu> +
 Joel S. Doss <jdoss@uoregon.edu> +
