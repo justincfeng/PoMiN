@@ -6,7 +6,7 @@ PoMiN: a Post-Minkowskian N-Body Solver
 N-body code which solves Hamilton's equations for a system of particles using
 the N-body Hamiltonian in the following paper:
 
-https://arxiv.org/abs/1003.0561 [Ledvinka, T., Schafer, G., Bicak, J., Phys. Rev. Lett. 100, 251101 (2008)]
+https://arxiv.org/abs/0807.0214 [Ledvinka, T., Schafer, G., Bicak, J., Phys. Rev. Lett. 100, 251101 (2008)]
 
 The Hamiltonian presented in the paper above models a system of weakly
 gravitating point particles. It is fully special relativistic, but includes
