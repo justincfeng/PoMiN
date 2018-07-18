@@ -11,19 +11,19 @@
 while read line; do
 
 	# Pick out 1/2 the impact parameter (y-value of particle 2)
-	hb=$(echo $line | awk -F, '{print $18}')
+	hb=$(echo $line | awk -F, '{print $19}')
 
 	# Pick out initial y-momentum for particle 1
-	pstrt=$(echo $line | awk -F, '{print $14}')
+	pstrt=$(echo $line | awk -F, '{print $15}')
 
 	# Pick out mass of particle 1
-	m1=$(echo $line | awk -F, '{print $9}')
+	m1=$(echo $line | awk -F, '{print $10}')
 
 	# Pick out x-momentum of particle 1
-	p=$(echo $line | awk -F, '{print $13}')
+	p=$(echo $line | awk -F, '{print $14}')
 
 	# Pick out mass of particle 2
-	m2=$(echo $line | awk -F, '{print $16}')
+	m2=$(echo $line | awk -F, '{print $17}')
 
 	# Run pomin and get last line of output
     EndL=$(echo $line | ./pomin | tail -n1)

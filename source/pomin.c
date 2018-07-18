@@ -77,7 +77,7 @@
  * GLOBAL VARIABLES
  ************************************************************/
 // N is the number of particles.
-static unsigned int N, hamiltonian_to_use = 123;
+static unsigned int N, Ntot, hamiltonian_to_use = 123;
 static PRECISION gravity, timestep, maxtimestep, *mass;
 static char *name;
 
@@ -227,8 +227,10 @@ int main(int argc, char **argv) {
             }
         }
     }
-    // Account for preceeding (7) & per-particle (7) entries.
-    N-=7; N/=7;
+    // Account for preceding (8) & per-particle (7) entries.
+    N-=8; N/=7;
+    
+    Ntot = N;
 
     // Disregard the description (used only to identify input).
     char* description = strtok(line, ",");
@@ -339,6 +341,7 @@ int main(int argc, char **argv) {
     snprintf(courant_str,     sizeof(courant_str),     "%s", strtok(NULL, ","));
     snprintf(gravity_str,     sizeof(gravity_str),     "%s", strtok(NULL, ","));
     snprintf(light_speed_str, sizeof(light_speed_str), "%s", strtok(NULL, ","));
+    unsigned const int numspecparticles   = strtol(strtok(NULL, ","), NULL, 10);
 
     // Convert strings to quad numbers.
     PRECISION time        = strtoflt128(time_str,        NULL);
@@ -380,10 +383,11 @@ int main(int argc, char **argv) {
     PRECISION time        = strtod(strtok(NULL, ","), NULL);
     PRECISION duration    = strtod(strtok(NULL, ","), NULL);
     timestep              = strtod(strtok(NULL, ","), NULL);
-    unsigned const int iterations = strtol(strtok(NULL, ","), NULL, 10);
+    unsigned const int iterations       = strtol(strtok(NULL, ","), NULL, 10);
     PRECISION courant     = strtod(strtok(NULL, ","), NULL);
     gravity               = strtod(strtok(NULL, ","), NULL);
     PRECISION light_speed = strtod(strtok(NULL, ","), NULL);
+    unsigned const int numspecparticles = strtol(strtok(NULL, ","), NULL, 10);
 
     for(int n=0; n<N; n++) {
         mass[n] = strtod(strtok(NULL, ","), NULL);
@@ -400,7 +404,6 @@ int main(int argc, char **argv) {
     }
 
 #endif // QUAD
-
 
     // Initialize qi and pi to q and p.
     memcpy(qi,q,sizeof(PRECISION[N][3]));
@@ -493,6 +496,10 @@ int main(int argc, char **argv) {
     
 #endif // QUAD
 
+	if(numspecparticles>0) {
+    N = numspecparticles;
+	}
+
 /*
     if (debug) {
 	printf(",0,0,0,0,0,0,0");
@@ -546,8 +553,8 @@ int main(int argc, char **argv) {
          ************************************************************/
 
         // Initialize qRK4 and pRK4 to qi and pi.
-        memcpy(qRK4,qi,sizeof(PRECISION[N][3]));
-        memcpy(pRK4,pi,sizeof(PRECISION[N][3]));
+        memcpy(qRK4,qi,sizeof(PRECISION[Ntot][3]));
+        memcpy(pRK4,pi,sizeof(PRECISION[Ntot][3]));
 
         HamiltonEquations(H, courant, true);
         time += timestep;
@@ -555,7 +562,7 @@ int main(int argc, char **argv) {
         /************************************************************
          * RK4 SECOND STAGE
          ************************************************************/
-        for(int n=0; n<N; n++) {
+        for(int n=0; n<Ntot; n++) {
             for(int x=0; x<3; x++) {
                 /* This prepares the next set of phase space variables for
                  * re-calculating the quantities kp,kq needed for the second stage
@@ -576,7 +583,7 @@ int main(int argc, char **argv) {
         /************************************************************
          * RK4 THIRD STAGE: COMPUTING pdot3,qdot3
          ************************************************************/
-        for(int n=0; n<N; n++) {
+        for(int n=0; n<Ntot; n++) {
             for(int x=0; x<3; x++) {
                 qRK4[n][x] = qi[n][x]+HALF*timestep*qdot[n][x];
                 pRK4[n][x] = pi[n][x]+HALF*timestep*pdot[n][x];
@@ -591,7 +598,7 @@ int main(int argc, char **argv) {
         /************************************************************
          * RK4 FOURTH STAGE: COMPUTING pdot4,qdot4
          ************************************************************/
-        for(int n=0; n<N; n++) {
+        for(int n=0; n<Ntot; n++) {
             for(int x=0; x<3; x++) {
                 qRK4[n][x] = qi[n][x]+timestep*qdot[n][x];
                 pRK4[n][x] = pi[n][x]+timestep*pdot[n][x];
@@ -614,7 +621,7 @@ int main(int argc, char **argv) {
         printf(",%.35lf", time);
 #endif
 
-        for(int n=0; n<N; n++) {
+        for(int n=0; n<Ntot; n++) {
             for(int x=0; x<3; x++) {
                 qi[n][x] = q[n][x] += (SIXTH)*timestep*qdot[n][x];
                 pi[n][x] = p[n][x] += (SIXTH)*timestep*pdot[n][x];
@@ -723,7 +730,7 @@ void HamiltonEquations(PRECISION *H, PRECISION courant, bool calculate_hamiltoni
     /************************************************************
      * COMPUTE: ps, mm
      ************************************************************/
-    for(int n=0; n<N; n++) {
+    for(int n=0; n<Ntot; n++) {
         ps[n] = pRK4[n][0]*pRK4[n][0] + pRK4[n][1]*pRK4[n][1] + pRK4[n][2]*pRK4[n][2];
         mm[n] = sqrt(mass[n]*mass[n] + ps[n]);
 
@@ -773,11 +780,70 @@ void HamiltonEquations(PRECISION *H, PRECISION courant, bool calculate_hamiltoni
             }
         }
     }
+    
+    // Loops for test particles
+    for (int a=0; a<N; a++) {
+        for (int b=N; b<Ntot; b++) {
+            if (b != a) {
+                r[a][b] = sqrt((qRK4[b][0]-qRK4[a][0])*(qRK4[b][0]-qRK4[a][0]) 
+                        + (qRK4[b][1]-qRK4[a][1])*(qRK4[b][1]-qRK4[a][1]) 
+                        + (qRK4[b][2]-qRK4[a][2])*(qRK4[b][2]-qRK4[a][2]));
+                
+                r[b][a] = sqrt((qRK4[a][0]-qRK4[b][0])*(qRK4[a][0]-qRK4[b][0]) 
+                        + (qRK4[a][1]-qRK4[b][1])*(qRK4[a][1]-qRK4[b][1]) 
+                        + (qRK4[a][2]-qRK4[b][2])*(qRK4[a][2]-qRK4[b][2]));
+
+                if(r[a][b] == 0) {
+                    fprintf(stderr, "%s: zero separation between particles %i & %i.\n", name, a+1, b+1);
+                    exit(EXIT_FAILURE);
+                }
+                
+                if(r[b][a] == 0) {
+                    fprintf(stderr, "%s: zero separation between particles %i & %i.\n", name, a+1, b+1);
+                    exit(EXIT_FAILURE);
+                }
+
+                // This looks for the closest interacting particle/test particle pair
+                // This implements adaptive time stepping for test particles
+                if(courant<ZERO) {
+                    rsmallest=r[ats][bts];
+
+                    if(r[a][b] < rsmallest) {
+                        rsmallest = r[a][b];
+                        ats = a;
+                        bts = b;
+                    }
+                
+                    if(r[b][a] < rsmallest) {
+                        rsmallest = r[b][a];
+                        ats = a;
+                        bts = b;
+                    }
+			    }
+
+                Th[b][a] = (NEGATIVEONE/r[a][b]) * (pRK4[b][0] * (qRK4[b][0]-qRK4[a][0]) \
+                        + pRK4[b][1] * (qRK4[b][1]-qRK4[a][1]) \
+                        + pRK4[b][2] * (qRK4[b][2]-qRK4[a][2]));
+                y[b][a]  = (ONE/mm[b]) * sqrt(mass[b]*mass[b] + Th[b][a]*Th[b][a]);
+                Xi[a][b] = pRK4[a][0]*pRK4[b][0] \
+                           + pRK4[a][1]*pRK4[b][1] \
+                           + pRK4[a][2]*pRK4[b][2];
+                           
+                Th[a][b] = (NEGATIVEONE/r[b][a]) * (pRK4[a][0] * (qRK4[a][0]-qRK4[b][0]) \
+                        + pRK4[a][1] * (qRK4[a][1]-qRK4[b][1]) \
+                        + pRK4[a][2] * (qRK4[a][2]-qRK4[b][2]));
+                y[a][b]  = (ONE/mm[a]) * sqrt(mass[a]*mass[a] + Th[a][b]*Th[a][b]);
+                Xi[b][a] = pRK4[b][0]*pRK4[a][0] \
+                           + pRK4[b][1]*pRK4[a][1] \
+                           + pRK4[b][2]*pRK4[a][2];
+            }
+        }
+    }
 
     /************************************************************
      * COMPUTE HAMILTON EQUATIONS
      ************************************************************/
-    for(int n=0; n<N; n++) {
+    for(int n=0; n<Ntot; n++) {
         for (int x=0; x<3; x++) {
             pdot[n][x] = NEGATIVEONE * DHamiltonian(x,n);
             qdot[n][x] =             DHamiltonian(x+3,n);
@@ -808,6 +874,8 @@ void HamiltonEquations(PRECISION *H, PRECISION courant, bool calculate_hamiltoni
     /************************************************************
      * HAMILTONIAN CALCULATOR
      ************************************************************/
+    // Does not include contributions from test particles.
+     
     if(calculate_hamiltonian) {
 
         // Subtract the rest mass from H1 to magnify changes in H.
@@ -889,6 +957,13 @@ PRECISION DHamiltonian(unsigned int zindex, unsigned const int c)
      * computations scale as N^2.
      ************************************************************/
     if(zindex<3) {
+		
+		// For Test particles
+        if(c>=N) {
+		dps[c] = ZERO;
+        dmm[c] = ZERO;
+		}
+		
         for(int a=0; a<N; a++) {
             dps[a] = ZERO;
             dmm[a] = ZERO;
@@ -936,6 +1011,12 @@ PRECISION DHamiltonian(unsigned int zindex, unsigned const int c)
 
             dmm[a] = (HALF/(mm[a])) * dps[a];
         }
+        
+            // For Test particles
+            if(c>=N) {
+			dps[c] = TWO*pRK4[c][zindex];
+            dmm[c] = (HALF/(mm[c])) * dps[c];
+			}
 
         for(int a=0; a<N; a++) {
             if(a!=c) {
@@ -977,6 +1058,12 @@ PRECISION DHamiltonian(unsigned int zindex, unsigned const int c)
     for(int n=0; n<N; n++)  {
         dH[1] += dmm[n];
         dH[0] += HALF*dps[n]/mass[n];
+        
+        // For Test particles
+        if(c>=N) {
+		dH[1] += dmm[c];
+        dH[0] += HALF*dps[c]/mass[c];
+		}
     }
 
     for(int a=0; a<N; a++) {
