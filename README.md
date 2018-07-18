@@ -53,7 +53,7 @@ Which parts of the Hamiltonian to use:
 Input must be read from stdin as one line in the following format:
 
     description,start-time,end-time,timestep,iterations,courant-number,gravitational-constant,speed-of-
-    light,mass_1,qx_1,qy_1,qz_1,px_1,py_1,pz_1,mass_2,qx_2,...
+    light,number-of-particles,mass_1,qx_1,qy_1,qz_1,px_1,py_1,pz_1,mass_2,qx_2,...
 
 
     INPUT,                  TYPE,    DESCRIPTION  
@@ -65,15 +65,26 @@ Input must be read from stdin as one line in the following format:
     courant-number,         float,   adaptive-timestep parameter (0 = off)  
     gravitational-constant, float,   you know: G  
     speed-of-light,         float,   that'd be: c  
+    number-of-particles     integer, number of interacting particles
     mass_1,                 float,   mass of particle 1  
     qx_1,                   float,   x-position of particle 1  
     ...,                    ...,     ...  
     py_3,                   float,   y-momentum of particle 3  
     ...,                    ...,     ...  
 
+NOTE: the 'number-of-particles' is the number of fully interacting particles in the 
+system. Any additional particles in the input line after the first 'number-of-particles' 
+particles will be treated as test particles. Set 'number-of-particles' to zero if all
+particles in the input line are fully interacting particles (no test particles).
+
 NOTE: the 'courant-number' is the ratio of the change in distance between the
 two closest particles (in a single timestep) to the distance between those
-particles.
+particles. A positive 'courant-number' turns on adaptive timestepping and computes
+the timestep using the distances between all particles, including test particles. 
+Setting 'courant-number' to zero turns off adaptive timestepping. A negative 
+'courant-number' turns on adaptive timestepping, but computes the timestep (with 
+the absolute value of 'courant-number') using only the distances between fully 
+interacting particles.
 
 WARNING: the 'description' field cannot be empty due to the strtok(1) function
 parsing; however, using a unique value here is helpful when selecting input to
