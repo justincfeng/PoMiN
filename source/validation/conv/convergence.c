@@ -16,12 +16,12 @@
 #include <string.h>
 #include <quadmath.h>
 
-#define QX2 8
-#define QY2 9
-#define QZ2 10
-#define PX2 11
-#define PY2 12
-#define PZ2 13
+#define QX2 2
+#define QY2 3
+#define QZ2 4
+#define PX2 5
+#define PY2 6
+#define PZ2 7
 
 /************************************************************
  * MAIN

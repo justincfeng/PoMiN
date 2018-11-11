@@ -84,12 +84,12 @@ static char *name;
 // The following 2D arrays are indexed by: [particle #][dimension].
 // q    & p    are the canonical coordinates (q) and conjugate momenta (p).
 // qdot & pdot are their time derivatives.
-// qRK4 & pRK4 are intermediate values in the RK4 algorithm.
-PRECISION (*q)[3], (*qdot)[3], (*qRK4)[3];
-PRECISION (*p)[3], (*pdot)[3], (*pRK4)[3];
+// Q & P are intermediate values in the RK4 algorithm.
+PRECISION (*q)[3], (*qdot)[3], (*Q)[3];
+PRECISION (*p)[3], (*pdot)[3], (*P)[3];
 
-PRECISION *ps, *mm, **r, **y, **Th, **Xi;
-PRECISION *dps, *dmm, **dr, **dy, **dTh, **dXi;
+PRECISION *ps, *En, **r, **y, **Th, **Xi;
+PRECISION *dps, *dEn, **dr, **dy, **dTh, **dXi;
 
 /************************************************************
  * FUNCTION PROTOTYPES
@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
     // Save the name of the program into a variable to identify output.
     name = argv[0];
 
-    // Loop through the command line arguments.
+    // Loop through the coEnand line arguments.
     for (int i=1; i<argc; i++)  {
 
         // Check if argument is flagged.
@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
     FILE *hash  = popen("git rev-parse --verify HEAD", "r");
     FILE *state = popen("git status --porcelain",      "r");
 
-    // Save output of those commands to variables.
+    // Save output of those coEnands to variables.
     fgets(githash,  sizeof(githash)-1,  hash);
     fgets(gitstate, sizeof(gitstate)-1, state);
 
@@ -217,18 +217,18 @@ int main(int argc, char **argv) {
 
     // Determine the number of particles given.
     for (int i=0; line[i]!='\0'; i++) {
-        // i.e., count the number of commas in the line.
+        // i.e., count the number of coEnas in the line.
         if (line[i] == ',') {
             N++;
 
-            // End if there's nothing between two commas (an empty entry).
+            // End if there's nothing between two coEnas (an empty entry).
             if(line[i+1] == ',') {
                 break;
             }
         }
     }
-    // Account for preceding (8) & per-particle (7) entries.
-    N-=8; N/=7;
+    // Account for preceding (7) & per-particle (7) entries.
+    N-=7; N/=7;
     
     Ntot = N;
 
@@ -245,17 +245,17 @@ int main(int argc, char **argv) {
     qdot            = malloc(sizeof(PRECISION[N][3]));
     pdot            = malloc(sizeof(PRECISION[N][3]));
 
-    /* qRK4 & pRK4 are the phase space coordinates used
+    /* Q & P are the phase space coordinates used
      * to compute the right hand side of Hamilton's Equations at 
      * each partial timestep in the RK4 scheme. */
-    qRK4 = malloc(sizeof(PRECISION[N][3]));
-    pRK4 = malloc(sizeof(PRECISION[N][3]));
+    Q = malloc(sizeof(PRECISION[N][3]));
+    P = malloc(sizeof(PRECISION[N][3]));
     PRECISION (*qi)[3] = malloc(sizeof(PRECISION[N][3]));
     PRECISION (*pi)[3] = malloc(sizeof(PRECISION[N][3]));
 
     // Exit if memory has been depleted.
     if (H == NULL || mass == NULL ||  q == NULL || p == NULL || \
-            qdot == NULL || pdot == NULL || qRK4 == NULL || pRK4 == NULL || \
+            qdot == NULL || pdot == NULL || Q == NULL || P == NULL || \
             pi == NULL || qi == NULL)
     {
         fprintf(stderr, "%s: out of memory\n", name);
@@ -263,26 +263,26 @@ int main(int argc, char **argv) {
     }
 
     ps  	= malloc(sizeof(PRECISION[N]));
-    mm  	= malloc(sizeof(PRECISION[N]));
+    En  	= malloc(sizeof(PRECISION[N]));
     r  		= malloc(N * sizeof(PRECISION *));
     y  		= malloc(N * sizeof(PRECISION *));
     Th 		= malloc(N * sizeof(PRECISION *));
     Xi 		= malloc(N * sizeof(PRECISION *));
     dps  	= malloc(sizeof(PRECISION[N]));
-    dmm  	= malloc(sizeof(PRECISION[N]));
+    dEn  	= malloc(sizeof(PRECISION[N]));
     dr  	= malloc(N * sizeof(PRECISION *));
     dy  	= malloc(N * sizeof(PRECISION *));
     dTh 	= malloc(N * sizeof(PRECISION *));
     dXi 	= malloc(N * sizeof(PRECISION *));
 
     /* Quit if out of memory. */
-    if(ps == NULL || mm == NULL || r  == NULL ||      \
+    if(ps == NULL || En == NULL || r  == NULL ||      \
             y  == NULL || Th == NULL || Xi == NULL)
     {
         fprintf(stderr, "%s: out of memory\n", name);
         exit(EXIT_FAILURE);
     }
-    if(dps == NULL || dmm == NULL || \
+    if(dps == NULL || dEn == NULL || \
             dr == NULL || dy == NULL || dTh == NULL || dXi == NULL)
     {
         fprintf(stderr, "%s: out of memory\n", name);
@@ -325,7 +325,7 @@ int main(int argc, char **argv) {
 
     // Create strings to read and print quad precision numbers.
     char    time_str[512], duration_str[512],     timestep_str[512];
-    char courant_str[512],  gravity_str[512],  light_speed_str[512];
+    char courant_str[512],  gravity_str[512];
     char mass_str[N][512];
 
     char    H_str[3][512];
@@ -340,7 +340,6 @@ int main(int argc, char **argv) {
     unsigned const int iterations         = strtol(strtok(NULL, ","), NULL, 10);
     snprintf(courant_str,     sizeof(courant_str),     "%s", strtok(NULL, ","));
     snprintf(gravity_str,     sizeof(gravity_str),     "%s", strtok(NULL, ","));
-    snprintf(light_speed_str, sizeof(light_speed_str), "%s", strtok(NULL, ","));
     unsigned const int numspecparticles   = strtol(strtok(NULL, ","), NULL, 10);
 
     // Convert strings to quad numbers.
@@ -349,7 +348,6 @@ int main(int argc, char **argv) {
     timestep              = strtoflt128(timestep_str,    NULL);
     PRECISION courant     = strtoflt128(courant_str,     NULL);
     gravity               = strtoflt128(gravity_str,     NULL);
-    PRECISION light_speed = strtoflt128(light_speed_str, NULL);
 
     // Save quad numbers to strings for printing.
     quadmath_snprintf(time_str,        sizeof(time_str),        "%.35Qf", time);
@@ -357,7 +355,6 @@ int main(int argc, char **argv) {
     quadmath_snprintf(timestep_str,    sizeof(timestep_str),    "%.35Qf", timestep);
     quadmath_snprintf(courant_str,     sizeof(courant_str),     "%.35Qf", courant);
     quadmath_snprintf(gravity_str,     sizeof(gravity_str),     "%.35Qf", gravity);
-    quadmath_snprintf(light_speed_str, sizeof(light_speed_str), "%.35Qf", light_speed);
 
     // Now do all of the above for each of the particles.
     for(int n=0; n<N; n++) {
@@ -386,7 +383,6 @@ int main(int argc, char **argv) {
     unsigned const int iterations       = strtol(strtok(NULL, ","), NULL, 10);
     PRECISION courant     = strtod(strtok(NULL, ","), NULL);
     gravity               = strtod(strtok(NULL, ","), NULL);
-    PRECISION light_speed = strtod(strtok(NULL, ","), NULL);
     unsigned const int numspecparticles = strtol(strtok(NULL, ","), NULL, 10);
 
     for(int n=0; n<N; n++) {
@@ -422,7 +418,7 @@ int main(int argc, char **argv) {
 
         printf("YYYY-MM-DDTHH:MM:SS (ISO 8601) of %s code using H:%i with Git hash:\n"\
                 "%s [%s] %s\ndescription,start-time,end-time,timestep,iterations,"\
-                "courant-number,gravitational-constant,speed-of-light",\
+                "courant-number,gravitational-constant",\
                 precision, hamiltonian_to_use, datetime, gitstate, githash);
 
         for(int n=1; n<N+1; n++) {
@@ -432,8 +428,8 @@ int main(int argc, char **argv) {
         printf("\n%s", description);
 
 #ifdef QUAD
-        printf(",%s,%s,%s,%i,%s,%s,%s", time_str, duration_str, timestep_str, \
-                iterations, courant_str, gravity_str, light_speed_str);
+        printf(",%s,%s,%s,%i,%s,%s", time_str, duration_str, timestep_str, \
+                iterations, courant_str, gravity_str);
 
         for(int n=0; n<N; n++) {
             printf(",%s,%s,%s,%s,%s,%s,%s", mass_str[n], q_str[n][0], q_str[n][1], q_str[n][2],\
@@ -441,8 +437,8 @@ int main(int argc, char **argv) {
         }
 
 #else // not QUAD
-        printf(",%.35lf,%lf,%lf,%i,%lf,%lf,%lf", time, duration, timestep, \
-                iterations, courant, gravity, light_speed);
+        printf(",%.35lf,%lf,%lf,%i,%lf,%lf", time, duration, timestep, \
+                iterations, courant, gravity);
 
         for(int n=0; n<N; n++) {
             printf(",%.35lf,%.35lf,%.35lf,%.35lf,%.35lf,%.35lf,%.35lf", \
@@ -528,14 +524,14 @@ int main(int argc, char **argv) {
          * Zero Out Arrays
          ************************************************************/
         //memset(ps,0,N*sizeof(PRECISION));
-        //memset(mm,0,N*sizeof(PRECISION));
+        //memset(En,0,N*sizeof(PRECISION));
         //memset(r,0,N*sizeof(*PRECISION));		
         //memset(y,0,N*N*sizeof(PRECISION));
         //memset(Th,0,N*N*sizeof(PRECISION));
         //memset(Xi,0,N*N*sizeof(PRECISION));
 
         //memset(dps,0,N*sizeof(PRECISION));
-        //memset(dmm,0,N*sizeof(PRECISION));
+        //memset(dEn,0,N*sizeof(PRECISION));
         //memset(dr,0,N*N*sizeof(PRECISION));
         //memset(dy,0,N*N*sizeof(PRECISION));
         //memset(dTh,0,N*N*sizeof(PRECISION));
@@ -552,9 +548,9 @@ int main(int argc, char **argv) {
          * Equations, computed with the function HamiltonEquations.
          ************************************************************/
 
-        // Initialize qRK4 and pRK4 to qi and pi.
-        memcpy(qRK4,qi,sizeof(PRECISION[Ntot][3]));
-        memcpy(pRK4,pi,sizeof(PRECISION[Ntot][3]));
+        // Initialize Q and P to qi and pi.
+        memcpy(Q,qi,sizeof(PRECISION[Ntot][3]));
+        memcpy(P,pi,sizeof(PRECISION[Ntot][3]));
 
         HamiltonEquations(H, courant, true);
         time += timestep;
@@ -567,8 +563,8 @@ int main(int argc, char **argv) {
                 /* This prepares the next set of phase space variables for
                  * re-calculating the quantities kp,kq needed for the second stage
                  * of the Runge-Kutta algorithm. */
-                qRK4[n][x] = qi[n][x]+HALF*timestep*qdot[n][x];
-                pRK4[n][x] = pi[n][x]+HALF*timestep*pdot[n][x];
+                Q[n][x] = qi[n][x]+HALF*timestep*qdot[n][x];
+                P[n][x] = pi[n][x]+HALF*timestep*pdot[n][x];
 
                 /* The updated values for the p's and q's are obtained by computing
                  * a weighted average of pdot and qdot. The following calculation
@@ -585,8 +581,8 @@ int main(int argc, char **argv) {
          ************************************************************/
         for(int n=0; n<Ntot; n++) {
             for(int x=0; x<3; x++) {
-                qRK4[n][x] = qi[n][x]+HALF*timestep*qdot[n][x];
-                pRK4[n][x] = pi[n][x]+HALF*timestep*pdot[n][x];
+                Q[n][x] = qi[n][x]+HALF*timestep*qdot[n][x];
+                P[n][x] = pi[n][x]+HALF*timestep*pdot[n][x];
 
                 q[n][x] += (SIXTH)*timestep*(TWO*qdot[n][x]);
                 p[n][x] += (SIXTH)*timestep*(TWO*pdot[n][x]);
@@ -600,8 +596,8 @@ int main(int argc, char **argv) {
          ************************************************************/
         for(int n=0; n<Ntot; n++) {
             for(int x=0; x<3; x++) {
-                qRK4[n][x] = qi[n][x]+timestep*qdot[n][x];
-                pRK4[n][x] = pi[n][x]+timestep*pdot[n][x];
+                Q[n][x] = qi[n][x]+timestep*qdot[n][x];
+                P[n][x] = pi[n][x]+timestep*pdot[n][x];
 
                 q[n][x] += (SIXTH)*timestep*(TWO*qdot[n][x]);
                 p[n][x] += (SIXTH)*timestep*(TWO*pdot[n][x]);
@@ -728,13 +724,13 @@ void HamiltonEquations(PRECISION *H, PRECISION courant, bool calculate_hamiltoni
     if (calculate_hamiltonian) H[0] = H[1] = H[2] = H[3] = ZERO;
     
     /************************************************************
-     * COMPUTE: ps, mm
+     * COMPUTE: ps, En
      ************************************************************/
     for(int n=0; n<Ntot; n++) {
-        ps[n] = pRK4[n][0]*pRK4[n][0] + pRK4[n][1]*pRK4[n][1] + pRK4[n][2]*pRK4[n][2];
-        mm[n] = sqrt(mass[n]*mass[n] + ps[n]);
+        ps[n] = P[n][0]*P[n][0] + P[n][1]*P[n][1] + P[n][2]*P[n][2];
+        En[n] = sqrt(mass[n]*mass[n] + ps[n]);
 
-        if(mm[n] == 0) {
+        if(En[n] == 0) {
             fprintf(stderr, "%s: zero energy for particle %i.\n", name, n+1);
             exit(EXIT_FAILURE);
         }
@@ -751,9 +747,9 @@ void HamiltonEquations(PRECISION *H, PRECISION courant, bool calculate_hamiltoni
     for (int a=0; a<N; a++) {
         for (int b=0; b<N; b++) {
             if (b != a) {
-                r[a][b] = sqrt((qRK4[b][0]-qRK4[a][0])*(qRK4[b][0]-qRK4[a][0]) 
-                        + (qRK4[b][1]-qRK4[a][1])*(qRK4[b][1]-qRK4[a][1]) 
-                        + (qRK4[b][2]-qRK4[a][2])*(qRK4[b][2]-qRK4[a][2]));
+                r[a][b] = sqrt((Q[b][0]-Q[a][0])*(Q[b][0]-Q[a][0]) 
+                        + (Q[b][1]-Q[a][1])*(Q[b][1]-Q[a][1]) 
+                        + (Q[b][2]-Q[a][2])*(Q[b][2]-Q[a][2]));
 
                 if(r[a][b] == 0) {
                     fprintf(stderr, "%s: zero separation between particles %i & %i.\n", name, a+1, b+1);
@@ -770,13 +766,13 @@ void HamiltonEquations(PRECISION *H, PRECISION courant, bool calculate_hamiltoni
                     bts = b;
                 }
 
-                Th[b][a] = (NEGATIVEONE/r[a][b]) * (pRK4[b][0] * (qRK4[b][0]-qRK4[a][0]) \
-                        + pRK4[b][1] * (qRK4[b][1]-qRK4[a][1]) \
-                        + pRK4[b][2] * (qRK4[b][2]-qRK4[a][2]));
-                y[b][a]  = (ONE/mm[b]) * sqrt(mass[b]*mass[b] + Th[b][a]*Th[b][a]);
-                Xi[a][b] = pRK4[a][0]*pRK4[b][0] \
-                           + pRK4[a][1]*pRK4[b][1] \
-                           + pRK4[a][2]*pRK4[b][2];
+                Th[b][a] = (NEGATIVEONE/r[a][b]) * (P[b][0] * (Q[b][0]-Q[a][0]) \
+                        + P[b][1] * (Q[b][1]-Q[a][1]) \
+                        + P[b][2] * (Q[b][2]-Q[a][2]));
+                y[b][a]  = (ONE/En[b]) * sqrt(mass[b]*mass[b] + Th[b][a]*Th[b][a]);
+                Xi[a][b] = P[a][0]*P[b][0] \
+                           + P[a][1]*P[b][1] \
+                           + P[a][2]*P[b][2];
             }
         }
     }
@@ -785,13 +781,13 @@ void HamiltonEquations(PRECISION *H, PRECISION courant, bool calculate_hamiltoni
     for (int a=0; a<N; a++) {
         for (int b=N; b<Ntot; b++) {
             if (b != a) {
-                r[a][b] = sqrt((qRK4[b][0]-qRK4[a][0])*(qRK4[b][0]-qRK4[a][0]) 
-                        + (qRK4[b][1]-qRK4[a][1])*(qRK4[b][1]-qRK4[a][1]) 
-                        + (qRK4[b][2]-qRK4[a][2])*(qRK4[b][2]-qRK4[a][2]));
+                r[a][b] = sqrt((Q[b][0]-Q[a][0])*(Q[b][0]-Q[a][0]) 
+                        + (Q[b][1]-Q[a][1])*(Q[b][1]-Q[a][1]) 
+                        + (Q[b][2]-Q[a][2])*(Q[b][2]-Q[a][2]));
                 
-                r[b][a] = sqrt((qRK4[a][0]-qRK4[b][0])*(qRK4[a][0]-qRK4[b][0]) 
-                        + (qRK4[a][1]-qRK4[b][1])*(qRK4[a][1]-qRK4[b][1]) 
-                        + (qRK4[a][2]-qRK4[b][2])*(qRK4[a][2]-qRK4[b][2]));
+                r[b][a] = sqrt((Q[a][0]-Q[b][0])*(Q[a][0]-Q[b][0]) 
+                        + (Q[a][1]-Q[b][1])*(Q[a][1]-Q[b][1]) 
+                        + (Q[a][2]-Q[b][2])*(Q[a][2]-Q[b][2]));
 
                 if(r[a][b] == 0) {
                     fprintf(stderr, "%s: zero separation between particles %i & %i.\n", name, a+1, b+1);
@@ -821,21 +817,21 @@ void HamiltonEquations(PRECISION *H, PRECISION courant, bool calculate_hamiltoni
                     }
 			    }
 
-                Th[b][a] = (NEGATIVEONE/r[a][b]) * (pRK4[b][0] * (qRK4[b][0]-qRK4[a][0]) \
-                        + pRK4[b][1] * (qRK4[b][1]-qRK4[a][1]) \
-                        + pRK4[b][2] * (qRK4[b][2]-qRK4[a][2]));
-                y[b][a]  = (ONE/mm[b]) * sqrt(mass[b]*mass[b] + Th[b][a]*Th[b][a]);
-                Xi[a][b] = pRK4[a][0]*pRK4[b][0] \
-                           + pRK4[a][1]*pRK4[b][1] \
-                           + pRK4[a][2]*pRK4[b][2];
+                Th[b][a] = (NEGATIVEONE/r[a][b]) * (P[b][0] * (Q[b][0]-Q[a][0]) \
+                        + P[b][1] * (Q[b][1]-Q[a][1]) \
+                        + P[b][2] * (Q[b][2]-Q[a][2]));
+                y[b][a]  = (ONE/En[b]) * sqrt(mass[b]*mass[b] + Th[b][a]*Th[b][a]);
+                Xi[a][b] = P[a][0]*P[b][0] \
+                           + P[a][1]*P[b][1] \
+                           + P[a][2]*P[b][2];
                            
-                Th[a][b] = (NEGATIVEONE/r[b][a]) * (pRK4[a][0] * (qRK4[a][0]-qRK4[b][0]) \
-                        + pRK4[a][1] * (qRK4[a][1]-qRK4[b][1]) \
-                        + pRK4[a][2] * (qRK4[a][2]-qRK4[b][2]));
-                y[a][b]  = (ONE/mm[a]) * sqrt(mass[a]*mass[a] + Th[a][b]*Th[a][b]);
-                Xi[b][a] = pRK4[b][0]*pRK4[a][0] \
-                           + pRK4[b][1]*pRK4[a][1] \
-                           + pRK4[b][2]*pRK4[a][2];
+                Th[a][b] = (NEGATIVEONE/r[b][a]) * (P[a][0] * (Q[a][0]-Q[b][0]) \
+                        + P[a][1] * (Q[a][1]-Q[b][1]) \
+                        + P[a][2] * (Q[a][2]-Q[b][2]));
+                y[a][b]  = (ONE/En[a]) * sqrt(mass[a]*mass[a] + Th[a][b]*Th[a][b]);
+                Xi[b][a] = P[b][0]*P[a][0] \
+                           + P[b][1]*P[a][1] \
+                           + P[b][2]*P[a][2];
             }
         }
     }
@@ -880,7 +876,7 @@ void HamiltonEquations(PRECISION *H, PRECISION courant, bool calculate_hamiltoni
 
         // Subtract the rest mass from H1 to magnify changes in H.
         for(int n=0; n<N; n++) {
-            H[1] += mm[n] - mass[n];
+            H[1] += En[n] - mass[n];
 
             if(mass[n] > ZERO) {
                 H[0] += HALF*ps[n]/mass[n];
@@ -890,11 +886,11 @@ void HamiltonEquations(PRECISION *H, PRECISION courant, bool calculate_hamiltoni
         for(int a=0; a<N; a++) {
             for(int b=0; b<N; b++) {
                 if(b != a) {
-                    H[1] -= (gravity*HALF)*(mm[a]*mm[b]/r[a][b])*(ONE + (ps[a]/(mm[a]*mm[a])) + (ps[b]/(mm[b]*mm[b])));
+                    H[1] -= (gravity*HALF)*(En[a]*En[b]/r[a][b])*(ONE + (ps[a]/(En[a]*En[a])) + (ps[b]/(En[b]*En[b])));
                     H[2] += (gravity*QUARTER)*(((NEGATIVEONE)*(Th[a][b]*Th[b][a]) + SEVEN*Xi[a][b])/r[a][b]);
 
                     if(mass[b] > ZERO) {
-                        H[3] -= (gravity*QUARTER)*(ONE/r[a][b])*(ONE/(mm[a]*mm[b]*(y[b][a]+ONE)*(y[b][a]+ONE)*y[b][a]))*( TWO*( TWO*Xi[a][b]*Xi[a][b]*Th[b][a]*Th[b][a] - TWO*(Th[a][b])*(-Th[b][a])*(Xi[a][b])*ps[b] + Th[a][b]*Th[a][b]*ps[b]*ps[b] - Xi[a][b]*Xi[a][b]*ps[b] )*(ONE/(mm[b]*mm[b])) + TWO*(-ps[a]*Th[b][a]*Th[b][a] + Th[a][b]*Th[a][b]*Th[b][a]*Th[b][a] + TWO*(Th[a][b])*(-Th[b][a])*(Xi[a][b]) + Xi[a][b]*Xi[a][b] - Th[a][b]*Th[a][b]*ps[b]) + ((-THREE*ps[a]*Th[b][a]*Th[b][a] + Th[a][b]*Th[a][b]*Th[b][a]*Th[b][a] + EIGHT*(Th[a][b])*(-Th[b][a])*(Xi[a][b]) + ps[a]*ps[b] - THREE*Th[a][b]*Th[a][b]*ps[b] )*y[b][a] ) );
+                        H[3] -= (gravity*QUARTER)*(ONE/r[a][b])*(ONE/(En[a]*En[b]*(y[b][a]+ONE)*(y[b][a]+ONE)*y[b][a]))*( TWO*( TWO*Xi[a][b]*Xi[a][b]*Th[b][a]*Th[b][a] - TWO*(Th[a][b])*(-Th[b][a])*(Xi[a][b])*ps[b] + Th[a][b]*Th[a][b]*ps[b]*ps[b] - Xi[a][b]*Xi[a][b]*ps[b] )*(ONE/(En[b]*En[b])) + TWO*(-ps[a]*Th[b][a]*Th[b][a] + Th[a][b]*Th[a][b]*Th[b][a]*Th[b][a] + TWO*(Th[a][b])*(-Th[b][a])*(Xi[a][b]) + Xi[a][b]*Xi[a][b] - Th[a][b]*Th[a][b]*ps[b]) + ((-THREE*ps[a]*Th[b][a]*Th[b][a] + Th[a][b]*Th[a][b]*Th[b][a]*Th[b][a] + EIGHT*(Th[a][b])*(-Th[b][a])*(Xi[a][b]) + ps[a]*ps[b] - THREE*Th[a][b]*Th[a][b]*ps[b] )*y[b][a] ) );
                         H[0] -= HALF*gravity*mass[a]*mass[b]/r[a][b];
                     }
                     else {
@@ -927,7 +923,7 @@ PRECISION DHamiltonian(unsigned int zindex, unsigned const int c)
      * c      is the particle index.
      *
      * qk & pk are arrays where k is a spatial index (0=x,1=y,2=z).
-     * dps, dmm, dr, dy, dTh, dXi are derivatives of ps, mm, m, r, y, Th, Xi. 
+     * dps, dEn, dr, dy, dTh, dXi are derivatives of ps, En, m, r, y, Th, Xi. 
      ************************************************************/
 
 
@@ -961,37 +957,37 @@ PRECISION DHamiltonian(unsigned int zindex, unsigned const int c)
 		// For Test particles
         if(c>=N) {
 		dps[c] = ZERO;
-        dmm[c] = ZERO;
+        dEn[c] = ZERO;
 		}
 		
         for(int a=0; a<N; a++) {
             dps[a] = ZERO;
-            dmm[a] = ZERO;
+            dEn[a] = ZERO;
 
             if(a!=c) {
-                dr[a][c]  = (ONE/r[a][c]) * (qRK4[c][zindex]-qRK4[a][zindex]);
-                dTh[a][c] = (ONE/r[a][c]) * (pRK4[a][zindex]-Th[a][c]*dr[a][c]);
+                dr[a][c]  = (ONE/r[a][c]) * (Q[c][zindex]-Q[a][zindex]);
+                dTh[a][c] = (ONE/r[a][c]) * (P[a][zindex]-Th[a][c]*dr[a][c]);
                 dXi[a][c] = ZERO;
 
                 if(mass[a] > ZERO) {
-                    dy[a][c] = (mm[a]*dTh[a][c]*Th[a][c] + dmm[a]*(-mass[a]*mass[a] - Th[a][c]*Th[a][c]))/(mm[a]*mm[a]*sqrt(mass[a]*mass[a] + Th[a][c]*Th[a][c]));
+                    dy[a][c] = (En[a]*dTh[a][c]*Th[a][c] + dEn[a]*(-mass[a]*mass[a] - Th[a][c]*Th[a][c]))/(En[a]*En[a]*sqrt(mass[a]*mass[a] + Th[a][c]*Th[a][c]));
                 }
                 else {
-                    dy[a][c] = Sign(Th[a][c])*(mm[a]*dTh[a][c] - dmm[a]*Th[a][c])/(mm[a]*mm[a]);
+                    dy[a][c] = Sign(Th[a][c])*(En[a]*dTh[a][c] - dEn[a]*Th[a][c])/(En[a]*En[a]);
                 }
             }
         }
         for(int b=0; b<N; b++) {
             if(b!=c) {
-                dr[c][b]  = (ONE/r[c][b]) * (qRK4[b][zindex]-qRK4[c][zindex]) * (NEGATIVEONE);
-                dTh[c][b] = (ONE/r[c][b]) * (pRK4[c][zindex]*(NEGATIVEONE) - Th[c][b]*dr[c][b]);
+                dr[c][b]  = (ONE/r[c][b]) * (Q[b][zindex]-Q[c][zindex]) * (NEGATIVEONE);
+                dTh[c][b] = (ONE/r[c][b]) * (P[c][zindex]*(NEGATIVEONE) - Th[c][b]*dr[c][b]);
                 dXi[c][b] = ZERO;
 
                 if(mass[c] > ZERO) {
-                    dy[c][b] = (mm[c]*dTh[c][b]*Th[c][b] + dmm[c]*(-mass[c]*mass[c] - Th[c][b]*Th[c][b]))/(mm[c]*mm[c]*sqrt(mass[c]*mass[c] + Th[c][b]*Th[c][b]));
+                    dy[c][b] = (En[c]*dTh[c][b]*Th[c][b] + dEn[c]*(-mass[c]*mass[c] - Th[c][b]*Th[c][b]))/(En[c]*En[c]*sqrt(mass[c]*mass[c] + Th[c][b]*Th[c][b]));
                 }
                 else {
-                    dy[c][b] = Sign(Th[c][b])*(mm[c]*dTh[c][b] - dmm[c]*Th[c][b])/(mm[c]*mm[c]);
+                    dy[c][b] = Sign(Th[c][b])*(En[c]*dTh[c][b] - dEn[c]*Th[c][b])/(En[c]*En[c]);
                 }
             }
         }
@@ -1003,32 +999,32 @@ PRECISION DHamiltonian(unsigned int zindex, unsigned const int c)
 
         for(int a=0; a<N; a++) {
             if(a==c) {
-                dps[a] = TWO*pRK4[a][zindex];
+                dps[a] = TWO*P[a][zindex];
             }
             else {
                 dps[a] = ZERO;
             }
 
-            dmm[a] = (HALF/(mm[a])) * dps[a];
+            dEn[a] = (HALF/(En[a])) * dps[a];
         }
         
             // For Test particles
             if(c>=N) {
-			dps[c] = TWO*pRK4[c][zindex];
-            dmm[c] = (HALF/(mm[c])) * dps[c];
+			dps[c] = TWO*P[c][zindex];
+            dEn[c] = (HALF/(En[c])) * dps[c];
 			}
 
         for(int a=0; a<N; a++) {
             if(a!=c) {
                 dr[a][c]  = ZERO;
                 dTh[a][c] = ZERO;
-                dXi[a][c] = pRK4[a][zindex];
+                dXi[a][c] = P[a][zindex];
 
                 if(mass[a] > ZERO) {
-                    dy[a][c] = (mm[a]*dTh[a][c]*Th[a][c] + dmm[a]*(-mass[a]*mass[a] - Th[a][c]*Th[a][c]))/(mm[a]*mm[a]*sqrt(mass[a]*mass[a] + Th[a][c]*Th[a][c]));
+                    dy[a][c] = (En[a]*dTh[a][c]*Th[a][c] + dEn[a]*(-mass[a]*mass[a] - Th[a][c]*Th[a][c]))/(En[a]*En[a]*sqrt(mass[a]*mass[a] + Th[a][c]*Th[a][c]));
                 }
                 else {
-                    dy[a][c] = Sign(Th[a][c])*(mm[a]*dTh[a][c] - dmm[a]*Th[a][c])/(mm[a]*mm[a]);
+                    dy[a][c] = Sign(Th[a][c])*(En[a]*dTh[a][c] - dEn[a]*Th[a][c])/(En[a]*En[a]);
                 }
             }
         }
@@ -1036,14 +1032,14 @@ PRECISION DHamiltonian(unsigned int zindex, unsigned const int c)
         for(int b=0; b<N; b++) {
             if(b!=c) {
                 dr[c][b]  = ZERO;
-                dTh[c][b] = (ONE/r[c][b]) * (qRK4[b][zindex]-qRK4[c][zindex]);
-                dXi[c][b] = pRK4[b][zindex];
+                dTh[c][b] = (ONE/r[c][b]) * (Q[b][zindex]-Q[c][zindex]);
+                dXi[c][b] = P[b][zindex];
 
                 if(mass[c] > ZERO) {
-                    dy[c][b] = (mm[c]*dTh[c][b]*Th[c][b] + dmm[c]*(-mass[c]*mass[c] - Th[c][b]*Th[c][b]))/(mm[c]*mm[c]*sqrt(mass[c]*mass[c] + Th[c][b]*Th[c][b]));
+                    dy[c][b] = (En[c]*dTh[c][b]*Th[c][b] + dEn[c]*(-mass[c]*mass[c] - Th[c][b]*Th[c][b]))/(En[c]*En[c]*sqrt(mass[c]*mass[c] + Th[c][b]*Th[c][b]));
                 }
                 else {
-                    dy[c][b] = Sign(Th[c][b])*(mm[c]*dTh[c][b] - dmm[c]*Th[c][b])/(mm[c]*mm[c]);
+                    dy[c][b] = Sign(Th[c][b])*(En[c]*dTh[c][b] - dEn[c]*Th[c][b])/(En[c]*En[c]);
                 }
             }
         }
@@ -1056,43 +1052,43 @@ PRECISION DHamiltonian(unsigned int zindex, unsigned const int c)
     PRECISION dH[4] = {ZERO,ZERO,ZERO,ZERO};
 
     for(int n=0; n<N; n++)  {
-        dH[1] += dmm[n];
+        dH[1] += dEn[n];
         dH[0] += HALF*dps[n]/mass[n];
         
         // For Test particles
         if(c>=N) {
-		dH[1] += dmm[c];
+		dH[1] += dEn[c];
         dH[0] += HALF*dps[c]/mass[c];
 		}
     }
 
     for(int a=0; a<N; a++) {
         if(c!=a) {
-            dH[1] -= (gravity*HALF)*((-(mm[a]*mm[c]*(mm[c]*mm[c]*ps[a] + mm[a]*mm[a]*(mm[c]*mm[c] + ps[c]))*dr[a][c]) + (-(dmm[a]*mm[c]*mm[c]*mm[c]*ps[a]) + mm[a]*mm[c]*mm[c]*(dps[a]*mm[c] + dmm[c]*ps[a]) + mm[a]*mm[a]*mm[a]*(dps[c]*mm[c] + dmm[c]*(mm[c]*mm[c] - ps[c])) + dmm[a]*mm[a]*mm[a]*mm[c]*(mm[c]*mm[c] + ps[c]))*r[a][c])/(mm[a]*mm[a]*mm[c]*mm[c]*r[a][c]*r[a][c]));
+            dH[1] -= (gravity*HALF)*((-(En[a]*En[c]*(En[c]*En[c]*ps[a] + En[a]*En[a]*(En[c]*En[c] + ps[c]))*dr[a][c]) + (-(dEn[a]*En[c]*En[c]*En[c]*ps[a]) + En[a]*En[c]*En[c]*(dps[a]*En[c] + dEn[c]*ps[a]) + En[a]*En[a]*En[a]*(dps[c]*En[c] + dEn[c]*(En[c]*En[c] - ps[c])) + dEn[a]*En[a]*En[a]*En[c]*(En[c]*En[c] + ps[c]))*r[a][c])/(En[a]*En[a]*En[c]*En[c]*r[a][c]*r[a][c]));
             dH[2] += (gravity*QUARTER)*((SEVEN*dXi[a][c]*r[a][c] - dTh[c][a]*r[a][c]*Th[a][c] - dTh[a][c]*r[a][c]*Th[c][a] + dr[a][c]*Th[a][c]*Th[c][a] - SEVEN*dr[a][c]*Xi[a][c])/(r[a][c]*r[a][c]));
 
             if(mass[c] > ZERO) {
-                dH[3] -= (gravity*QUARTER)*(-((TWO*mm[a]*mm[c]*dy[c][a]*r[a][c]*y[c][a]*(TWO*ps[c]*ps[c]*Th[a][c]*Th[a][c] + FOUR*ps[c]*Th[a][c]*Th[c][a]*Xi[a][c] - TWO*(ps[c] - TWO*Th[c][a]*Th[c][a])*Xi[a][c]*Xi[a][c] + mm[c]*mm[c]*(TWO*(-(Th[a][c]*Th[c][a]) + Xi[a][c])*(-(Th[a][c]*Th[c][a]) + Xi[a][c]) + Th[a][c]*Th[c][a]*(Th[a][c]*Th[c][a] - EIGHT*Xi[a][c])*y[c][a] - ps[a]*Th[c][a]*Th[c][a]*(TWO + THREE*y[c][a]) + ps[c]*(ps[a]*y[c][a] - Th[a][c]*Th[a][c]*(TWO + THREE*y[c][a])))) + dmm[c]*mm[a]*r[a][c]*y[c][a]*(ONE + y[c][a])*(TWO*ps[c]*ps[c]*Th[a][c]*Th[a][c] + FOUR*ps[c]*Th[a][c]*Th[c][a]*Xi[a][c] - TWO*(ps[c] - TWO*Th[c][a]*Th[c][a])*Xi[a][c]*Xi[a][c] + mm[c]*mm[c]*(TWO*(-(Th[a][c]*Th[c][a]) + Xi[a][c])*(-(Th[a][c]*Th[c][a]) + Xi[a][c]) + Th[a][c]*Th[c][a]*(Th[a][c]*Th[c][a] - EIGHT*Xi[a][c])*y[c][a] - ps[a]*Th[c][a]*Th[c][a]*(TWO + THREE*y[c][a]) + ps[c]*(ps[a]*y[c][a] - Th[a][c]*Th[a][c]*(TWO + THREE*y[c][a])))) - mm[a]*mm[c]*dy[c][a]*r[a][c]*(ONE + y[c][a])*(-TWO*ps[c]*ps[c]*Th[a][c]*Th[a][c] - FOUR*Th[c][a]*Th[c][a]*Xi[a][c]*Xi[a][c] + TWO*ps[c]*Xi[a][c]*(-TWO*Th[a][c]*Th[c][a] + Xi[a][c]) + mm[c]*mm[c]*(-TWO*(-(Th[a][c]*Th[c][a]) + Xi[a][c])*(-(Th[a][c]*Th[c][a]) + Xi[a][c]) + Th[a][c]*Th[c][a]*(-(Th[a][c]*Th[c][a]) + EIGHT*Xi[a][c])*y[c][a] + ps[a]*Th[c][a]*Th[c][a]*(TWO + THREE*y[c][a]) + ps[c]*(-(ps[a]*y[c][a]) + Th[a][c]*Th[a][c]*(TWO + THREE*y[c][a])))) - mm[a]*mm[c]*dr[a][c]*y[c][a]*(ONE + y[c][a])*(-TWO*ps[c]*ps[c]*Th[a][c]*Th[a][c] - FOUR*Th[c][a]*Th[c][a]*Xi[a][c]*Xi[a][c] + TWO*ps[c]*Xi[a][c]*(-TWO*Th[a][c]*Th[c][a] + Xi[a][c]) + mm[c]*mm[c]*(-TWO*(-(Th[a][c]*Th[c][a]) + Xi[a][c])*(-(Th[a][c]*Th[c][a]) + Xi[a][c]) + Th[a][c]*Th[c][a]*(-(Th[a][c]*Th[c][a]) + EIGHT*Xi[a][c])*y[c][a] + ps[a]*Th[c][a]*Th[c][a]*(TWO + THREE*y[c][a]) + ps[c]*(-(ps[a]*y[c][a]) + Th[a][c]*Th[a][c]*(TWO + THREE*y[c][a])))) - dmm[a]*mm[c]*r[a][c]*y[c][a]*(ONE + y[c][a])*(-TWO*ps[c]*ps[c]*Th[a][c]*Th[a][c] - FOUR*Th[c][a]*Th[c][a]*Xi[a][c]*Xi[a][c] + TWO*ps[c]*Xi[a][c]*(-TWO*Th[a][c]*Th[c][a] + Xi[a][c]) + mm[c]*mm[c]*(-TWO*(-(Th[a][c]*Th[c][a]) + Xi[a][c])*(-(Th[a][c]*Th[c][a]) + Xi[a][c]) + Th[a][c]*Th[c][a]*(-(Th[a][c]*Th[c][a]) + EIGHT*Xi[a][c])*y[c][a] + ps[a]*Th[c][a]*Th[c][a]*(TWO + THREE*y[c][a]) + ps[c]*(-(ps[a]*y[c][a]) + Th[a][c]*Th[a][c]*(TWO + THREE*y[c][a])))) + mm[a]*r[a][c]*y[c][a]*(ONE + y[c][a])*(TWO*dps[c]*mm[c]*mm[c]*mm[c]*Th[a][c]*Th[a][c] + FOUR*ps[c]*ps[c]*Th[a][c]*(-(mm[c]*dTh[a][c]) + dmm[c]*Th[a][c]) - FOUR*mm[c]*mm[c]*mm[c]*dXi[a][c]*Xi[a][c] + FOUR*mm[c]*mm[c]*mm[c]*dTh[c][a]*Th[a][c]*Xi[a][c] + TWO*dps[c]*mm[c]*Xi[a][c]*Xi[a][c] - dps[c]*mm[c]*mm[c]*mm[c]*ps[a]*y[c][a] + THREE*dps[c]*mm[c]*mm[c]*mm[c]*Th[a][c]*Th[a][c]*y[c][a] + EIGHT*mm[c]*mm[c]*mm[c]*dTh[c][a]*Th[a][c]*Xi[a][c]*y[c][a] + Th[c][a]*Th[c][a]*(-EIGHT*mm[c]*dXi[a][c]*Xi[a][c] + EIGHT*dmm[c]*Xi[a][c]*Xi[a][c] + mm[c]*mm[c]*mm[c]*(dy[c][a]*(THREE*ps[a] - Th[a][c]*Th[a][c]) - TWO*dTh[a][c]*Th[a][c]*(TWO + y[c][a]) + dps[a]*(TWO + THREE*y[c][a]))) + ps[c]*((-FOUR*dps[c]*mm[c] + THREE*mm[c]*mm[c]*mm[c]*dy[c][a])*Th[a][c]*Th[a][c] + FOUR*mm[c]*(dXi[a][c] - dTh[a][c]*Th[c][a])*Xi[a][c] - FOUR*dmm[c]*Xi[a][c]*Xi[a][c] - mm[c]*mm[c]*mm[c]*(ps[a]*dy[c][a] + dps[a]*y[c][a]) + Th[a][c]*(-FOUR*mm[c]*dTh[c][a]*Xi[a][c] + Th[c][a]*(-FOUR*mm[c]*dXi[a][c] + EIGHT*dmm[c]*Xi[a][c]) + TWO*mm[c]*mm[c]*mm[c]*dTh[a][c]*(TWO + THREE*y[c][a]))) + Th[c][a]*(-FOUR*mm[c]*Xi[a][c]*(dps[c]*Th[a][c] + TWO*dTh[c][a]*Xi[a][c]) + mm[c]*mm[c]*mm[c]*(FOUR*dXi[a][c]*Th[a][c]*(ONE + TWO*y[c][a]) + FOUR*Xi[a][c]*(TWO*dy[c][a]*Th[a][c] + dTh[a][c]*(ONE + TWO*y[c][a])) + TWO*dTh[c][a]*(-(Th[a][c]*Th[a][c]*(TWO + y[c][a])) + ps[a]*(TWO + THREE*y[c][a]))))))/(mm[a]*mm[a]*mm[c]*mm[c]*mm[c]*mm[c]*r[a][c]*r[a][c]*y[c][a]*y[c][a]*(ONE + y[c][a])*(ONE + y[c][a])*(ONE + y[c][a]))));
+                dH[3] -= (gravity*QUARTER)*(-((TWO*En[a]*En[c]*dy[c][a]*r[a][c]*y[c][a]*(TWO*ps[c]*ps[c]*Th[a][c]*Th[a][c] + FOUR*ps[c]*Th[a][c]*Th[c][a]*Xi[a][c] - TWO*(ps[c] - TWO*Th[c][a]*Th[c][a])*Xi[a][c]*Xi[a][c] + En[c]*En[c]*(TWO*(-(Th[a][c]*Th[c][a]) + Xi[a][c])*(-(Th[a][c]*Th[c][a]) + Xi[a][c]) + Th[a][c]*Th[c][a]*(Th[a][c]*Th[c][a] - EIGHT*Xi[a][c])*y[c][a] - ps[a]*Th[c][a]*Th[c][a]*(TWO + THREE*y[c][a]) + ps[c]*(ps[a]*y[c][a] - Th[a][c]*Th[a][c]*(TWO + THREE*y[c][a])))) + dEn[c]*En[a]*r[a][c]*y[c][a]*(ONE + y[c][a])*(TWO*ps[c]*ps[c]*Th[a][c]*Th[a][c] + FOUR*ps[c]*Th[a][c]*Th[c][a]*Xi[a][c] - TWO*(ps[c] - TWO*Th[c][a]*Th[c][a])*Xi[a][c]*Xi[a][c] + En[c]*En[c]*(TWO*(-(Th[a][c]*Th[c][a]) + Xi[a][c])*(-(Th[a][c]*Th[c][a]) + Xi[a][c]) + Th[a][c]*Th[c][a]*(Th[a][c]*Th[c][a] - EIGHT*Xi[a][c])*y[c][a] - ps[a]*Th[c][a]*Th[c][a]*(TWO + THREE*y[c][a]) + ps[c]*(ps[a]*y[c][a] - Th[a][c]*Th[a][c]*(TWO + THREE*y[c][a])))) - En[a]*En[c]*dy[c][a]*r[a][c]*(ONE + y[c][a])*(-TWO*ps[c]*ps[c]*Th[a][c]*Th[a][c] - FOUR*Th[c][a]*Th[c][a]*Xi[a][c]*Xi[a][c] + TWO*ps[c]*Xi[a][c]*(-TWO*Th[a][c]*Th[c][a] + Xi[a][c]) + En[c]*En[c]*(-TWO*(-(Th[a][c]*Th[c][a]) + Xi[a][c])*(-(Th[a][c]*Th[c][a]) + Xi[a][c]) + Th[a][c]*Th[c][a]*(-(Th[a][c]*Th[c][a]) + EIGHT*Xi[a][c])*y[c][a] + ps[a]*Th[c][a]*Th[c][a]*(TWO + THREE*y[c][a]) + ps[c]*(-(ps[a]*y[c][a]) + Th[a][c]*Th[a][c]*(TWO + THREE*y[c][a])))) - En[a]*En[c]*dr[a][c]*y[c][a]*(ONE + y[c][a])*(-TWO*ps[c]*ps[c]*Th[a][c]*Th[a][c] - FOUR*Th[c][a]*Th[c][a]*Xi[a][c]*Xi[a][c] + TWO*ps[c]*Xi[a][c]*(-TWO*Th[a][c]*Th[c][a] + Xi[a][c]) + En[c]*En[c]*(-TWO*(-(Th[a][c]*Th[c][a]) + Xi[a][c])*(-(Th[a][c]*Th[c][a]) + Xi[a][c]) + Th[a][c]*Th[c][a]*(-(Th[a][c]*Th[c][a]) + EIGHT*Xi[a][c])*y[c][a] + ps[a]*Th[c][a]*Th[c][a]*(TWO + THREE*y[c][a]) + ps[c]*(-(ps[a]*y[c][a]) + Th[a][c]*Th[a][c]*(TWO + THREE*y[c][a])))) - dEn[a]*En[c]*r[a][c]*y[c][a]*(ONE + y[c][a])*(-TWO*ps[c]*ps[c]*Th[a][c]*Th[a][c] - FOUR*Th[c][a]*Th[c][a]*Xi[a][c]*Xi[a][c] + TWO*ps[c]*Xi[a][c]*(-TWO*Th[a][c]*Th[c][a] + Xi[a][c]) + En[c]*En[c]*(-TWO*(-(Th[a][c]*Th[c][a]) + Xi[a][c])*(-(Th[a][c]*Th[c][a]) + Xi[a][c]) + Th[a][c]*Th[c][a]*(-(Th[a][c]*Th[c][a]) + EIGHT*Xi[a][c])*y[c][a] + ps[a]*Th[c][a]*Th[c][a]*(TWO + THREE*y[c][a]) + ps[c]*(-(ps[a]*y[c][a]) + Th[a][c]*Th[a][c]*(TWO + THREE*y[c][a])))) + En[a]*r[a][c]*y[c][a]*(ONE + y[c][a])*(TWO*dps[c]*En[c]*En[c]*En[c]*Th[a][c]*Th[a][c] + FOUR*ps[c]*ps[c]*Th[a][c]*(-(En[c]*dTh[a][c]) + dEn[c]*Th[a][c]) - FOUR*En[c]*En[c]*En[c]*dXi[a][c]*Xi[a][c] + FOUR*En[c]*En[c]*En[c]*dTh[c][a]*Th[a][c]*Xi[a][c] + TWO*dps[c]*En[c]*Xi[a][c]*Xi[a][c] - dps[c]*En[c]*En[c]*En[c]*ps[a]*y[c][a] + THREE*dps[c]*En[c]*En[c]*En[c]*Th[a][c]*Th[a][c]*y[c][a] + EIGHT*En[c]*En[c]*En[c]*dTh[c][a]*Th[a][c]*Xi[a][c]*y[c][a] + Th[c][a]*Th[c][a]*(-EIGHT*En[c]*dXi[a][c]*Xi[a][c] + EIGHT*dEn[c]*Xi[a][c]*Xi[a][c] + En[c]*En[c]*En[c]*(dy[c][a]*(THREE*ps[a] - Th[a][c]*Th[a][c]) - TWO*dTh[a][c]*Th[a][c]*(TWO + y[c][a]) + dps[a]*(TWO + THREE*y[c][a]))) + ps[c]*((-FOUR*dps[c]*En[c] + THREE*En[c]*En[c]*En[c]*dy[c][a])*Th[a][c]*Th[a][c] + FOUR*En[c]*(dXi[a][c] - dTh[a][c]*Th[c][a])*Xi[a][c] - FOUR*dEn[c]*Xi[a][c]*Xi[a][c] - En[c]*En[c]*En[c]*(ps[a]*dy[c][a] + dps[a]*y[c][a]) + Th[a][c]*(-FOUR*En[c]*dTh[c][a]*Xi[a][c] + Th[c][a]*(-FOUR*En[c]*dXi[a][c] + EIGHT*dEn[c]*Xi[a][c]) + TWO*En[c]*En[c]*En[c]*dTh[a][c]*(TWO + THREE*y[c][a]))) + Th[c][a]*(-FOUR*En[c]*Xi[a][c]*(dps[c]*Th[a][c] + TWO*dTh[c][a]*Xi[a][c]) + En[c]*En[c]*En[c]*(FOUR*dXi[a][c]*Th[a][c]*(ONE + TWO*y[c][a]) + FOUR*Xi[a][c]*(TWO*dy[c][a]*Th[a][c] + dTh[a][c]*(ONE + TWO*y[c][a])) + TWO*dTh[c][a]*(-(Th[a][c]*Th[a][c]*(TWO + y[c][a])) + ps[a]*(TWO + THREE*y[c][a]))))))/(En[a]*En[a]*En[c]*En[c]*En[c]*En[c]*r[a][c]*r[a][c]*y[c][a]*y[c][a]*(ONE + y[c][a])*(ONE + y[c][a])*(ONE + y[c][a]))));
                 dH[0] += HALF*gravity*mass[a]*mass[c]*dr[a][c]/(r[a][c]*r[a][c]);
             }
             else {
                 PRECISION signTh = Sign(Th[c][a]);
-                dH[3] -= (gravity*QUARTER)*(TWO*mm[a]*ps[c]*dr[a][c]*(ONE + y[c][a])*(EIGHT*signTh*sqrt(ps[c])*Th[a][c]*Xi[a][c]*y[c][a] - FOUR*Xi[a][c]*Xi[a][c]*y[c][a] - ps[c]*Th[a][c]*Th[a][c]*(NEGATIVEONE + y[c][a])*(THREE + y[c][a]) +  ps[a]*ps[c]*(ONE + y[c][a])*(NEGATIVEONE + THREE*y[c][a])) + r[a][c]*(dps[c]*mm[a]*(ONE + y[c][a])*(EIGHT*signTh*sqrt(ps[c])*Th[a][c]*Xi[a][c]*y[c][a] - TWO*SIX*Xi[a][c]*Xi[a][c]*y[c][a] - ps[c]*Th[a][c]*Th[a][c]*(THREE + y[c][a]*(TWO + y[c][a])) + ps[a]*ps[c]*(ONE + y[c][a]*(TWO + THREE*y[c][a]))) - TWO*(dps[a]*mm[a]*ps[c]*ps[c]*(ONE + y[c][a])*(ONE + y[c][a])*(NEGATIVEONE + THREE*y[c][a]) + dmm[a]*ps[c]*(ONE + y[c][a])*(-EIGHT*signTh*sqrt(ps[c])*Th[a][c]*Xi[a][c]*y[c][a] + FOUR*Xi[a][c]*Xi[a][c]*y[c][a] + ps[c]*Th[a][c]*Th[a][c]*(NEGATIVEONE + y[c][a])*(THREE + y[c][a]) - ps[a]*ps[c]*(ONE + y[c][a])*(NEGATIVEONE + THREE*y[c][a])) + TWO*mm[a]*sqrt(ps[c])*(dTh[c][a]*(ONE + y[c][a])*(FOUR*sqrt(ps[c])*Th[a][c]*Xi[a][c] - FOUR*signTh*Xi[a][c]*Xi[a][c] - signTh*ps[c]*Th[a][c]*Th[a][c]*(TWO + y[c][a]) + signTh*ps[a]*ps[c]*(TWO + THREE*y[c][a])) + sqrt(ps[c])*(FOUR*dXi[a][c]*(signTh*sqrt(ps[c])*Th[a][c] - Xi[a][c])*y[c][a]*(ONE + y[c][a]) - sqrt(ps[c])*dTh[a][c]*(ONE + y[c][a])*(-FOUR*signTh*Xi[a][c]*y[c][a] + sqrt(ps[c])*Th[a][c]*(NEGATIVEONE + y[c][a])*(THREE + y[c][a])) + dy[c][a]*(-EIGHT*signTh*sqrt(ps[c])*Th[a][c]*Xi[a][c]*y[c][a] + TWO*Xi[a][c]*Xi[a][c]*(ONE + THREE*y[c][a]) + ps[c]*(-THREE*ps[a]*y[c][a]*(ONE + y[c][a]) + Th[a][c]*Th[a][c]*(-TWO + y[c][a]*(THREE + y[c][a])))))))))/(TWO*mm[a]*mm[a]*sqrt(ps[c])*ps[c]*r[a][c]*r[a][c]*(ONE + y[c][a])*(ONE + y[c][a])*(ONE + y[c][a]));
+                dH[3] -= (gravity*QUARTER)*(TWO*En[a]*ps[c]*dr[a][c]*(ONE + y[c][a])*(EIGHT*signTh*sqrt(ps[c])*Th[a][c]*Xi[a][c]*y[c][a] - FOUR*Xi[a][c]*Xi[a][c]*y[c][a] - ps[c]*Th[a][c]*Th[a][c]*(NEGATIVEONE + y[c][a])*(THREE + y[c][a]) +  ps[a]*ps[c]*(ONE + y[c][a])*(NEGATIVEONE + THREE*y[c][a])) + r[a][c]*(dps[c]*En[a]*(ONE + y[c][a])*(EIGHT*signTh*sqrt(ps[c])*Th[a][c]*Xi[a][c]*y[c][a] - TWO*SIX*Xi[a][c]*Xi[a][c]*y[c][a] - ps[c]*Th[a][c]*Th[a][c]*(THREE + y[c][a]*(TWO + y[c][a])) + ps[a]*ps[c]*(ONE + y[c][a]*(TWO + THREE*y[c][a]))) - TWO*(dps[a]*En[a]*ps[c]*ps[c]*(ONE + y[c][a])*(ONE + y[c][a])*(NEGATIVEONE + THREE*y[c][a]) + dEn[a]*ps[c]*(ONE + y[c][a])*(-EIGHT*signTh*sqrt(ps[c])*Th[a][c]*Xi[a][c]*y[c][a] + FOUR*Xi[a][c]*Xi[a][c]*y[c][a] + ps[c]*Th[a][c]*Th[a][c]*(NEGATIVEONE + y[c][a])*(THREE + y[c][a]) - ps[a]*ps[c]*(ONE + y[c][a])*(NEGATIVEONE + THREE*y[c][a])) + TWO*En[a]*sqrt(ps[c])*(dTh[c][a]*(ONE + y[c][a])*(FOUR*sqrt(ps[c])*Th[a][c]*Xi[a][c] - FOUR*signTh*Xi[a][c]*Xi[a][c] - signTh*ps[c]*Th[a][c]*Th[a][c]*(TWO + y[c][a]) + signTh*ps[a]*ps[c]*(TWO + THREE*y[c][a])) + sqrt(ps[c])*(FOUR*dXi[a][c]*(signTh*sqrt(ps[c])*Th[a][c] - Xi[a][c])*y[c][a]*(ONE + y[c][a]) - sqrt(ps[c])*dTh[a][c]*(ONE + y[c][a])*(-FOUR*signTh*Xi[a][c]*y[c][a] + sqrt(ps[c])*Th[a][c]*(NEGATIVEONE + y[c][a])*(THREE + y[c][a])) + dy[c][a]*(-EIGHT*signTh*sqrt(ps[c])*Th[a][c]*Xi[a][c]*y[c][a] + TWO*Xi[a][c]*Xi[a][c]*(ONE + THREE*y[c][a]) + ps[c]*(-THREE*ps[a]*y[c][a]*(ONE + y[c][a]) + Th[a][c]*Th[a][c]*(-TWO + y[c][a]*(THREE + y[c][a])))))))))/(TWO*En[a]*En[a]*sqrt(ps[c])*ps[c]*r[a][c]*r[a][c]*(ONE + y[c][a])*(ONE + y[c][a])*(ONE + y[c][a]));
             }
         }
     }
     for(int b=0; b<N; b++) {
         if(b!=c) {
-            dH[1] -= (gravity*HALF)*((-(mm[c]*mm[b]*(mm[b]*mm[b]*ps[c] + mm[c]*mm[c]*(mm[b]*mm[b] + ps[b]))*dr[c][b]) + (-(dmm[c]*mm[b]*mm[b]*mm[b]*ps[c]) + mm[c]*mm[b]*mm[b]*(dps[c]*mm[b] + dmm[b]*ps[c]) + mm[c]*mm[c]*mm[c]*(dps[b]*mm[b] + dmm[b]*(mm[b]*mm[b] - ps[b])) + dmm[c]*mm[c]*mm[c]*mm[b]*(mm[b]*mm[b] + ps[b]))*r[c][b])/(mm[c]*mm[c]*mm[b]*mm[b]*r[c][b]*r[c][b]));
+            dH[1] -= (gravity*HALF)*((-(En[c]*En[b]*(En[b]*En[b]*ps[c] + En[c]*En[c]*(En[b]*En[b] + ps[b]))*dr[c][b]) + (-(dEn[c]*En[b]*En[b]*En[b]*ps[c]) + En[c]*En[b]*En[b]*(dps[c]*En[b] + dEn[b]*ps[c]) + En[c]*En[c]*En[c]*(dps[b]*En[b] + dEn[b]*(En[b]*En[b] - ps[b])) + dEn[c]*En[c]*En[c]*En[b]*(En[b]*En[b] + ps[b]))*r[c][b])/(En[c]*En[c]*En[b]*En[b]*r[c][b]*r[c][b]));
             dH[2] += (gravity*QUARTER)*((SEVEN*dXi[c][b]*r[c][b] - dTh[b][c]*r[c][b]*Th[c][b] - dTh[c][b]*r[c][b]*Th[b][c] + dr[c][b]*Th[c][b]*Th[b][c] - SEVEN*dr[c][b]*Xi[c][b])/(r[c][b]*r[c][b]));
 
             if(mass[b] > ZERO) {
-                dH[3] -= (gravity*QUARTER)*(-((TWO*mm[c]*mm[b]*dy[b][c]*r[c][b]*y[b][c]*(TWO*ps[b]*ps[b]*Th[c][b]*Th[c][b] + FOUR*ps[b]*Th[c][b]*Th[b][c]*Xi[c][b] - TWO*(ps[b] - TWO*Th[b][c]*Th[b][c])*Xi[c][b]*Xi[c][b] + mm[b]*mm[b]*(TWO*(-(Th[c][b]*Th[b][c]) + Xi[c][b])*(-(Th[c][b]*Th[b][c]) + Xi[c][b]) + Th[c][b]*Th[b][c]*(Th[c][b]*Th[b][c] - EIGHT*Xi[c][b])*y[b][c] - ps[c]*Th[b][c]*Th[b][c]*(TWO + THREE*y[b][c]) + ps[b]*(ps[c]*y[b][c] - Th[c][b]*Th[c][b]*(TWO + THREE*y[b][c])))) + dmm[b]*mm[c]*r[c][b]*y[b][c]*(ONE + y[b][c])*(TWO*ps[b]*ps[b]*Th[c][b]*Th[c][b] + FOUR*ps[b]*Th[c][b]*Th[b][c]*Xi[c][b] - TWO*(ps[b] - TWO*Th[b][c]*Th[b][c])*Xi[c][b]*Xi[c][b] + mm[b]*mm[b]*(TWO*(-(Th[c][b]*Th[b][c]) + Xi[c][b])*(-(Th[c][b]*Th[b][c]) + Xi[c][b]) + Th[c][b]*Th[b][c]*(Th[c][b]*Th[b][c] - EIGHT*Xi[c][b])*y[b][c] - ps[c]*Th[b][c]*Th[b][c]*(TWO + THREE*y[b][c]) + ps[b]*(ps[c]*y[b][c] - Th[c][b]*Th[c][b]*(TWO + THREE*y[b][c])))) - mm[c]*mm[b]*dy[b][c]*r[c][b]*(ONE + y[b][c])*(-TWO*ps[b]*ps[b]*Th[c][b]*Th[c][b] - FOUR*Th[b][c]*Th[b][c]*Xi[c][b]*Xi[c][b] + TWO*ps[b]*Xi[c][b]*(-TWO*Th[c][b]*Th[b][c] + Xi[c][b]) + mm[b]*mm[b]*(-TWO*(-(Th[c][b]*Th[b][c]) + Xi[c][b])*(-(Th[c][b]*Th[b][c]) + Xi[c][b]) + Th[c][b]*Th[b][c]*(-(Th[c][b]*Th[b][c]) + EIGHT*Xi[c][b])*y[b][c] + ps[c]*Th[b][c]*Th[b][c]*(TWO + THREE*y[b][c]) + ps[b]*(-(ps[c]*y[b][c]) + Th[c][b]*Th[c][b]*(TWO + THREE*y[b][c])))) - mm[c]*mm[b]*dr[c][b]*y[b][c]*(ONE + y[b][c])*(-TWO*ps[b]*ps[b]*Th[c][b]*Th[c][b] - FOUR*Th[b][c]*Th[b][c]*Xi[c][b]*Xi[c][b] + TWO*ps[b]*Xi[c][b]*(-TWO*Th[c][b]*Th[b][c] + Xi[c][b]) + mm[b]*mm[b]*(-TWO*(-(Th[c][b]*Th[b][c]) + Xi[c][b])*(-(Th[c][b]*Th[b][c]) + Xi[c][b]) + Th[c][b]*Th[b][c]*(-(Th[c][b]*Th[b][c]) + EIGHT*Xi[c][b])*y[b][c] + ps[c]*Th[b][c]*Th[b][c]*(TWO + THREE*y[b][c]) + ps[b]*(-(ps[c]*y[b][c]) + Th[c][b]*Th[c][b]*(TWO + THREE*y[b][c])))) - dmm[c]*mm[b]*r[c][b]*y[b][c]*(ONE + y[b][c])*(-TWO*ps[b]*ps[b]*Th[c][b]*Th[c][b] - FOUR*Th[b][c]*Th[b][c]*Xi[c][b]*Xi[c][b] + TWO*ps[b]*Xi[c][b]*(-TWO*Th[c][b]*Th[b][c] + Xi[c][b]) + mm[b]*mm[b]*(-TWO*(-(Th[c][b]*Th[b][c]) + Xi[c][b])*(-(Th[c][b]*Th[b][c]) + Xi[c][b]) + Th[c][b]*Th[b][c]*(-(Th[c][b]*Th[b][c]) + EIGHT*Xi[c][b])*y[b][c] + ps[c]*Th[b][c]*Th[b][c]*(TWO + THREE*y[b][c]) + ps[b]*(-(ps[c]*y[b][c]) + Th[c][b]*Th[c][b]*(TWO + THREE*y[b][c])))) + mm[c]*r[c][b]*y[b][c]*(ONE + y[b][c])*(TWO*dps[b]*mm[b]*mm[b]*mm[b]*Th[c][b]*Th[c][b] + FOUR*ps[b]*ps[b]*Th[c][b]*(-(mm[b]*dTh[c][b]) + dmm[b]*Th[c][b]) - FOUR*mm[b]*mm[b]*mm[b]*dXi[c][b]*Xi[c][b] + FOUR*mm[b]*mm[b]*mm[b]*dTh[b][c]*Th[c][b]*Xi[c][b] + TWO*dps[b]*mm[b]*Xi[c][b]*Xi[c][b] - dps[b]*mm[b]*mm[b]*mm[b]*ps[c]*y[b][c] + THREE*dps[b]*mm[b]*mm[b]*mm[b]*Th[c][b]*Th[c][b]*y[b][c] + EIGHT*mm[b]*mm[b]*mm[b]*dTh[b][c]*Th[c][b]*Xi[c][b]*y[b][c] + Th[b][c]*Th[b][c]*(-EIGHT*mm[b]*dXi[c][b]*Xi[c][b] + EIGHT*dmm[b]*Xi[c][b]*Xi[c][b] + mm[b]*mm[b]*mm[b]*(dy[b][c]*(THREE*ps[c] - Th[c][b]*Th[c][b]) - TWO*dTh[c][b]*Th[c][b]*(TWO + y[b][c]) + dps[c]*(TWO + THREE*y[b][c]))) + ps[b]*((-FOUR*dps[b]*mm[b] + THREE*mm[b]*mm[b]*mm[b]*dy[b][c])*Th[c][b]*Th[c][b] + FOUR*mm[b]*(dXi[c][b] - dTh[c][b]*Th[b][c])*Xi[c][b] - FOUR*dmm[b]*Xi[c][b]*Xi[c][b] - mm[b]*mm[b]*mm[b]*(ps[c]*dy[b][c] + dps[c]*y[b][c]) + Th[c][b]*(-FOUR*mm[b]*dTh[b][c]*Xi[c][b] + Th[b][c]*(-FOUR*mm[b]*dXi[c][b] + EIGHT*dmm[b]*Xi[c][b]) + TWO*mm[b]*mm[b]*mm[b]*dTh[c][b]*(TWO + THREE*y[b][c]))) + Th[b][c]*(-FOUR*mm[b]*Xi[c][b]*(dps[b]*Th[c][b] + TWO*dTh[b][c]*Xi[c][b]) + mm[b]*mm[b]*mm[b]*(FOUR*dXi[c][b]*Th[c][b]*(ONE + TWO*y[b][c]) + FOUR*Xi[c][b]*(TWO*dy[b][c]*Th[c][b] + dTh[c][b]*(ONE + TWO*y[b][c])) + TWO*dTh[b][c]*(-(Th[c][b]*Th[c][b]*(TWO + y[b][c])) + ps[c]*(TWO + THREE*y[b][c]))))))/(mm[c]*mm[c]*mm[b]*mm[b]*mm[b]*mm[b]*r[c][b]*r[c][b]*y[b][c]*y[b][c]*(ONE + y[b][c])*(ONE + y[b][c])*(ONE + y[b][c]))));
+                dH[3] -= (gravity*QUARTER)*(-((TWO*En[c]*En[b]*dy[b][c]*r[c][b]*y[b][c]*(TWO*ps[b]*ps[b]*Th[c][b]*Th[c][b] + FOUR*ps[b]*Th[c][b]*Th[b][c]*Xi[c][b] - TWO*(ps[b] - TWO*Th[b][c]*Th[b][c])*Xi[c][b]*Xi[c][b] + En[b]*En[b]*(TWO*(-(Th[c][b]*Th[b][c]) + Xi[c][b])*(-(Th[c][b]*Th[b][c]) + Xi[c][b]) + Th[c][b]*Th[b][c]*(Th[c][b]*Th[b][c] - EIGHT*Xi[c][b])*y[b][c] - ps[c]*Th[b][c]*Th[b][c]*(TWO + THREE*y[b][c]) + ps[b]*(ps[c]*y[b][c] - Th[c][b]*Th[c][b]*(TWO + THREE*y[b][c])))) + dEn[b]*En[c]*r[c][b]*y[b][c]*(ONE + y[b][c])*(TWO*ps[b]*ps[b]*Th[c][b]*Th[c][b] + FOUR*ps[b]*Th[c][b]*Th[b][c]*Xi[c][b] - TWO*(ps[b] - TWO*Th[b][c]*Th[b][c])*Xi[c][b]*Xi[c][b] + En[b]*En[b]*(TWO*(-(Th[c][b]*Th[b][c]) + Xi[c][b])*(-(Th[c][b]*Th[b][c]) + Xi[c][b]) + Th[c][b]*Th[b][c]*(Th[c][b]*Th[b][c] - EIGHT*Xi[c][b])*y[b][c] - ps[c]*Th[b][c]*Th[b][c]*(TWO + THREE*y[b][c]) + ps[b]*(ps[c]*y[b][c] - Th[c][b]*Th[c][b]*(TWO + THREE*y[b][c])))) - En[c]*En[b]*dy[b][c]*r[c][b]*(ONE + y[b][c])*(-TWO*ps[b]*ps[b]*Th[c][b]*Th[c][b] - FOUR*Th[b][c]*Th[b][c]*Xi[c][b]*Xi[c][b] + TWO*ps[b]*Xi[c][b]*(-TWO*Th[c][b]*Th[b][c] + Xi[c][b]) + En[b]*En[b]*(-TWO*(-(Th[c][b]*Th[b][c]) + Xi[c][b])*(-(Th[c][b]*Th[b][c]) + Xi[c][b]) + Th[c][b]*Th[b][c]*(-(Th[c][b]*Th[b][c]) + EIGHT*Xi[c][b])*y[b][c] + ps[c]*Th[b][c]*Th[b][c]*(TWO + THREE*y[b][c]) + ps[b]*(-(ps[c]*y[b][c]) + Th[c][b]*Th[c][b]*(TWO + THREE*y[b][c])))) - En[c]*En[b]*dr[c][b]*y[b][c]*(ONE + y[b][c])*(-TWO*ps[b]*ps[b]*Th[c][b]*Th[c][b] - FOUR*Th[b][c]*Th[b][c]*Xi[c][b]*Xi[c][b] + TWO*ps[b]*Xi[c][b]*(-TWO*Th[c][b]*Th[b][c] + Xi[c][b]) + En[b]*En[b]*(-TWO*(-(Th[c][b]*Th[b][c]) + Xi[c][b])*(-(Th[c][b]*Th[b][c]) + Xi[c][b]) + Th[c][b]*Th[b][c]*(-(Th[c][b]*Th[b][c]) + EIGHT*Xi[c][b])*y[b][c] + ps[c]*Th[b][c]*Th[b][c]*(TWO + THREE*y[b][c]) + ps[b]*(-(ps[c]*y[b][c]) + Th[c][b]*Th[c][b]*(TWO + THREE*y[b][c])))) - dEn[c]*En[b]*r[c][b]*y[b][c]*(ONE + y[b][c])*(-TWO*ps[b]*ps[b]*Th[c][b]*Th[c][b] - FOUR*Th[b][c]*Th[b][c]*Xi[c][b]*Xi[c][b] + TWO*ps[b]*Xi[c][b]*(-TWO*Th[c][b]*Th[b][c] + Xi[c][b]) + En[b]*En[b]*(-TWO*(-(Th[c][b]*Th[b][c]) + Xi[c][b])*(-(Th[c][b]*Th[b][c]) + Xi[c][b]) + Th[c][b]*Th[b][c]*(-(Th[c][b]*Th[b][c]) + EIGHT*Xi[c][b])*y[b][c] + ps[c]*Th[b][c]*Th[b][c]*(TWO + THREE*y[b][c]) + ps[b]*(-(ps[c]*y[b][c]) + Th[c][b]*Th[c][b]*(TWO + THREE*y[b][c])))) + En[c]*r[c][b]*y[b][c]*(ONE + y[b][c])*(TWO*dps[b]*En[b]*En[b]*En[b]*Th[c][b]*Th[c][b] + FOUR*ps[b]*ps[b]*Th[c][b]*(-(En[b]*dTh[c][b]) + dEn[b]*Th[c][b]) - FOUR*En[b]*En[b]*En[b]*dXi[c][b]*Xi[c][b] + FOUR*En[b]*En[b]*En[b]*dTh[b][c]*Th[c][b]*Xi[c][b] + TWO*dps[b]*En[b]*Xi[c][b]*Xi[c][b] - dps[b]*En[b]*En[b]*En[b]*ps[c]*y[b][c] + THREE*dps[b]*En[b]*En[b]*En[b]*Th[c][b]*Th[c][b]*y[b][c] + EIGHT*En[b]*En[b]*En[b]*dTh[b][c]*Th[c][b]*Xi[c][b]*y[b][c] + Th[b][c]*Th[b][c]*(-EIGHT*En[b]*dXi[c][b]*Xi[c][b] + EIGHT*dEn[b]*Xi[c][b]*Xi[c][b] + En[b]*En[b]*En[b]*(dy[b][c]*(THREE*ps[c] - Th[c][b]*Th[c][b]) - TWO*dTh[c][b]*Th[c][b]*(TWO + y[b][c]) + dps[c]*(TWO + THREE*y[b][c]))) + ps[b]*((-FOUR*dps[b]*En[b] + THREE*En[b]*En[b]*En[b]*dy[b][c])*Th[c][b]*Th[c][b] + FOUR*En[b]*(dXi[c][b] - dTh[c][b]*Th[b][c])*Xi[c][b] - FOUR*dEn[b]*Xi[c][b]*Xi[c][b] - En[b]*En[b]*En[b]*(ps[c]*dy[b][c] + dps[c]*y[b][c]) + Th[c][b]*(-FOUR*En[b]*dTh[b][c]*Xi[c][b] + Th[b][c]*(-FOUR*En[b]*dXi[c][b] + EIGHT*dEn[b]*Xi[c][b]) + TWO*En[b]*En[b]*En[b]*dTh[c][b]*(TWO + THREE*y[b][c]))) + Th[b][c]*(-FOUR*En[b]*Xi[c][b]*(dps[b]*Th[c][b] + TWO*dTh[b][c]*Xi[c][b]) + En[b]*En[b]*En[b]*(FOUR*dXi[c][b]*Th[c][b]*(ONE + TWO*y[b][c]) + FOUR*Xi[c][b]*(TWO*dy[b][c]*Th[c][b] + dTh[c][b]*(ONE + TWO*y[b][c])) + TWO*dTh[b][c]*(-(Th[c][b]*Th[c][b]*(TWO + y[b][c])) + ps[c]*(TWO + THREE*y[b][c]))))))/(En[c]*En[c]*En[b]*En[b]*En[b]*En[b]*r[c][b]*r[c][b]*y[b][c]*y[b][c]*(ONE + y[b][c])*(ONE + y[b][c])*(ONE + y[b][c]))));
                 dH[0] += HALF*gravity*mass[c]*mass[b]*dr[c][b]/(r[c][b]*r[c][b]);
             }
             else {
                 PRECISION signTh = Sign(Th[b][c]);
-                dH[3] -= (gravity*QUARTER)*(TWO*mm[c]*ps[b]*dr[c][b]*(ONE + y[b][c])*(EIGHT*signTh*sqrt(ps[b])*Th[c][b]*Xi[c][b]*y[b][c] - FOUR*Xi[c][b]*Xi[c][b]*y[b][c] - ps[b]*Th[c][b]*Th[c][b]*(NEGATIVEONE + y[b][c])*(THREE + y[b][c]) +  ps[c]*ps[b]*(ONE + y[b][c])*(NEGATIVEONE + THREE*y[b][c])) + r[c][b]*(dps[b]*mm[c]*(ONE + y[b][c])*(EIGHT*signTh*sqrt(ps[b])*Th[c][b]*Xi[c][b]*y[b][c] - TWO*SIX*Xi[c][b]*Xi[c][b]*y[b][c] - ps[b]*Th[c][b]*Th[c][b]*(THREE + y[b][c]*(TWO + y[b][c])) + ps[c]*ps[b]*(ONE + y[b][c]*(TWO + THREE*y[b][c]))) - TWO*(dps[c]*mm[c]*ps[b]*ps[b]*(ONE + y[b][c])*(ONE + y[b][c])*(NEGATIVEONE + THREE*y[b][c]) + dmm[c]*ps[b]*(ONE + y[b][c])*(-EIGHT*signTh*sqrt(ps[b])*Th[c][b]*Xi[c][b]*y[b][c] + FOUR*Xi[c][b]*Xi[c][b]*y[b][c] + ps[b]*Th[c][b]*Th[c][b]*(NEGATIVEONE + y[b][c])*(THREE + y[b][c]) - ps[c]*ps[b]*(ONE + y[b][c])*(NEGATIVEONE + THREE*y[b][c])) + TWO*mm[c]*sqrt(ps[b])*(dTh[b][c]*(ONE + y[b][c])*(FOUR*sqrt(ps[b])*Th[c][b]*Xi[c][b] - FOUR*signTh*Xi[c][b]*Xi[c][b] - signTh*ps[b]*Th[c][b]*Th[c][b]*(TWO + y[b][c]) + signTh*ps[c]*ps[b]*(TWO + THREE*y[b][c])) + sqrt(ps[b])*(FOUR*dXi[c][b]*(signTh*sqrt(ps[b])*Th[c][b] - Xi[c][b])*y[b][c]*(ONE + y[b][c]) - sqrt(ps[b])*dTh[c][b]*(ONE + y[b][c])*(-FOUR*signTh*Xi[c][b]*y[b][c] + sqrt(ps[b])*Th[c][b]*(NEGATIVEONE + y[b][c])*(THREE + y[b][c])) + dy[b][c]*(-EIGHT*signTh*sqrt(ps[b])*Th[c][b]*Xi[c][b]*y[b][c] + TWO*Xi[c][b]*Xi[c][b]*(ONE + THREE*y[b][c]) + ps[b]*(-THREE*ps[c]*y[b][c]*(ONE + y[b][c]) + Th[c][b]*Th[c][b]*(-TWO + y[b][c]*(THREE + y[b][c])))))))))/(TWO*mm[c]*mm[c]*sqrt(ps[b])*ps[b]*r[c][b]*r[c][b]*(ONE + y[b][c])*(ONE + y[b][c])*(ONE + y[b][c]));
+                dH[3] -= (gravity*QUARTER)*(TWO*En[c]*ps[b]*dr[c][b]*(ONE + y[b][c])*(EIGHT*signTh*sqrt(ps[b])*Th[c][b]*Xi[c][b]*y[b][c] - FOUR*Xi[c][b]*Xi[c][b]*y[b][c] - ps[b]*Th[c][b]*Th[c][b]*(NEGATIVEONE + y[b][c])*(THREE + y[b][c]) +  ps[c]*ps[b]*(ONE + y[b][c])*(NEGATIVEONE + THREE*y[b][c])) + r[c][b]*(dps[b]*En[c]*(ONE + y[b][c])*(EIGHT*signTh*sqrt(ps[b])*Th[c][b]*Xi[c][b]*y[b][c] - TWO*SIX*Xi[c][b]*Xi[c][b]*y[b][c] - ps[b]*Th[c][b]*Th[c][b]*(THREE + y[b][c]*(TWO + y[b][c])) + ps[c]*ps[b]*(ONE + y[b][c]*(TWO + THREE*y[b][c]))) - TWO*(dps[c]*En[c]*ps[b]*ps[b]*(ONE + y[b][c])*(ONE + y[b][c])*(NEGATIVEONE + THREE*y[b][c]) + dEn[c]*ps[b]*(ONE + y[b][c])*(-EIGHT*signTh*sqrt(ps[b])*Th[c][b]*Xi[c][b]*y[b][c] + FOUR*Xi[c][b]*Xi[c][b]*y[b][c] + ps[b]*Th[c][b]*Th[c][b]*(NEGATIVEONE + y[b][c])*(THREE + y[b][c]) - ps[c]*ps[b]*(ONE + y[b][c])*(NEGATIVEONE + THREE*y[b][c])) + TWO*En[c]*sqrt(ps[b])*(dTh[b][c]*(ONE + y[b][c])*(FOUR*sqrt(ps[b])*Th[c][b]*Xi[c][b] - FOUR*signTh*Xi[c][b]*Xi[c][b] - signTh*ps[b]*Th[c][b]*Th[c][b]*(TWO + y[b][c]) + signTh*ps[c]*ps[b]*(TWO + THREE*y[b][c])) + sqrt(ps[b])*(FOUR*dXi[c][b]*(signTh*sqrt(ps[b])*Th[c][b] - Xi[c][b])*y[b][c]*(ONE + y[b][c]) - sqrt(ps[b])*dTh[c][b]*(ONE + y[b][c])*(-FOUR*signTh*Xi[c][b]*y[b][c] + sqrt(ps[b])*Th[c][b]*(NEGATIVEONE + y[b][c])*(THREE + y[b][c])) + dy[b][c]*(-EIGHT*signTh*sqrt(ps[b])*Th[c][b]*Xi[c][b]*y[b][c] + TWO*Xi[c][b]*Xi[c][b]*(ONE + THREE*y[b][c]) + ps[b]*(-THREE*ps[c]*y[b][c]*(ONE + y[b][c]) + Th[c][b]*Th[c][b]*(-TWO + y[b][c]*(THREE + y[b][c])))))))))/(TWO*En[c]*En[c]*sqrt(ps[b])*ps[b]*r[c][b]*r[c][b]*(ONE + y[b][c])*(ONE + y[b][c])*(ONE + y[b][c]));
             }
         }
     }

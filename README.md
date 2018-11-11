@@ -52,8 +52,7 @@ Which parts of the Hamiltonian to use:
 
 Input must be read from stdin as one line in the following format:
 
-    description,start-time,end-time,timestep,iterations,courant-number,gravitational-constant,speed-of-
-    light,number-of-particles,mass_1,qx_1,qy_1,qz_1,px_1,py_1,pz_1,mass_2,qx_2,...
+    description,start-time,end-time,timestep,iterations,courant-number,gravitational-constant,number-of-particles,mass_1,qx_1,qy_1,qz_1,px_1,py_1,pz_1,mass_2,qx_2,...
 
 
     INPUT,                  TYPE,    DESCRIPTION  
@@ -64,13 +63,14 @@ Input must be read from stdin as one line in the following format:
     iterations,             integer, upper bound of iterations (0 = unbounded)  
     courant-number,         float,   adaptive-timestep parameter (0 = off)  
     gravitational-constant, float,   you know: G  
-    speed-of-light,         float,   that'd be: c  
     number-of-particles     integer, number of interacting particles
     mass_1,                 float,   mass of particle 1  
     qx_1,                   float,   x-position of particle 1  
     ...,                    ...,     ...  
     py_3,                   float,   y-momentum of particle 3  
     ...,                    ...,     ...  
+
+NOTE: the speed of light c is assumed to have a value of 1.
 
 NOTE: the 'number-of-particles' is the number of fully interacting particles in the 
 system. Any additional particles in the input line after the first 'number-of-particles' 
@@ -107,14 +107,16 @@ this form:
 
 ## Validation
 
-To run the validation tests, see the INSTRUCTIONS file in the following directory:
+To run the validation tests, see the INSTRUCTIONS.sh file in the following directory:
 
     source/validation
     
-The INSTRUCTIONS file itself may be run as a shell script in validation directory.
+The INSTRUCTIONS.sh file itself may be run as a shell script in validation directory.
 
 The validation tests in the paper were performed using gcc 5.4.0 and GNU Awk 4.1.3;
-they may not run properly with older versions of gcc and Awk.
+they may not run properly with older versions of gcc and Awk. The latest version of
+the code (v1.1) has been tested with gcc 5.4.0, gcc 7.3.0, GNU Awk 4.1.3, and GNU
+ Awk 4.1.4.
 
 ## Debug
 

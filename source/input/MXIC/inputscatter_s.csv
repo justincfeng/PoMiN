@@ -1,2 +1,2 @@
-"Description","Start Time","End Time","Timestep","Iterations","Courant Number","Gravitational Constant","Speed of Light","Number of Particles","mass_1","qx_1","qy_1","qz_1","px_1","py_1","pz_1","mass_2","qx_2","qy_2","qz_2","px_2","py_2","pz_2"
-"CMScatter",0,6.000599880029991600128e21,6.000599880029992e16,0,0.01,1,1,2,0.01000000000000000020816681711721685132943,-2.999700059985004724224e21,-6.e15,0,0.5,0,0,0,3.000299940014995800064e21,6.e15,0,-0.5,0,0
+"Description","Start Time","End Time","Timestep","Iterations","Courant Number","Gravitational Constant","Number of Particles","mass_1","qx_1","qy_1","qz_1","px_1","py_1","pz_1","mass_2","qx_2","qy_2","qz_2","px_2","py_2","pz_2"
+"CMScatter",0,6.000599880029991600128e21,6.000599880029992e16,0,0.01,1,2,0.01000000000000000020816681711721685132943,-2.999700059985004724224e21,-6.e15,0,0.5,0,0,0,3.000299940014995800064e21,6.e15,0,-0.5,0,0

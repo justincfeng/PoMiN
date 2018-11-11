@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[     43208,       1005]
-NotebookOptionsPosition[     42571,        985]
-NotebookOutlinePosition[     42905,       1000]
-CellTagsIndexPosition[     42862,        997]
+NotebookDataLength[     42722,        988]
+NotebookOptionsPosition[     42214,        971]
+NotebookOutlinePosition[     42547,        986]
+CellTagsIndexPosition[     42504,        983]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -53,8 +53,6 @@ in the center of mass frame.",
   3.7230625865474463`*^9, 
   3.72306259094313*^9}},ExpressionUUID->"488ea4ee-fb11-409e-8dd4-\
 80d67c1b5c48"],
-
-Cell[CellGroupData[{
 
 Cell[BoxData[{
  RowBox[{"ClearAll", "\[IndentingNewLine]", 
@@ -275,10 +273,10 @@ Cell[BoxData[{
    " ", "*)"}]}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{
-   RowBox[{"Initial", "=", "9"}], ";"}], "   ", 
+   RowBox[{"Initial", "=", "8"}], ";"}], "   ", 
   RowBox[{"(*", " ", 
    RowBox[{
-   "First", " ", "9", " ", "Entries", " ", "of", " ", "Input", " ", "Line"}], 
+   "First", " ", "8", " ", "Entries", " ", "of", " ", "Input", " ", "Line"}], 
    " ", "*)"}]}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{
@@ -339,14 +337,9 @@ Cell[BoxData[{
   ";"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{
-   RowBox[{"DataArray", "[", 
-    RowBox[{"0", ",", "8"}], "]"}], "=", "\"\<Speed of Light\>\""}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{
    RowBox[{
     RowBox[{"DataArray", "[", 
-     RowBox[{"0", ",", "9"}], "]"}], "=", "\"\<Number of Particles\>\""}], 
+     RowBox[{"0", ",", "8"}], "]"}], "=", "\"\<Number of Particles\>\""}], 
    ";"}], "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"For", "[", 
@@ -727,11 +720,7 @@ Cell[BoxData[{
        RowBox[{"j", ",", "7"}], "]"}], "=", "G"}], ";", "\[IndentingNewLine]", 
      RowBox[{
       RowBox[{"DataArray", "[", 
-       RowBox[{"j", ",", "8"}], "]"}], "=", "c"}], ";", " ", 
-     "\[IndentingNewLine]", 
-     RowBox[{
-      RowBox[{"DataArray", "[", 
-       RowBox[{"j", ",", "9"}], "]"}], "=", "n"}], ";", "\[IndentingNewLine]",
+       RowBox[{"j", ",", "8"}], "]"}], "=", "n"}], ";", "\[IndentingNewLine]",
       "\[IndentingNewLine]", 
      RowBox[{"For", "[", 
       RowBox[{
@@ -973,18 +962,15 @@ Cell[BoxData[{
    3.700322510306232*^9}, {3.700323008143413*^9, 3.700323009491026*^9}, 
    3.700323054774173*^9, {3.712760607137162*^9, 3.712760627793269*^9}, 
    3.7127661068793907`*^9, 3.71311293756608*^9, 3.714934855918498*^9, {
-   3.7399678402099533`*^9, 3.739967857193039*^9}, 3.73996801258454*^9},
- CellLabel->"In[1]:=",ExpressionUUID->"06db6f8b-478f-4be9-82ca-9140d206389f"],
-
-Cell[BoxData["ClearAll"], "Output",
- CellChangeTimes->{3.7149348595644484`*^9, 3.714935074768346*^9, 
-  3.739968706818935*^9},
- CellLabel->"Out[1]=",ExpressionUUID->"bff7258a-9bf3-4453-96c4-ae905b9ca66d"]
-}, Open  ]]
+   3.7399678402099533`*^9, 3.739967857193039*^9}, 3.73996801258454*^9, {
+   3.750699616987397*^9, 3.750699623351967*^9}, 3.750699655651907*^9, {
+   3.7506999311774187`*^9, 3.750699941866971*^9}, {3.7507001962310123`*^9, 
+   3.750700196699294*^9}},
+ CellLabel->"In[1]:=",ExpressionUUID->"06db6f8b-478f-4be9-82ca-9140d206389f"]
 }, Open  ]]
 },
-WindowSize->{1294, 870},
-WindowMargins->{{Automatic, 70}, {3, Automatic}},
+WindowSize->{1294, 696},
+WindowMargins->{{9, Automatic}, {3, Automatic}},
 FrontEndVersion->"11.3 for Linux x86 (64-bit) (March 6, 2018)",
 StyleDefinitions->"Default.nb"
 ]
@@ -1002,10 +988,7 @@ Notebook[{
 Cell[CellGroupData[{
 Cell[580, 22, 604, 10, 150, "Title",ExpressionUUID->"8afa16da-a642-4f24-940e-7e9a744a8f0f"],
 Cell[1187, 34, 994, 20, 56, "Text",ExpressionUUID->"488ea4ee-fb11-409e-8dd4-80d67c1b5c48"],
-Cell[CellGroupData[{
-Cell[2206, 58, 40130, 918, 4097, "Input",ExpressionUUID->"06db6f8b-478f-4be9-82ca-9140d206389f"],
-Cell[42339, 978, 204, 3, 35, "Output",ExpressionUUID->"bff7258a-9bf3-4453-96c4-ae905b9ca66d"]
-}, Open  ]]
+Cell[2184, 56, 40014, 912, 4051, "Input",ExpressionUUID->"06db6f8b-478f-4be9-82ca-9140d206389f"]
 }, Open  ]]
 }
 ]

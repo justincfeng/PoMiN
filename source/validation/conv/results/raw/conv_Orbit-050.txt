@@ -1,5 +1,5 @@
-gcc -std=gnu99 -Wall pomin.c -lquadmath -lrt -DQUAD -o pomin
-gcc -std=gnu99 -Wall -o ./validation/conv/convergence.exe ./validation/conv/convergence.c -lquadmath
+gcc -std=gnu99  pomin.c -lquadmath -lrt -DQUAD -o pomin
+gcc -std=gnu99  -o ./validation/conv/convergence.exe ./validation/conv/convergence.c -lquadmath
 1
 2
 4

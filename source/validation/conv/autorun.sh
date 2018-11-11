@@ -6,22 +6,31 @@
 # Compile code and convergence.c script.
 make quad conv
 
-# Define an iterator over particle number.
-a=1
+# Define Initial Filenames
+FILECF=1
+FILECV=2
 
 # Read from stdin.
-while read line; do
+while read N a line; do
 
-    # Read number of particles.
-    N=2 # $(echo $line | awk -F, '{print $2+0}')
+    # Total number of particles to read
+    #    N=5 
+        # $(echo $line | awk -F, '{print $2+0}')
 
     # Print header 
-    printf "iteration,time" > $a
+    printf "iteration,time" > $FILECF
+    printf "iteration,time" > $FILECV
     for (( i=1; i<=$N; i++ )); do
         printf ',qx_%s,qy_%s,qz_%s,px_%s,py_%s,pz_%s'\
-            "$i" "$i" "$i" "$i" "$i" "$i" >> $a
+            "$i" "$i" "$i" "$i" "$i" "$i" >> $FILECF
+    if [ $i = $a ]; then
+        printf ',qx_%s,qy_%s,qz_%s,px_%s,py_%s,pz_%s'\
+            "$i" "$i" "$i" "$i" "$i" "$i" >> $FILECV
+    fi
+
     done
-    printf "\n" >> $a
+    printf "\n" >> $FILECF
+    printf "\n" >> $FILECV
 
     # Half the timestep value and run that as input.
     for (( i=1; i<=512; i=$i*2 )); do
@@ -29,16 +38,27 @@ while read line; do
         timestep=$(echo $timestep $i | awk '{printf("%.30e", $1/$2)}')
         
         echo $line | awk -F, -v OFS=, '{$4=ts; print }' ts=$timestep \
-         | ./pomin | tail -n1 >> $a
+         | ./pomin | tail -n1 >> $FILECF
 	echo $i
+
+    fileline=`tail -n 1 $FILECF`
+
+    k=$((2+6*(a-1)))
+
+    cvline=$(echo $fileline | awk -F, -v x=$k '{for(j=x+1;j<=x+6;j++){printf ",%s", $j}; printf "\n"}')
+
+    echo $i,$timestep$cvline >> $FILECV
+
     done
 
     # Print header for readability.
     printf "\nQ factors:\n"
     # Calculate convergence factors.
-    ./validation/conv/convergence.exe $a
+    ./validation/conv/convergence.exe $FILECV
 
-    ((a = a + 1))
+rm ./1
+rm ./2
+
 done
 
 ############################################################
