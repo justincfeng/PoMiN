@@ -49,6 +49,10 @@ echo 5 4 "$a8" | bash validation/conv/autorun.sh > validation/conv/results/raw/c
 #		command:
 #		grep CFiveParticles input/input.csv
 
+# NOTE: In the input file input.csv, make sure the end time is a multiple of the 
+#       timestep. Too many significant figures in the end time or timestep can
+#       ruin convergence behavior.
+
 
 
 ################################################################################
