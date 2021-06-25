@@ -107,69 +107,9 @@ this form:
 
 ## Validation
 
-To run the validation tests, see the INSTRUCTIONS.sh file in the following directory:
-
-    source/validation
-    
-The INSTRUCTIONS.sh file itself may be run as a shell script in validation directory.
-
-The validation tests in the paper were performed using gcc 5.4.0 and GNU Awk 4.1.3;
-they may not run properly with older versions of gcc and Awk. The latest version of
-the code (v1.1) has been tested with gcc 5.4.0, gcc 7.3.0, GNU Awk 4.1.3, and GNU
- Awk 4.1.4.
-
 ## Debug
 
-If the debug flag is given, some metadata and other variables are also printed:
-
-The above output will be prefixed with the time and date (formatted in
-accordance with ISO 8601: YYYY-MM-DDTHH:MM:SS) of when the program was executed
-along with the git(1) hash at that time (with an idicator of whether the
-working directory was clean or not) and which mathematical precision was used
-(double or quad). Furthermore, the standard output will be interlaced with the
-following information (identified by headers):
-
-    H1,H2,H3,dH1,dH2,dH3,qdotx_1,qdoty_1,qdotz_1,qdotx_2,...
-
-where 'H' and 'dH' are the values of the Hamiltonian (H1+H2+H3) and its
-derivative at that given time, followed by the components of the derivative of
-each particle's position along the three Cartesian axes.
-
 ## Notes
-
-+stdin+ (standard in) and +stdout+ (standard out) are special names for two
-ordinary files. To get input to (and output from) pomin all you have
-to do is write to (and read) these files; imagine your data travelling like
-this:
-
-    stdin --> pomin --> stdout
-
-Now, by default, +stdin+ is associated with your keyboard and +stdout+ is
-associated with your monitor. But typing the input by hand only to have it
-display on screen isn't very useful; so we redirect these “file descriptors“ to
-other files. For example, to redirect the output (+stdout+) to a file we write
-
-    pomin > file
-
-That right angle-bracket (>) will take the output of a command and write it to
-a file; this is known as “redirection.”
-
-Now we only need to get our input (+stdin+) from someplace better. To do this,
-we use a “pipe” (a vertical bar: |) to take the output of one command and give
-it as input to another command like so:
-
-    cat file | pomin
-
-The cat command takes the contents of a file and writes it to +stdout+ -- then
-the pipe takes this output and writes it to the stdin of the next program;
-essentially creating a cohesive stream of data:
-
-              /\-- pipe --\/
-    cat --> stdout       stdin --> pomin
-
-All of this sounds like more work than necessary but, in fact, it makes the
-program much more robust and useful.
-
 
 ### Obtaining
 
@@ -194,49 +134,9 @@ view its manual at any time with man pomin
 
 ### Scripts
 
-There are several files in the ./scripts directory that can be used to automate
-various tasks. Each file can be executed with the -h flag to show usage and
-help information; e.g., python ./script/animate.py -h
-
-
 ## Examples
-
-To use a file named +input.csv+ that has exactly one line of input (as described
-in the *INPUT* section) and write the output to a file called +output.csv+, try
-
-    cat input.csv | pomin > output.csv
-
-To use as input a line from a file (of any size) called +input.csv+ with “test
-one” in the description field and only save every other output line (and the
-header, line #1):
-
-    grep “test one” input.csv | pomin | awk 'NR == 1 || NR % 2 == 0' > output.csv
-
-To run all of the lines (except the header) from a file and split their outputs
-into seperate files:
-
-    tail -n +2 input.csv | pomin | csplit --prefix="output/test_" -sz - '/^iteration/' '{*}'
-
-To print only the first and last lines of output:
-
-    pomin | sed -e 1b -e '$!d'
-
-
-## Authors
-
-Developed at the University of Texas at Austin by the following authors:
-
-Mark Baumann <markb@physics.utexas.edu> +
-Joel S. Doss <jdoss@uoregon.edu> +
-Justin C. Feng <jcfeng@physics.utexas.edu> +
-Bryton T.D. Hall <email@bryton.io> + 
-Lucas Spencer
-
 
 ## License
 
 This program is licensed under the MIT License. See LICENSE file.
 
-
-## See Also
-stdin(3), stdout(3), stderr(3), grep(1), cat(1), echo(1), awk(1), sed(1), head(1), tail(1), csplit(1)
