@@ -7,6 +7,8 @@ module jli      # jli module
 using LinearAlgebra
 using OrdinaryDiffEq
 
+import ..RealVec
+
 function Jsympl( Zarg::RealVec )
     tpfl=typeof(Zarg[1])
     n2 = length(Zarg)

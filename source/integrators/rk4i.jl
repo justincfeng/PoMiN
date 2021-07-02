@@ -6,6 +6,8 @@ module rk4i      # rk4i module
 
 using LinearAlgebra
 
+import ..RealVec
+
 function Jsympl( Zarg::RealVec )
     tpfl=typeof(Zarg[1])
     n2 = length(Zarg)

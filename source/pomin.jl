@@ -6,6 +6,7 @@
 #
 #-----------------------------------------------------------------------
 
+include("global-types.jl")
 include("HamPM.jl")     # post-Minkowski Hamiltonian
 include("exf.jl")       # External forces
 include("gwsc.jl")      # GW strain calculator
@@ -13,11 +14,12 @@ include("integrators/epsi.jl")      # Symplectic Integrator (Tao 2016)
 include("integrators/rk4i.jl")      # 4th order Runge-Kutta
 include("integrators/jli.jl")       # OrdinaryDiffEq Integrators
 
+
 module pomin
 
 using LinearAlgebra
 using CSV
-using Serializer
+#using Serializer
 
 import ..HPM
 import ..exf
@@ -25,29 +27,10 @@ import ..epsi
 import ..rk4i
 import ..jli
 import ..gwsc
-
-const RealVec{T<:Real} = Array{T,1}
-
-struct Particles
-    m::RealVec
-    q::Array{RealVec,1}
-    p::Array{RealVec,1}
-end
-
-struct Parameters
-    sym :: Bool
-    rkl :: Tuple{Bool,Real}
-    jli :: Bool
-    ω :: Real
-    tspan :: Tuple{Real,Real}
-    iter  :: Int
-    tol   :: Real
-end
-
-struct soln
-    t::RealVec
-    z::Array{RealVec,1}
-end
+import ..RealVec
+import ..Particles
+import ..Parameters
+import ..soln
 
 function Part2Z( Part::Particles )
     tpfl = typeof(Part.q[1][1])
@@ -75,7 +58,6 @@ function pominmain( Part::Particles , Param::Parameters )
         return epsi.hsintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , δ , Param.ω , Param.tspan , Param.iter )
     elseif Param.rkl[1]
         return rk4i.hrkintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , δ , Zv->tadap(Zv,Param.rkl[2]) , Param.tspan , Param.iter )
-    end
     elseif Param.jli
         return jli.hjlintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , Param.tspan , Param.tol )
     end

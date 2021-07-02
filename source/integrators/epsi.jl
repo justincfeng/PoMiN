@@ -8,6 +8,8 @@ using LinearAlgebra
 
 include("Tao.jl")
 
+import ..RealVec
+
 function zdoubler( z::RealVec )  # This function doubles the phase space
     tpfl=typeof(z[1])
     n = length(z)
