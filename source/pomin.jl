@@ -6,10 +6,10 @@
 #
 #-----------------------------------------------------------------------
 
-include("global-types.jl")
-include("HamPM.jl")     # post-Minkowski Hamiltonian
-include("exf.jl")       # External forces
-include("gwsc.jl")      # GW strain calculator
+include("global-types.jl")          # Global datatypes
+include("HamPM.jl")                 # post-Minkowski Hamiltonian
+include("exf.jl")                   # External forces
+include("gwsc.jl")                  # GW strain calculator
 include("integrators/epsi.jl")      # Symplectic Integrator (Tao 2016)
 include("integrators/rk4i.jl")      # 4th order Runge-Kutta
 include("integrators/jli.jl")       # OrdinaryDiffEq Integrators
@@ -54,12 +54,12 @@ end
 function pominmain( Part::Particles , Param::Parameters )
     δ = abs(Param.tspan[2]-Param.tspan[1])/Param.iter
 
-    if Param.sym
-        return epsi.hsintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , δ , Param.ω , Param.tspan , Param.iter )
+    if Param.sym[1]
+        return epsi.hsintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , δ , Param.sym[2] , Param.tspan , Param.iter )
     elseif Param.rkl[1]
         return rk4i.hrkintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , δ , Zv->tadap(Zv,Param.rkl[2]) , Param.tspan , Param.iter )
-    elseif Param.jli
-        return jli.hjlintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , Param.tspan , Param.tol )
+    elseif Param.jli[1]
+        return jli.hjlintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , Param.tspan , Param.jli[2] )
     end
 
 end
