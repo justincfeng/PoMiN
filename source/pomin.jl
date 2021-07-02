@@ -11,16 +11,19 @@ include("exf.jl")       # External forces
 include("gwsc.jl")      # GW strain calculator
 include("integrators/epsi.jl")      # Symplectic Integrator (Tao 2016)
 include("integrators/rk4i.jl")      # 4th order Runge-Kutta
+include("integrators/jli.jl")       # OrdinaryDiffEq Integrators
 
 module pomin
 
 using LinearAlgebra
 using CSV
+using Serializer
 
 import ..HPM
 import ..exf
 import ..epsi
 import ..rk4i
+import ..jli
 import ..gwsc
 
 const RealVec{T<:Real} = Array{T,1}
@@ -39,6 +42,11 @@ struct Parameters
     tspan :: Tuple{Real,Real}
     iter  :: Int
     tol   :: Real
+end
+
+struct soln
+    t::RealVec
+    z::Array{RealVec,1}
 end
 
 function Part2Z( Part::Particles )
@@ -64,13 +72,14 @@ function pominmain( Part::Particles , Param::Parameters )
     δ = abs(Param.tspan[2]-Param.tspan[1])/Param.iter
 
     if Param.sym
-        return hsintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , δ , Param.ω , Param.tspan , Param.iter )
+        return epsi.hsintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , δ , Param.ω , Param.tspan , Param.iter )
     elseif Param.rkl[1]
-        return hsintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , δ , Param.rkl[2] , Param.tspan , Param.iter )
+        return rk4i.hrkintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , δ , Zv->tadap(Zv,Param.rkl[2]) , Param.tspan , Param.iter )
     end
     elseif Param.jli
-        return hjlintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , Param.tspan , Param.tol )
+        return jli.hjlintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , Param.tspan , Param.tol )
     end
+
 end
 
 end # module

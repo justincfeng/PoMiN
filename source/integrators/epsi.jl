@@ -8,14 +8,6 @@ using LinearAlgebra
 
 include("Tao.jl")
 
-const RealVec{T<:Real} = Array{T,1}
-
-struct soln
-    t::RealVec
-    z::Array{RealVec,1}
-    zaux::Array{RealVec,1}
-end
-
 function zdoubler( z::RealVec )  # This function doubles the phase space
     tpfl=typeof(z[1])
     n = length(z)
