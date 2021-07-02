@@ -59,7 +59,7 @@ function zaux( Z::RealVec )  # This function extracts second half of phase space
     end
 end  # End zaux
 
-function hintegrator( z0::RealVec, dH::Function , δ::Real , ω::Real , tspan::Tuple{Real,Real} , maxit::Real )
+function hsintegrator( z0::RealVec, dH::Function , δ::Real , ω::Real , tspan::Tuple{Real,Real} , maxit::Real )
     tpfl=typeof(z0[1])
 
     ddof = Int(length(z0))

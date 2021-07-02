@@ -267,7 +267,7 @@ function dH3m0( d::Int , m::RealVec , Z::RealVec )
 
 end
 
-function dH( d::Int , m::RealVec , Z::RealVec , H::Function )
+function dH( d::Int , m::RealVec , Z::RealVec )
     return ForwardDiff.gradient(x->H(d,m,x),Z) + dH3m0( d , m , Z )
 end
 

@@ -8,9 +8,9 @@
 
 include("HamPM.jl")     # post-Minkowski Hamiltonian
 include("exf.jl")       # External forces
-include("epsi.jl")      # Symplectic Integrator (Tao 2016)
-include("rk4i.jl")      # 4th order Runge-Kutta
 include("gwsc.jl")      # GW strain calculator
+include("integrators/epsi.jl")      # Symplectic Integrator (Tao 2016)
+include("integrators/rk4i.jl")      # 4th order Runge-Kutta
 
 module pomin
 
@@ -31,8 +31,14 @@ struct Particles
     p::Array{RealVec,1}
 end
 
-function Part2m( Part::Particles )
-    return Part.m
+struct Parameters
+    sym :: Bool
+    rkl :: Tuple{Bool,Real}
+    jli :: Bool
+    ω :: Real
+    tspan :: Tuple{Real,Real}
+    iter  :: Int
+    tol   :: Real
 end
 
 function Part2Z( Part::Particles )
@@ -54,6 +60,17 @@ function Part2Z( Part::Particles )
     end
 end
 
+function pominmain( Part::Particles , Param::Parameters )
+    δ = abs(Param.tspan[2]-Param.tspan[1])/Param.iter
 
+    if Param.sym
+        return hsintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , δ , Param.ω , Param.tspan , Param.iter )
+    elseif Param.rkl[1]
+        return hsintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , δ , Param.rkl[2] , Param.tspan , Param.iter )
+    end
+    elseif Param.jli
+        return hjlintegrator( Part2Z(Part) , Zv->dH( length(Part.q[1]) , Part.m , Zv ) , Param.tspan , Param.tol )
+    end
+end
 
 end # module
