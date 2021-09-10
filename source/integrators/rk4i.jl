@@ -2,12 +2,6 @@
 #   RK4 INTEGRATOR
 #-----------------------------------------------------------------------
 
-module rk4i      # rk4i module
-
-using LinearAlgebra
-
-import ..RealVec
-
 function Jsympl( Zarg::RealVec )
     tpfl=typeof(Zarg[1])
     n2 = length(Zarg)
@@ -72,5 +66,4 @@ function hrkintegrator( z0::RealVec, dH::Function , δ::Real , tadap::Function ,
     return Z
 end  # End hrkintegrator
 
-end  # End scope of module rk4i
 #-----------------------------------------------------------------------

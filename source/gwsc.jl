@@ -1,32 +1,6 @@
 #-----------------------------------------------------------------------
 #   GRAVITATIONAL WAVE STRAIN CALCULATOR
 #-----------------------------------------------------------------------
-module gwsc      # This module contains functions for computing gw strain
-
-using LinearAlgebra
-using ForwardDiff
-
-const RealVec{T<:Real} = Array{T,1}
-
-# These functions extract particle positions and momenta from Z
-
-function Z2q( n::Int , d::Int , i::Int , Z::RealVec )
-    tpfl = typeof(Z[1])
-    q = zeros(tpfl,d)
-    for j=1:d
-        q[j] = Z[d*(i-1)+j]
-    end
-    return q
-end
-
-function Z2p( n::Int , d::Int , i::Int , Z::RealVec )
-    tpfl = typeof(Z[1])
-    p = zeros(tpfl,d)
-    for j=1:d
-        p[j] = Z[d*(i-1+n)+j]
-    end
-    return p
-end
 
 # This function computes the linearized gw strain for a system of particles
 function hstr( d::Int , m::RealVec , Z::RealVec , θ::Real , ϕ::Real )
@@ -68,5 +42,3 @@ function hstr( d::Int , m::RealVec , Z::RealVec , θ::Real , ϕ::Real )
 
     return [ hp ; hx ]
 end
-
-end # module HPM

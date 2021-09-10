@@ -1,9 +1,9 @@
-const RealVec{T<:Real} = Array{T,1}
+const RealVec{T<:Real} = Array{T}
 
 struct Particles
     m::RealVec
-    q::Array{RealVec,1}
-    p::Array{RealVec,1}
+    q::Array{RealVec}
+    p::Array{RealVec}
 end
 
 struct Parameters
@@ -15,7 +15,6 @@ struct Parameters
     iter  :: Int
     tol   :: Real
 end
-
 
 struct soln
     t::RealVec

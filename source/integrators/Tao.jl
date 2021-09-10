@@ -1,12 +1,5 @@
 #-----------------------------------------------------------------------
 
-module TaoMap
-
-using LinearAlgebra
-
-const RealVec{T<:Real} = Array{T,1}
-
-
 function Zc( q::RealVec , p::RealVec)    
     tpfl=typeof(q[1])
     n = length(q)
@@ -92,7 +85,7 @@ function ΦA( z::RealVec , dH::Function , δ::Real )
 
     Z = zeros(tpfl,nz) 
 
-    if iseven(nz) && iseven(nz/2)
+    if iseven(nz) && iseven(Int(nz/2))
 
         n = Int(nz/4)
 
@@ -122,7 +115,7 @@ function ΦB( z::RealVec , dH::Function , δ::Real )
 
     Z = zeros(tpfl,nz) 
 
-    if iseven(nz) && iseven(nz/2)
+    if iseven(nz) && iseven(Int(nz/2))
 
         n = Int(nz/4)
 
@@ -152,7 +145,7 @@ function ΦC( z::RealVec , ω::Real , δ::Real )
 
     Z = zeros(tpfl,nz) 
 
-    if iseven(nz) && iseven(nz/2)
+    if iseven(nz) && iseven(Int(nz/2))
 
         n = Int(nz/4)
 
@@ -184,7 +177,7 @@ function ΦTao2( z::RealVec , dH::Function , δ::Real , ω::Real )
     tpfl=typeof(z[1])
     nz = length(z)
 
-    if iseven(nz) && iseven(nz/2)
+    if iseven(nz) && iseven(Int(nz/2))
 
         return ΦA( 
                   ΦB( 
@@ -207,7 +200,7 @@ function ΦTao4( z::RealVec , dH::Function , δ::Real , ω::Real )
     tpfl=typeof(z[1])
     nz = length(z)
 
-    if iseven(nz) && iseven(nz/2)
+    if iseven(nz) && iseven(Int(nz/2))
         
         γ = 1/(2-2^(tpfl(1/3)))   # There is a sign error in Tao's paper
 
@@ -222,7 +215,5 @@ function ΦTao4( z::RealVec , dH::Function , δ::Real , ω::Real )
         print("Inputs have inconsistent dimensionality \n")
     end
 end
-
-end # TaoMap
 
 #-----------------------------------------------------------------------

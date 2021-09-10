@@ -2,13 +2,7 @@
 #   EXTENDED PHASE SPACE INTEGRATOR
 #-----------------------------------------------------------------------
 
-module epsi      # epsi module
-
-using LinearAlgebra
-
 include("Tao.jl")
-
-import ..RealVec
 
 function zdoubler( z::RealVec )  # This function doubles the phase space
     tpfl=typeof(z[1])
@@ -80,5 +74,4 @@ function hsintegrator( z0::RealVec, dH::Function , δ::Real , ω::Real , tspan::
     return Z
 end  # End hintegrator
 
-end  # End scope of module epsi
 #-----------------------------------------------------------------------

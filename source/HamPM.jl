@@ -2,13 +2,6 @@
 #   POST-MINKOWSKIAN HAMILTONIAN
 #-----------------------------------------------------------------------
 
-module HPM # This module contains the post-Minkowskian Hamiltonian
-
-using LinearAlgebra
-using ForwardDiff
-
-const RealVec{T<:Real} = Array{T,1}
-
 # These functions extract particle positions and momenta from Z
 
 function Z2q( n::Int , d::Int , i::Int , Z::RealVec )
@@ -270,5 +263,3 @@ end
 function dH( d::Int , m::RealVec , Z::RealVec )
     return ForwardDiff.gradient(x->H(d,m,x),Z) + dH3m0( d , m , Z )
 end
-
-end # module HPM
