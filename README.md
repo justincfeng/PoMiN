@@ -12,13 +12,18 @@ The Hamiltonian presented in the paper above models a system of weakly
 gravitating point particles. It is fully special relativistic and includes 
 first-order effects in (Newton's constant) G from General Relativity.
 
-The code uses a fourth-order Runge-Kutta integrator and has a computational
-complexity that scales as N^2. The code implements a global adaptive
-timestepping scheme, based on the distances and velocities of the two closest
-particles.
+Version 2.0 of PoMiN has been written in Julia.  It uses the symplectic integration 
+scheme for nonseparable Hamiltonians published by M. Tao:
 
-This code also accurately reproduces light deflection angles due to gravitational 
-fields.  
+https://arxiv.org/abs/1609.02212 [Tao, M., Phys. Rev. E 94, 043303 (2016)]
+
+A 4th order Runge-Kutta integrator is also included as an option.  RK4 was the
+integrator used by version 1 of PoMiN.  RK4 sometimes displays better accuracy than
+the symplectic method, although it does not conserve energy (on average) like the
+symplectic method does.
+
+In addition to handling ultra-relativistic particle interactions via gravity,  
+PoMiN accurately reproduces light deflection angles in gravitational fields.  
 
 For more details, including validation tests, see our PoMiN paper:
 
