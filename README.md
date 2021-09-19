@@ -17,6 +17,9 @@ complexity that scales as N^2. The code implements a global adaptive
 timestepping scheme, based on the distances and velocities of the two closest
 particles.
 
+This code also accurately reproduces light deflection angles due to gravitational 
+fields.  
+
 For more details, including validation tests, see our PoMiN paper:
 
 https://arxiv.org/abs/1805.00813 [Feng, J., Baumann, M., Hall, B., Doss, J., Spencer, L., Matzner, R., Ap. J. 859, 130 (2018)]
@@ -44,14 +47,18 @@ Input must be read from a CSV file with one line in the following format:
     py_3,                   float,   y-momentum of particle 3  
     ...,                    ...,     ...  
 
-NOTE: the speed of light c is assumed to have a value of 1.
+The speed of light c is assumed to have a value of 1.
 
-NOTE: the 'number-of-particles' is the number of fully interacting particles in the 
+Any particle given a mass of 0 will move at the speed of light, as dictated by the
+physics.  Therefore, light can be included in the simulation simply by adding one 
+or more massless bodies and assigning their energies appropriately using E=hf.
+
+The 'number-of-particles' parameter is the number of fully interacting particles in the 
 system. Any additional particles in the input line after the first 'number-of-particles' 
 particles will be treated as test particles. Set 'number-of-particles' to zero if all
 particles in the input line are fully interacting particles (no test particles).
 
-NOTE: the 'courant-number' is the ratio of the change in distance between the
+The 'courant-number' parameter is the ratio of the change in distance between the
 two closest particles (in a single timestep) to the distance between those
 particles. A positive 'courant-number' turns on adaptive timestepping and computes
 the timestep using the distances between all particles, including test particles. 
