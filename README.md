@@ -17,40 +17,14 @@ complexity that scales as N^2. The code implements a basic, global adaptive
 timestepping scheme, based on the distances and velocities of the two closest
 particles. Support for parallel computing has not yet been implemented.
 
-For more, see link:doc/pomin.pdf[pomin.pdf].
+For more, see our PoMiN paper:
 
-pomin takes input from the standard input (stdin) and outputs to the
-standard output (stdout); both of which are in the comma-separated values (CSV)
-format (see the *INPUT* and *OUTPUT* sections).
-
-For more information about using stdin and stdout, see the *NOTES* section below.
-Also see the *EXAMPLES* section for some useful uses.
-
-## Options
-
-Print debug (e.g., auxiliary values and metadata) information to stdout.  
-
-    -d  
-
-Print verbose (e.g., wall-time) information to stderr.  
-
-    -v  
-
-Which parts of the Hamiltonian to use:  
-
-    -p <parts>  
-    
-    where <parts> is one of the following (see paper for definitions of H1, H2, H3):  
-
-    1    to use H1 only  
-    12   to use H1+H2  
-    13   to use H1+H3 or  
-    123  to use H1+H2+H3 (full Hamiltonian, default)  
+https://arxiv.org/abs/1805.00813 [Feng, J., Baumann, M., Hall, B., Doss, J., Spencer, L., Matzner, R., Ap. J. 859, 130 (2018)]
 
 
 ## Input
 
-Input must be read from stdin as one line in the following format:
+Input must be read from a CSV file with one line in the following format:
 
     description,start-time,end-time,timestep,iterations,courant-number,gravitational-constant,number-of-particles,mass_1,qx_1,qy_1,qz_1,px_1,py_1,pz_1,mass_2,qx_2,...
 
@@ -86,17 +60,6 @@ Setting 'courant-number' to zero turns off adaptive timestepping. A negative
 the absolute value of 'courant-number') using only the distances between fully 
 interacting particles.
 
-WARNING: the 'description' field cannot be empty due to the strtok(1) function
-parsing; however, using a unique value here is helpful when selecting input to
-use with, e.g., grep(1).
-
-To generate a header line for n particles, run the “header” make(1) target:
-
-    make header N=n
-
-The pomin code will automatically re-run itself if it detects another line of input
-(i.e., recursion).
-
 
 ## Output
 
@@ -104,37 +67,6 @@ Output is written to stdout (except for errors, which are written to stderr) in
 this form:
 
     iteration_#,time,qx_1,qy_1,qz_1,px_1,py_1,pz_1,qx_2,qy_2,...
-
-## Validation
-
-## Debug
-
-## Notes
-
-### Obtaining
-
-The Git repository can be obtained through the HTTPS protocol with
-
-    git clone https://github.com/justincfeng/PoMiN.git
-
-
-### Compiling
-
-To compile run
-
-    make [double | quad]
-
-where double (the default) or quad is the desired precision. Then, to install
-the program on an operating system that abides by the Filesystem Heirarchy
-Standard (FHS; e.g., a GNU/Linux distribution) run make install and the
-executible will be put into /usr/local/bin/ and this man page will be put into
-/usr/local/man/man1/ so that you can run the program from any directory and
-view its manual at any time with man pomin
-
-
-### Scripts
-
-## Examples
 
 ## License
 
