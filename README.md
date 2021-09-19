@@ -9,15 +9,15 @@ the N-body Hamiltonian in the following paper:
 https://arxiv.org/abs/0807.0214 [Ledvinka, T., Schafer, G., Bicak, J., Phys. Rev. Lett. 100, 251101 (2008)]
 
 The Hamiltonian presented in the paper above models a system of weakly
-gravitating point particles. It is fully special relativistic, but includes
-only first-order effects in (Newton's constant) G from General Relativity.
+gravitating point particles. It is fully special relativistic and includes 
+first-order effects in (Newton's constant) G from General Relativity.
 
-The code uses a fourth-order Runge-Kutta integrator, and has a computational
-complexity that scales as N^2. The code implements a basic, global adaptive
+The code uses a fourth-order Runge-Kutta integrator and has a computational
+complexity that scales as N^2. The code implements a global adaptive
 timestepping scheme, based on the distances and velocities of the two closest
-particles. Support for parallel computing has not yet been implemented.
+particles.
 
-For more, see our PoMiN paper:
+For more details, including validation tests, see our PoMiN paper:
 
 https://arxiv.org/abs/1805.00813 [Feng, J., Baumann, M., Hall, B., Doss, J., Spencer, L., Matzner, R., Ap. J. 859, 130 (2018)]
 
