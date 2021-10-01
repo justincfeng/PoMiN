@@ -37,7 +37,8 @@ function rk4map( zi::RealVec, dH::Function , δ::Real )
     return zi + δ*(k1 + 2*k2 + 2*k3 + k4)/6
 end
 
-function hrkintegrator( z0::RealVec, dH::Function , δ::Real , tadap::Function , tspan::Tuple{Real,Real} , maxit::Real )
+function hrkintegrator( z0::RealVec, dH::Function , δ::Real 
+            , tadap::Function , tspan::Tuple{Real,Real} , maxit::Real )
     tpfl=typeof(z0[1])
 
     ddof = Int(length(z0))

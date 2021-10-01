@@ -47,7 +47,8 @@ function zaux( Z::RealVec )  # This function extracts second half of phase space
     end
 end  # End zaux
 
-function hsintegrator( z0::RealVec, dH::Function , δ::Real , ω::Real , tspan::Tuple{Real,Real} , maxit::Real )
+function hsintegrator( z0::RealVec, dH::Function , δ::Real 
+                , ω::Real , tspan::Tuple{Real,Real} , maxit::Real )
     tpfl=typeof(z0[1])
 
     ddof = Int(length(z0))
@@ -60,12 +61,12 @@ function hsintegrator( z0::RealVec, dH::Function , δ::Real , ω::Real , tspan::
         n = abs(Int(round(maxit, digits=0)))
     end
 
-    Z = soln(zeros(tpfl,n),fill(zeros(tpfl,ddof),n),fill(zeros(tpfl,ddof),n))
+    Z = soln(zeros(tpfl,n),fill(zeros(tpfl,ddof),n))
 
     zi = zdoubler(z0)
 
     for i=1:n
-        zi = TaoMap.ΦTao4( zi , dH , δ , ω )
+        zi = ΦTao4( zi , dH , δ , ω )
         Z.t[i] = i*δ
         Z.z[i] = z(zi)
         Z.zaux[i] = zaux(zi)
