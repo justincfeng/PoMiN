@@ -8,7 +8,7 @@ function Z2q( n::Int , d::Int , i::Int , Z::RealVec )
     tpfl = typeof(Z[1])
     q = zeros(tpfl,d)
     for j=1:d
-        q[j] = Z[2*d*(i-1)+j]
+        q[j] = Z[d*(i-1)+j]
     end
     return q
 end
@@ -17,7 +17,7 @@ function Z2p( n::Int , d::Int , i::Int , Z::RealVec )
     tpfl = typeof(Z[1])
     p = zeros(tpfl,d)
     for j=1:d
-        p[j] = Z[2*d*(i-1)+j+n]
+        p[j] = Z[d*(i-1)+j+d*n]
     end
     return p
 end
