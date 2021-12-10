@@ -3,7 +3,11 @@
 #-----------------------------------------------------------------------
 
 # These functions extract particle positions and momenta from Z
+"""
+    Z2q( n::Int , d::Int , i::Int , Z::RealVec )
 
+This function extracts particle positions from Z
+"""
 function Z2q( n::Int , d::Int , i::Int , Z::RealVec )
     tpfl = typeof(Z[1])
     q = zeros(tpfl,d)
@@ -13,6 +17,11 @@ function Z2q( n::Int , d::Int , i::Int , Z::RealVec )
     return q
 end
 
+"""
+    Z2p( n::Int , d::Int , i::Int , Z::RealVec )
+
+This function extracts particle momenta from Z
+"""
 function Z2p( n::Int , d::Int , i::Int , Z::RealVec )
     tpfl = typeof(Z[1])
     p = zeros(tpfl,d)

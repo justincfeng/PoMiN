@@ -4,6 +4,11 @@
 
 include("Tao.jl")
 
+"""
+    zdoubler( z::RealVec )
+
+This function doubles the phase space
+"""
 function zdoubler( z::RealVec )  # This function doubles the phase space
     tpfl=typeof(z[1])
     n = length(z)
@@ -17,6 +22,11 @@ function zdoubler( z::RealVec )  # This function doubles the phase space
     return Z
 end  # End zdoubler
 
+"""
+    z( Z::RealVec )
+
+This function extracts first half of phase space
+"""
 function z( Z::RealVec )  # This function extracts first half of phase space
     tpfl=typeof(Z[1])
     nf = length(Z)
@@ -32,6 +42,11 @@ function z( Z::RealVec )  # This function extracts first half of phase space
     end
 end  # End zaux
 
+"""
+    zaux( Z::RealVec )
+
+This function extracts second half of phase space
+"""
 function zaux( Z::RealVec )  # This function extracts second half of phase space
     tpfl=typeof(Z[1])
     nf = length(Z)
@@ -47,6 +62,11 @@ function zaux( Z::RealVec )  # This function extracts second half of phase space
     end
 end  # End zaux
 
+"""
+    hsintegrator( z0::RealVec, dH::Function , δ::Real , ω::Real , tspan::Tuple{Real,Real} , maxit::Real )
+
+This function implements the symplectic integrator
+"""
 function hsintegrator( z0::RealVec, dH::Function , δ::Real 
                 , ω::Real , tspan::Tuple{Real,Real} , maxit::Real )
     tpfl=typeof(z0[1])
