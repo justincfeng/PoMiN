@@ -16,12 +16,23 @@ using OrdinaryDiffEq
 include("pomin-types.jl")   # data type definitions
 include("idxer.jl")         # routines for index management
 include("HamPM.jl")         # post-Minkowski Hamiltonian
-include("exf.jl")           # External forces
+#include("exf.jl")           # External forces
 include("integrators/epsi.jl")          # Symplectic Integrator (Tao 2016)
 include("integrators/rk4i.jl")          # 4th order Runge-Kutta
 include("integrators/int.jl")           # Julia integrator functions
 include("gwsc.jl")          # GW strain calculator
 
-ΦC(rand(Float64,4),rand(Float64),rand(Float64))
+#ΦC(rand(Float64,4),rand(Float64),rand(Float64))
+
+end # module
+
+
+module pominn
+
+using LinearAlgebra
+
+include("pomin-types.jl")   # data type definitions
+include("idxer.jl")         # routines for index management
+include("HamPM.jl")         # post-Minkowski HAMILTONIAN
 
 end # module

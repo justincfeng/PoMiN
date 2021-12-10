@@ -81,7 +81,7 @@ function hsintegrator( z0::RealVec, dH::Function , δ::Real
         n = abs(Int(round(maxit, digits=0)))
     end
 
-    Z = soln(zeros(tpfl,n),fill(zeros(tpfl,ddof),n))
+    Z = soln(zeros(tpfl,n),fill(zeros(tpfl,ddof),n),fill(zeros(tpfl,ddof),n))
 
     zi = zdoubler(z0)
 

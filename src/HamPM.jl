@@ -2,35 +2,6 @@
 #   POST-MINKOWSKIAN HAMILTONIAN
 #-----------------------------------------------------------------------
 
-# These functions extract particle positions and momenta from Z
-"""
-    Z2q( n::Int , d::Int , i::Int , Z::RealVec )
-
-This function extracts particle positions from Z
-"""
-function Z2q( n::Int , d::Int , i::Int , Z::RealVec )
-    tpfl = typeof(Z[1])
-    q = zeros(tpfl,d)
-    for j=1:d
-        q[j] = Z[d*(i-1)+j]
-    end
-    return q
-end
-
-"""
-    Z2p( n::Int , d::Int , i::Int , Z::RealVec )
-
-This function extracts particle momenta from Z
-"""
-function Z2p( n::Int , d::Int , i::Int , Z::RealVec )
-    tpfl = typeof(Z[1])
-    p = zeros(tpfl,d)
-    for j=1:d
-        p[j] = Z[d*(i-1)+j+d*n]
-    end
-    return p
-end
-
 # These functions compute scalar quantities that make up the Hamiltonian
 
 function psf( p::RealVec )

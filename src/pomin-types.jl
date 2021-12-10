@@ -20,4 +20,5 @@ end
 struct soln
     t::RealVec              # Vector recording times at each timestep
     z::Array{RealVec,1}     # Vector recording phase space coordinates at each timestep
+    zaux::Array{RealVec,1}
 end
