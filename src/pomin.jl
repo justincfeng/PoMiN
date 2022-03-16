@@ -22,17 +22,7 @@ include("integrators/rk4i.jl")          # 4th order Runge-Kutta
 include("integrators/int.jl")           # Julia integrator functions
 include("gwsc.jl")          # GW strain calculator
 
-#ΦC(rand(Float64,4),rand(Float64),rand(Float64))
+end
 
-end # module
-
-
-module pominn
-
-using LinearAlgebra
-
-include("pomin-types.jl")   # data type definitions
-include("idxer.jl")         # routines for index management
-include("HamPM.jl")         # post-Minkowski HAMILTONIAN
-
-end # module
+# test
+pomin.H(3,rand(Float64,2),rand(Float64,12))
