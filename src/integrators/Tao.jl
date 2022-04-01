@@ -1,85 +1,96 @@
 #-----------------------------------------------------------------------
+"""
+    Zc( q::RealVec , p::RealVec)
 
-function Zc( q::RealVec , p::RealVec)    
-    tpfl=typeof(q[1])
-    n = length(q)
-    if n == length(p)
-        Z = zeros(tpfl,2*n)        
-        for i=1:n
-            Z[i]     = q[i]
-            Z[n+i]   = p[i]
-        end
-        return Z
-    else
-        print("Inputs have inconsistent dimensionality \n")
-    end
-end
+This function returns the concatenation of the vector q and the vector 
+p.
+"""
+function Zc( q::RealVec , p::RealVec)
+    return vcat(q,p)
+end #-------------------------------------------------------------------
 
-function qc( Z::RealVec )    
-    tpfl=typeof(Z[1])
-    n4 = length(Z)
+"""
+    qc( z::RealVec )
+
+This function returns the first quarter of the `z` vector (representing 
+the extended phase space coordinate vector ``z=(q,p,x,y)``), assuming 
+the dimension of `z` is divisible by four.
+"""
+function qc( z::RealVec )
+    n4 = length(z)
     n2 = Int(n4/2)
     if iseven(n4) && iseven(n2)
         n = Int(n2/2)
-        q = zeros(tpfl,n)        
-        for i=1:n
-            q[i]     = Z[i]
-        end
-        return q
+        return z[1:n]
     else
         print("Inputs have inconsistent dimensionality \n")
     end
-end
+end #-------------------------------------------------------------------
 
-function pc( Z::RealVec )    
-    tpfl=typeof(Z[1])
-    n4 = length(Z)
+
+"""
+    pc( Z::RealVec )
+
+This function returns the second quarter of the `z` vector (representing 
+the extended phase space coordinate vector ``z=(q,p,x,y)``), assuming 
+the dimension of `z` is divisible by four.
+"""
+function pc( z::RealVec )    
+    n4 = length(z)
     n2 = Int(n4/2)
     if iseven(n4) && iseven(n2)
         n = Int(n2/2)
-        p = zeros(tpfl,n)        
-        for i=1:n
-            p[i]     = Z[n+i]
-        end
-        return p
+        return z[n+1:2*n]
     else
         print("Inputs have inconsistent dimensionality \n")
     end
-end
+end #-------------------------------------------------------------------
 
-function xc( Z::RealVec )    
-    tpfl=typeof(Z[1])
-    n4 = length(Z)
+"""
+    xc( Z::RealVec )
+
+This function returns the third quarter of the `z` vector (representing 
+the extended phase space coordinate vector ``z=(q,p,x,y)``), assuming 
+the dimension of `z` is divisible by four.
+"""
+function xc( z::RealVec )    
+    n4 = length(z)
     n2 = Int(n4/2)
     if iseven(n4) && iseven(n2)
         n = Int(n2/2)
-        x = zeros(tpfl,n)        
-        for i=1:n
-            x[i]     = Z[2*n+i]
-        end
-        return x
+        return z[2*n+1:3*n]
     else
         print("Inputs have inconsistent dimensionality \n")
     end
-end
+end #-------------------------------------------------------------------
 
-function yc( Z::RealVec )    
-    tpfl=typeof(Z[1])
-    n4 = length(Z)
+"""
+    yc( Z::RealVec )
+
+This function returns the fourth quarter of the `z` vector (representing 
+the extended phase space coordinate vector ``z=(q,p,x,y)``), assuming 
+the dimension of `z` is divisible by four.
+"""
+function yc( z::RealVec )    
+    n4 = length(z)
     n2 = Int(n4/2)
     if iseven(n4) && iseven(n2)
         n = Int(n2/2)
-        y = zeros(tpfl,n)        
-        for i=1:n
-            y[i]     = Z[3*n+i]
-        end
-        return y
+        return Zz[3*n+1:4*n]
     else
         print("Inputs have inconsistent dimensionality \n")
     end
-end
+end #-------------------------------------------------------------------
 
-function ΦA( z::RealVec , dH::Function , δ::Real )    
+"""
+    ΦA( z::RealVec , dH::Function , δ::Real )
+
+This function implements the function ``Φ^δ_{H_A}`` defined in the paper
+arXiv:1609.02212. It takes as inputs the extended phase space vector 
+`z`, a function `dH(z)` and a real-valued parameter `δ`. This function
+returns a vector with the same length as the phase space vector `z`.
+"""
+function ΦA( z::RealVec , dH::Function , δ::Real )
     tpfl=typeof(z[1])
     nz = length(z)
 
@@ -107,8 +118,16 @@ function ΦA( z::RealVec , dH::Function , δ::Real )
         print("Inputs have inconsistent dimensionality \n")
         return Z
     end
-end
+end #-------------------------------------------------------------------
 
+"""
+    ΦB( z::RealVec , dH::Function , δ::Real )
+
+This function implements the function ``Φ^δ_{H_B}`` defined in the paper
+arXiv:1609.02212. It takes as inputs the extended phase space vector 
+`z`, a function `dH(z)` and a real-valued parameter `δ`. This function
+returns a vector with the same length as the phase space vector `z`.
+"""
 function ΦB( z::RealVec , dH::Function , δ::Real )    
     tpfl=typeof(z[1])
     nz = length(z)
@@ -137,8 +156,16 @@ function ΦB( z::RealVec , dH::Function , δ::Real )
         print("Inputs have inconsistent dimensionality \n")
         return Z
     end
-end
+end #-------------------------------------------------------------------
 
+"""
+    ΦC( z::RealVec , ω::Real , δ::Real )
+
+This function implements the function ``Φ^δ_{ω H_C}`` defined in the 
+paper arXiv:1609.02212. It takes as inputs the extended phase space 
+vector `z`, and the real-valued parameters `ω` and `δ`. This function 
+returns a vector with the same length as the phase space vector `z`.
+"""
 function ΦC( z::RealVec , ω::Real , δ::Real )    
     tpfl=typeof(z[1])
     nz = length(z)
@@ -171,12 +198,18 @@ function ΦC( z::RealVec , ω::Real , δ::Real )
         print("Inputs have inconsistent dimensionality \n")
         return Z
     end
-end
+end #-------------------------------------------------------------------
 
-function ΦTao2( z::RealVec , dH::Function , δ::Real , ω::Real )    
-    tpfl=typeof(z[1])
+"""
+    ΦTao2( z::RealVec , dH::Function , δ::Real , ω::Real )
+
+This function implements the map defined in Eq. (2) of arXiv:1609.02212. 
+It takes as inputs the extended phase space vector `z`, a function 
+`dH(z)` and the real-valued parameters `ω` and `δ`. This function 
+returns a vector with the same length as the phase space vector `z`.
+"""
+function ΦTao2( z::RealVec , dH::Function , δ::Real , ω::Real )
     nz = length(z)
-
     if iseven(nz) && iseven(Int(nz/2))
 
         return ΦA( 
@@ -194,8 +227,16 @@ function ΦTao2( z::RealVec , dH::Function , δ::Real , ω::Real )
     else
         print("Inputs have inconsistent dimensionality \n")
     end
-end
+end #-------------------------------------------------------------------
 
+"""
+    ΦTao4( z::RealVec , dH::Function , δ::Real , ω::Real )
+
+This function implements the map defined in Eq. (3) of arXiv:1609.02212. 
+It takes as inputs the extended phase space vector `z`, a function 
+`dH(z)` and the real-valued parameters `ω` and `δ`. This function 
+returns a vector with the same length as the phase space vector `z`.
+"""
 function ΦTao4( z::RealVec , dH::Function , δ::Real , ω::Real )    
     tpfl=typeof(z[1])
     nz = length(z)
@@ -214,6 +255,6 @@ function ΦTao4( z::RealVec , dH::Function , δ::Real , ω::Real )
     else
         print("Inputs have inconsistent dimensionality \n")
     end
-end
+end #-------------------------------------------------------------------
 
 #-----------------------------------------------------------------------

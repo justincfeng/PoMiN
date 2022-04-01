@@ -2,6 +2,11 @@
 #   RK4 INTEGRATOR
 #-----------------------------------------------------------------------
 
+"""
+    Jsympl( Zarg::RealVec )
+
+This implements the symplectic operator
+"""
 function Jsympl( Zarg::RealVec )
     tpfl=typeof(Zarg[1])
     n2 = length(Zarg)

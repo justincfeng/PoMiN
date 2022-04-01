@@ -26,6 +26,12 @@ function Jsympl( Zarg::RealVec )
     end
 end
 
+"""
+    hjlintegrator( z0::RealVec , dH::Function , tspan::Tuple{Real,Real} , tol::Real )
+
+This function performs the integration using the 'Tsit5()' integrators 
+provided in the Julia library 'OrdinaryDiffEq.jl'.
+"""
 function hjlintegrator( z0::RealVec , dH::Function , tspan::Tuple{Real,Real} , tol::Real )
     function f(zx,p,t)
         return Jsympl(dH(zx))
