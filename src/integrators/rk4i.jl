@@ -5,8 +5,8 @@
 """
     Jsympl( Zarg::RealVec )
 
-Symplectic operator ``\\hat{J}``.  Takes vector ``\\vec{z}`` and returns ``\\hat{J}\\vec{z}`` where 
-``\\hat{J} = \\begin{bmatrix} 0 & I \\ -I & 0 \\end{bmatrix}``
+Symplectic operator ``\\hat{J}``.  Takes vector `z` and returns ``\\hat{J} z`` where 
+``\\hat{J} = \\begin{bmatrix} 0 & I \\\ -I & 0 \\end{bmatrix}``
 """
 function Jsympl(Zarg::RealVec)
     tpfl = typeof(Zarg[1])
