@@ -76,7 +76,7 @@ function yc( z::RealVec )
     n2 = Int(n4/2)
     if iseven(n4) && iseven(n2)
         n = Int(n2/2)
-        return Zz[3*n+1:4*n]
+        return z[3*n+1:4*n]
     else
         print("Inputs have inconsistent dimensionality \n")
     end
