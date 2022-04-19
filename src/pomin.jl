@@ -25,4 +25,4 @@ include("gwsc.jl")          # GW strain calculator
 end
 
 # test
-pomin.H(3,rand(Float64,2),rand(Float64,12))
+#pomin.H(3,rand(Float64,2),rand(Float64,12))
