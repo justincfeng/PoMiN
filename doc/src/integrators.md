@@ -1,28 +1,20 @@
-# Evaluation
+# Integrators
 
-The details of evaluation functions are provided here in case one is
-interested in performing more detailed tests of the location algorithms.
+The integrators used in PoMiN
 
-## Main evaluation function
-
-```@docs
-cereal.ceval.main
-```
-
-## Test case generator functions
+## RK4 Integrator
 
 ```@docs
-cereal.ceval.vgenerator
+pomin.Jsympl
 ```
 
 ```@docs
-cereal.ceval.nullgen
+pomin.hrkintegrator
 ```
 
-```@docs
-cereal.ceval.pgen
-```
+## Tao Symplectic Integrator
 
 ```@docs
-cereal.ceval.xgen
+pomin.hsintegrator
 ```
+
