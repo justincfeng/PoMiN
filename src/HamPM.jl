@@ -4,6 +4,11 @@
 
 # These functions compute scalar quantities that make up the Hamiltonian
 
+"""
+    psf( p::RealVec )
+
+Momentum squared function
+"""
 function psf( p::RealVec )
     return dot(p,p)
 end

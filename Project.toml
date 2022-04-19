@@ -2,3 +2,19 @@ name = "pomin"
 uuid = "c0229db0-a712-49ac-9113-be0d1581ecaa"
 authors = ["Justin C. Feng"]
 version = "0.1.0"
+
+[deps]
+LinearAlgebra   = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+OrdinaryDiffEq  = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
+ForwardDiff     = "f6369f11-7733-5829-9624-2563aa707210"
+
+DoubleFloats    = "497a8b3b-efae-58df-a0af-a86822472b78"
+
+[compat]
+julia = "1.7"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
