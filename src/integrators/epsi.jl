@@ -91,7 +91,7 @@ function hsintegrator(z0::RealVec, dH::Function, δ::Real, ω::Real, tspan::Tupl
 
     Z = soln(zeros(tpfl, n), fill(zeros(tpfl, ddof), n), fill(zeros(tpfl, ddof), n))
 
-    zi = zdoubler(z0)
+    zi = zdoubler(vec(z0))
 
     for i = 1:n
         zi = ΦTao4(zi, dH, δ, ω)

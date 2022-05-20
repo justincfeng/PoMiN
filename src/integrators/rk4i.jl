@@ -39,7 +39,7 @@ function rk4map(zi::RealVec, f::Function, δ::Real)
     k2 = zeros(tpfl, n)
     k3 = zeros(tpfl, n)
     k4 = zeros(tpfl, n)
-
+    
     k1 = f(zi)
     k2 = f(zi + δ * k1 / 2)
     k3 = f(zi + δ * k2 / 2)
@@ -78,7 +78,7 @@ function hrkintegrator(z0::RealVec, dH::Function, δ::Real, tadap::Function, tsp
 
     Z = soln(zeros(tpfl, n), fill(zeros(tpfl, ddof), n), fill(zeros(tpfl, ddof), n))
 
-    zi = z0
+    zi = vec(z0)
 
     f = zx -> Jsympl(dH(zx))
 
