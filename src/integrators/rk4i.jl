@@ -52,7 +52,8 @@ end
     hrkintegrator( z0::RealVec, dH::Function , δ::Real 
                     , tadap::Function , tspan::Tuple{Real,Real} , maxit::Real )
     
-4th order Runge-Kutta integrator
+4th order Runge-Kutta integrator.
+Returns a struct of type "soln" (defined in pomin-types)
 
 # Arguments
 - `z0::RealVec`: Initial values phase space vector ``\\{ \\vec{q}, \\vec{p} \\}``
@@ -79,7 +80,7 @@ function hrkintegrator(z0::RealVec, dH::Function, δ::Real, tadap::Function, tsp
 
     zi = z0
 
-    f = zx -> Jsympl(dH(zi))
+    f = zx -> Jsympl(dH(zx))
 
     for i = 1:n
         zi = rk4map(zi, f, δ)

@@ -65,7 +65,8 @@ end  # End zaux
 """
     hsintegrator( z0::RealVec, dH::Function , δ::Real , ω::Real , tspan::Tuple{Real,Real} , maxit::Real )
 
-Symplectic integrator of Tao
+Symplectic integrator of Tao.
+Returns a struct of type "soln" (defined in pomin-types)
 
 # Arguments
 - `z0::RealVec`: Initial values of phase space vector ``\\{ \\vec{q}, \\vec{p} \\}``

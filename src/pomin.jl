@@ -26,3 +26,12 @@ end
 
 # test
 #pomin.H(3,rand(Float64,2),rand(Float64,12))
+
+masses = [1 0.00000300336937]
+Z_init = [0 0 0 0 0 0 101306075.1 0 0 0 0.0000000002983946294 0]
+tadap = t -> 1.0  # effectively turns off adaptive time stepping since δ will be multiplied by 1 each timestep
+tspan = (0, 64071141430000)
+maxit = 1000000
+δ = 6407114143
+print(pomin.Jsympl(pomin.dH(3,masses,Z_init)))
+#sol = pomin.hrkintegrator(Z_init, x -> pomin.dH(3,masses,x) , δ, tadap, tspan, maxit)

@@ -7,8 +7,8 @@
 """
     psf( p::RealVec )
 
-Momentum squared function. Returns ``p^2=\vec{p}⋅\vec{p}`` given 
-relativistic momentum ``\vec{p}``.
+Momentum squared function. Returns ``p^2=\\vec{p}⋅\\vec{p}`` given 
+relativistic momentum ``\\vec{p}``.
 """
 function psf( p::RealVec )
     return dot(p,p)
@@ -17,8 +17,8 @@ end
 """
     Enf( m::Real, ps::Real )
 
-Kinetic energy function. Returns ``E=\sqrt{m^2+p^2}``, given ``m``
-and ``\vec{p}``.
+Kinetic energy function. Returns ``E=\\sqrt{m^2+p^2}``, given ``m``
+and ``\\vec{p}``.
 """
 function Enf( m::Real, ps::Real )
     return sqrt(m^2+ps)
@@ -27,8 +27,8 @@ end
 """
     rf( qa::RealVec , qb::RealVec )
 
-Euclidean distance function. Returns ``r_{ab}=\sqrt{(qa-qb)⋅(qa-qb)}``,
-given particle positions ``\vec{q}_a`` and ``\vec{q}_b``.
+Euclidean distance function. Returns ``r_{ab}=\\sqrt{(qa-qb)⋅(qa-qb)}``,
+given particle positions ``\\vec{q}_a`` and ``\\vec{q}_b``.
 """
 function rf( qa::RealVec , qb::RealVec )
     return sqrt(dot(qa-qb,qa-qb))
@@ -38,8 +38,8 @@ end
     nabf( qa::RealVec , qb::RealVec )
 
 Separation unit vector. Returns 
-``\vec{n}_{ab}=(\vec{q}_a-\vec{q}_b)/\sqrt{r_{ab}}``,
-given particle positions ``\vec{q}_a`` and ``\vec{q}_b``.
+``\\vec{n}_{ab}=(\\vec{q}_a-\\vec{q}_b)/\\sqrt{r_{ab}}``,
+given particle positions ``\\vec{q}_a`` and ``\\vec{q}_b``.
 """
 function nabf( qa::RealVec , qb::RealVec )
     return (qa-qb)/rf(qa,qb)
@@ -48,10 +48,10 @@ end
 """
     ybaf( mb::Real, qb::RealVec , qa::RealVec , pb::RealVec , pa::RealVec )
 
-Returns ``y_{ba}=\sqrt{m_b^2+(\vec{n}_{ab}⋅\vec{p}_b)^2}/E_b``, where ``E_b`` is
+Returns ``y_{ba}=\\sqrt{m_b^2+(\\vec{n}_{ab}⋅\\vec{p}_b)^2}/E_b``, where ``E_b`` is
 Kinetic energy for particle ``b``. Inputs are particle ``b`` mass ``m_b``,
-particle positions ``\vec{q}_b`` and ``\vec{q}_a``, and particle momenta
-``\vec{p}_b`` and ``\vec{p}_a``.
+particle positions ``\\vec{q}_b`` and ``\\vec{q}_a``, and particle momenta
+``\\vec{p}_b`` and ``\\vec{p}_a``.
 """
 function ybaf( mb::Real, qb::RealVec , qa::RealVec , pb::RealVec , pa::RealVec )
     return sqrt(mb^2+dot(nabf(qb,qa),pb)^2)/Enf(mb,psf(pb))
@@ -60,8 +60,8 @@ end
 """
     Θabf( qa::RealVec , qb::RealVec , pa::RealVec )
 
-Returns ``Θ_{ba}=\vec{p}_a⋅\vec{n}_{ab}``, where ``\vec{p}_b`` is
-momentum for particle ``b``, and ``\vec{n}_{ab}`` is unit separation 
+Returns ``Θ_{ba}=\\vec{p}_a⋅\\vec{n}_{ab}``, where ``\\vec{p}_b`` is
+momentum for particle ``b``, and ``\\vec{n}_{ab}`` is unit separation 
 vector.
 """
 function Θabf( qa::RealVec , qb::RealVec , pa::RealVec )
@@ -71,8 +71,8 @@ end
 """
     Ξabf( pa::RealVec, pb::RealVec )
 
-Returns ``Ξ_{ba}=\vec{p}_a⋅\vec{p}_{b}``, where ``\vec{p}_b`` and 
-``\vec{p}_a`` are momenta for particles ``a`` and ``b``.
+Returns ``Ξ_{ba}=\\vec{p}_a⋅\\vec{p}_{b}``, where ``\\vec{p}_b`` and 
+``\\vec{p}_a`` are momenta for particles ``a`` and ``b``.
 """
 function Ξabf( pa::RealVec, pb::RealVec )
     return dot(pa,pb)
@@ -290,7 +290,7 @@ end
 
 # Gradient of the Hamiltonian function
 function dH( d::Int , m::RealVec , Z::RealVec )
-    return ForwardDiff.gradient(x->H(d,m,x),Z) + dH3m0( d , m , Z )
+    return ForwardDiff.gradient(x->H(d,m,x),Z) #+ dH3m0( d , m , Z )
 end
 
 ## Symplectic operator: Maps output of dH to time derivative of phase space variables
