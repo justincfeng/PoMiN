@@ -22,7 +22,9 @@
 """
     Z2q( n::Int , d::Int , i::Int , Z::RealVec )
 
-This function extracts particle positions from Z
+This function extracts particle positions from Z. The parameter `n` is
+the number of particles, `d` represents the spatial dimension, and `i`
+is the particle label.
 """
 function Z2q( n::Int , d::Int , i::Int , Z::RealVec )
     tpfl = typeof(Z[1])
@@ -36,7 +38,9 @@ end
 """
     Z2p( n::Int , d::Int , i::Int , Z::RealVec )
 
-This function extracts particle momenta from Z
+This function extracts particle momenta from Z. The parameter `n` is
+the number of particles, `d` represents the spatial dimension, and `i`
+is the particle label.
 """
 function Z2p( n::Int , d::Int , i::Int , Z::RealVec )
     tpfl = typeof(Z[1])
@@ -47,10 +51,21 @@ function Z2p( n::Int , d::Int , i::Int , Z::RealVec )
     return p
 end
 
+"""
+   Part2m( Part::Particles )
+
+This function extracts particle masses from the `Particles` datatype.
+"""
 function Part2m( Part::Particles )
     return Part.m
 end
 
+"""
+   Part2Z( Part::Particles )
+
+This function extracts the phase space vector from the `Particles`
+datatype.
+"""
 function Part2Z( Part::Particles )
     tpfl = typeof(Part.q[1][1])
     n = length(Part.m)
