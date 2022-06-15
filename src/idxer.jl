@@ -22,13 +22,18 @@
 """
     Z2q( n::Int , d::Int , i::Int , Z::RealVec )
 
-This function extracts particle positions from Z
+This function extracts particle positions from Z for particle i
+    n is the number of particles and d is the number of dimensions
 """
 function Z2q( n::Int , d::Int , i::Int , Z::RealVec )
+    if i > n
+        error("In Z2q: particle number i=" * string(i) * " exceeds number of particles n=" * string(n))
+    end
     tpfl = typeof(Z[1])
     q = zeros(tpfl,d)
     for j=1:d
-        q[j] = Z[d*(i-1)+j]
+        index = d * (i - 1) + j
+        q[j] = Z[index]
     end
     return q
 end
@@ -36,13 +41,18 @@ end
 """
     Z2p( n::Int , d::Int , i::Int , Z::RealVec )
 
-This function extracts particle momenta from Z
+This function extracts particle momenta from Z for particle i
+    n is the number of particles and d is the number of dimensions
 """
 function Z2p( n::Int , d::Int , i::Int , Z::RealVec )
+    if i > n
+        error("In Z2p: particle number i=" * string(i) * " exceeds number of particles n=" * string(n))
+    end
     tpfl = typeof(Z[1])
     p = zeros(tpfl,d)
     for j=1:d
-        p[j] = Z[d*(i-1)+j+d*n]
+        index = d * (i - 1) + j + d * n
+        p[j] = Z[index]
     end
     return p
 end

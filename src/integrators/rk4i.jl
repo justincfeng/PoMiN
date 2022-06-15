@@ -29,7 +29,8 @@ end
 """
     rk4map(zi::RealVec, f::Function, δ::Real)
 
-Core function in RK4 method (the RK4 equivalent of TaoMap).  Takes function `f` and initial phase space data `zi` and executes RK4 method with time step `δ`
+Core function in RK4 method (the RK4 equivalent of TaoMap).  
+    Takes function `f` and initial phase space data `zi` and executes RK4 method with time step `δ`
 """
 function rk4map(zi::RealVec, f::Function, δ::Real)
     tpfl = typeof(zi[1])
@@ -63,20 +64,21 @@ Returns a struct of type "soln" (defined in pomin-types)
 - `tspan::Tuple{Real,Real}`: Tuple containing the start time and end time for the integration
 - `maxit::Real`: Maximum number of iterations.  When this number of iterations is exceeded, integration stops.
 """
-function hrkintegrator(z0::RealVec, dH::Function, δ::Real, tadap::Function, tspan::Tuple{Real,Real}, maxit::Real)
-    tpfl = typeof(z0[1])
+function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, tadap::Function, tspan::Tuple{Real,Real}, maxit::Real)
+    tpfl = typeof(z0[1])  # tpfl = type of data stored in z0
 
-    ddof = Int(length(z0))
+    ddof = Int(length(z0))  # ddof = number of elements in z0
 
-    tdiff = abs(tspan[2] - tspan[1])
+    tdiff = abs(tspan[2] - tspan[1])  # tdiff = timestep size
 
-    n = Int(round(tdiff / δ, digits=0))
+    n = Int(round(tdiff / δ, digits=0))  # n = number of timesteps
 
     if n > abs(Int(round(maxit, digits=0)))
         n = abs(Int(round(maxit, digits=0)))
     end
 
-    Z = soln(zeros(tpfl, n), fill(zeros(tpfl, ddof), n), fill(zeros(tpfl, ddof), n))
+    # initialize soln data structure and fill with zeros
+    sol = soln(d,N,zeros(tpfl, n), fill(zeros(tpfl, ddof), n), fill(zeros(tpfl, ddof), n))
 
     zi = vec(z0)
 
@@ -85,11 +87,9 @@ function hrkintegrator(z0::RealVec, dH::Function, δ::Real, tadap::Function, tsp
     for i = 1:n
         zi = rk4map(zi, f, δ)
         δ = δ * tadap(zi)
-        Z.t[i] = i * δ
-        Z.z[i] = zi
+        sol.t[i] = i * δ
+        sol.z[i] = zi
     end
 
-    return Z
+    return sol
 end  # End hrkintegrator
-
-#-----------------------------------------------------------------------
