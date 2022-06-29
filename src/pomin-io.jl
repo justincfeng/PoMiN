@@ -16,10 +16,8 @@ end
 #   p's for particle 1
 #   q's for particle 2
 #   p's for particle 2
-#   ...
+#   etc...
 function soln2csv(sol::soln)
-    
-    #N = Int(length(sol.z[1]) / 6)  # number of particles
 
     # Write CSV header
     csv_str = "iteration,time,"
@@ -46,16 +44,16 @@ function soln2csv(sol::soln)
         # write timestep number and time
         csv_str = string(csv_str, tn, ",", sol.t[tn], ",")
         for i in 1:sol.N
-            # get q values for particle i at timestep t
+            # get q values for particle i at timestep tn
             q = Z2q(sol.N, sol.d, i, sol.z[tn])
-            # write q values for particle i at timestep t
+            # write q values for particle i at timestep tn
             for j in 1:sol.d
                 csv_str = string(csv_str, q[j], ",")
             end
 
-            # get p values for particle i at timestep t
+            # get p values for particle i at timestep tn
             p = Z2p(sol.N, sol.d, i, sol.z[tn])
-            # write p values for particle i at timestep t
+            # write p values for particle i at timestep tn
             for j in 1:sol.d
                 csv_str = string(csv_str, p[j])
                 if j < sol.d || i < sol.N # add a comma after each except the last value of the last particle

@@ -12,6 +12,7 @@ using LinearAlgebra
 using CSV
 using ForwardDiff
 using OrdinaryDiffEq
+using Logging
 
 include("pomin-types.jl")   # data type definitions
 include("pomin-io.jl")      # input/output routines
@@ -22,18 +23,7 @@ include("integrators/epsi.jl")          # Symplectic Integrator (Tao 2016)
 include("integrators/rk4i.jl")          # 4th order Runge-Kutta
 include("integrators/int.jl")           # Julia integrator functions
 include("gwsc.jl")          # GW strain calculator
+include("convergence_tests.jl")
 
 end
 
-# test
-#pomin.H(3,rand(Float64,2),rand(Float64,12))
-
-masses = [1 0.00000300336937]
-Z_init = [0 0 0 101306075.1 0 0 0 0 0 0 0.0000000002983946294 0]
-tadap = t -> 1.0  # effectively turns off adaptive time stepping since δ will be multiplied by 1 each timestep
-tspan = (0, 64071141430000)
-maxit = 10000
-δ = 6407114143
-#print(pomin.Jsympl(pomin.dH(3, masses, Z_init)))
-sol = pomin.hrkintegrator(3,2,Z_init, x -> pomin.dH(3,masses,x) , δ, tadap, tspan, maxit)
-print(pomin.soln2csv(sol))
