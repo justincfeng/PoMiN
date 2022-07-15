@@ -57,6 +57,8 @@ end
 Returns a struct of type "soln" (defined in pomin-types)
 
 # Arguments
+- `d::Int` is the number of dimensions
+- `N::Int` is the number of particles
 - `z0::RealVec`: Initial values phase space vector ``\\{ \\vec{q}, \\vec{p} \\}``
 - `dH::Function`: Gradient of the Hamiltonian with respect to the phase space vector ``\\vec{z}``.  Takes a single parameter ``\\vec{zi}`` of the values of the phase space variables at the current time and returns a the gradient of H which is a vector with the same dimensionality as ``\\vec{zi}``
 - `δ::Real`: Time step to be used by the integrator
@@ -69,7 +71,7 @@ function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, tada
 
     ddof = Int(length(z0))  # ddof = number of elements in z0
 
-    tdiff = abs(tspan[2] - tspan[1])  # tdiff = timestep size
+    tdiff = abs(tspan[2] - tspan[1])  # tdiff = timespan size
 
     n = Int(round(tdiff / δ, digits=0))  # n = number of timesteps
 

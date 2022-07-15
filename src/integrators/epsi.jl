@@ -69,6 +69,8 @@ Symplectic integrator of Tao.
 Returns a struct of type "soln" (defined in pomin-types)
 
 # Arguments
+- `d::Int` is the number of dimensions
+- `N::Int` is the number of particles
 - `z0::RealVec`: Initial values of phase space vector ``\\{ \\vec{q}, \\vec{p} \\}``
 - `dH::Function`: Gradient of the Hamiltonian with respect to the phase space vector ``\\vec{z}``.  Takes a single parameter ``\\vec{zi}`` of the values of the phase space variables at the current time and returns a the gradient of H which is a vector with the same dimensionality as ``\\vec{zi}``
 - `δ::Real`: Time step to be used by the integrator
@@ -76,7 +78,7 @@ Returns a struct of type "soln" (defined in pomin-types)
 - `tspan::Tuple{Real,Real}`: Tuple containing the start time and end time for the integration
 - `maxit::Real`: Maximum number of iterations.  When this number of iterations is exceeded, integration stops.
 """
-function hsintegrator(z0::RealVec, dH::Function, δ::Real, ω::Real, tspan::Tuple{Real,Real}, maxit::Real)
+function hsintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, ω::Real, tspan::Tuple{Real,Real}, maxit::Real)
     tpfl = typeof(z0[1])
 
     ddof = Int(length(z0))
@@ -89,7 +91,8 @@ function hsintegrator(z0::RealVec, dH::Function, δ::Real, ω::Real, tspan::Tupl
         n = abs(Int(round(maxit, digits=0)))
     end
 
-    Z = soln(zeros(tpfl, n), fill(zeros(tpfl, ddof), n), fill(zeros(tpfl, ddof), n))
+    #Z = soln(zeros(tpfl, n), fill(zeros(tpfl, ddof), n), fill(zeros(tpfl, ddof), n))
+    Z = soln(d,N,zeros(tpfl, n), fill(zeros(tpfl, ddof), n), fill(zeros(tpfl, ddof), n))
 
     zi = zdoubler(vec(z0))
 
