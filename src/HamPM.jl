@@ -288,9 +288,60 @@ function dH3m0( d::Int , m::RealVec , Z::RealVec )
 
 end
 
+# Gradient of Milky Way potentials
+function dMilkyWay(d::Int, m::RealVec, Z::RealVec, r_sun =8.4, Mb =409, Md =2856, Mh =1018, b_b =0.23, a_d =4.22, b_d =0.292, a_h =2.562)
+    # Λ assumed to be 200 kpc
+    # γ assumed to be 2
+
+    tpfl = typeof(Z[1])
+    n = length(m)
+
+    # the Milky Way potentials are in 3-dimensionsal Cartesian coordinates
+    # ensure d is 3, otherwise return all zeros (effectively ignoring Milky Way potentials)
+    if d != 3 
+        return zeros(tpfl, 6*n)
+    end
+
+    dΦB = zeros(tpfl, 6*n)
+    dΦD = zeros(tpfl, 6*n)
+    dΦH = zeros(tpfl, 6*n)
+
+    # Z consists of q's for all particles first, then the p's for all particles
+    # dΦ vectors are gradients wrt Z, therefore derivs wrt all of the x, y, z's are first, then wrt all of the px, py, pz's
+    # Since MW Φ's contain no p's, the second half of each gradient vector will be zero (whole vector already initialized to zeros)
+    for i in 1:n
+        # index for start of q's of particle i in Z
+        part_index = 1 + 3*(i-1)  # since d == 3
+        # indices for x, y, z positions of particle i within Z, which also are indices within dΦ for x, y, z derivs for particle i
+        xind = part_index
+        yind = part_index + 1
+        zind = part_index + 2
+        pos = [ Z[xind], Z[yind], Z[zind]]
+        
+        bulge_denom = ( dot(pos,pos) + b_b^2)^1.5
+        dΦB[xind] += Mb * Z[xind] / bulge_denom
+        dΦB[yind] += Mb * Z[yind] / bulge_denom
+        dΦB[zind] += Mb * Z[zind] / bulge_denom
+
+        rsq = Z[xind]^2 + Z[yind]^2
+        disc_denom = ( rsq + (a_d + sqrt(Z[zind]^2 + b_d^2))^2)^1.5
+        dΦD[xind] += Md * Z[xind] / disc_denom
+        dΦD[yind] += Md * Z[yind] / disc_denom
+        dΦD[zind] += Md * Z[zind] * (a_d + sqrt(Z[zind]^2 + b_d^2)) / ( disc_denom * sqrt(Z[zind]^2 + b_d^2))
+
+        R = sqrt(dot(pos,pos))
+        halo_coeff = Mh / a_h^2 * (1 + R/a_h)^(-1) / R
+        dΦH[xind] += halo_coeff * Z[xind]
+        dΦH[yind] += halo_coeff * Z[yind]
+        dΦH[zind] += halo_coeff * Z[zind]
+    end
+
+    return dΦB + dΦD + dΦH
+end
+
 # Gradient of the Hamiltonian function
 function dH( d::Int , m::RealVec , Z::RealVec )
-    return ForwardDiff.gradient(x->H(d,m,x),Z) #+ dH3m0( d , m , Z )
+    return ForwardDiff.gradient(x->H(d,m,x),Z) #+ dMilkyWay(d,m,Z) #+ dH3m0( d , m , Z )
 end
 
 ## Symplectic operator: Maps output of dH to time derivative of phase space variables
