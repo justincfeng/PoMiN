@@ -8,7 +8,7 @@ tspan = (Double64(0), Double64(1.5E+21))
 tadap = t -> 1.0  # effectively turns off adaptive time stepping since δ will be multiplied by 1 each timestep
 maxit = 100000
 
-#sol = hrkintegrator(3, 1, Z_init, x -> pomin.dH(3, masses, x), δ, tadap, tspan, maxit)
-sol = hsintegrator(3, 1, Z_init, x -> pomin.dH(3, masses, x), δ, 1/(δ*100000), tspan, maxit)
+sol = hrkintegrator(3, 1, Z_init, x -> pomin.dH(3, masses, x), δ, tadap, tspan, maxit)
+#sol = hsintegrator(3, 1, Z_init, x -> pomin.dH(3, masses, x), δ, 1/(δ*100000), tspan, maxit)
 
 println(soln2csv(sol))
