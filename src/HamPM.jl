@@ -290,9 +290,18 @@ end
 
 # Gradient of Milky Way potentials
 function dMilkyWay(d::Int, m::RealVec, Z::RealVec, r_sun =8.4, Mb =409, Md =2856, Mh =1018, b_b =0.23, a_d =4.22, b_d =0.292, a_h =2.562)
-    # Λ assumed to be 200 kpc
-    # γ assumed to be 2
-
+    # Milky Way Model I (Irrgang et al):
+    #   r_sun = 8.4 kpc       radius of sun's orbit
+    #   Mb = 409 M_gal        mass bulge
+    #   Md = 2856 M_gal       mass disk
+    #   Mh = 1018 M_gal       mass halo
+    #   b_b = 0.23 kpc        length scale bulge
+    #   a_d = 4.22 kpc        length scale disk #1
+    #   b_d = 0.292 kpc       length scale disk #2
+    #   a_h = 2.562 kpc       length scale halo
+    #   Λ = 200 kpc           halo cutoff parameter
+    #   γ = 2                 free parameter
+    
     tpfl = typeof(Z[1])
     n = length(m)
 
@@ -306,7 +315,7 @@ function dMilkyWay(d::Int, m::RealVec, Z::RealVec, r_sun =8.4, Mb =409, Md =2856
     dΦD = zeros(tpfl, 6*n)
     dΦH = zeros(tpfl, 6*n)
 
-    # Z consists of q's for all particles first, then the p's for all particles
+    # Z consists of q's for all particles first, then p's for all particles
     # dΦ vectors are gradients wrt Z, therefore derivs wrt all of the x, y, z's are first, then wrt all of the px, py, pz's
     # Since MW Φ's contain no p's, the second half of each gradient vector will be zero (whole vector already initialized to zeros)
     for i in 1:n
@@ -341,7 +350,7 @@ end
 
 # Gradient of the Hamiltonian function
 function dH( d::Int , m::RealVec , Z::RealVec )
-    return ForwardDiff.gradient(x->H(d,m,x),Z) #+ dMilkyWay(d,m,Z) #+ dH3m0( d , m , Z )
+    return ForwardDiff.gradient(x -> H(d, m, x), Z) + dMilkyWay(d, m, Z, 1.7552537847E+17, 9.5091683066E+09, 6.6401429544E+10, 2.3668296665E+10, 4.8060520294E+15, 8.8180606801E+16, 6.1015964896E+15, 5.3535240432E+16) #+ dH3m0( d , m , Z )
 end
 
 ## Symplectic operator: Maps output of dH to time derivative of phase space variables

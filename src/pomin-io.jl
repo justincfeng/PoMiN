@@ -11,7 +11,7 @@ function num2xyz(i::Int)
 end
 
 # Converts the soln data structure into CSV data
-# CSV data will be organized as follows:
+# CSV columns will be ordered as follows:
 #   q's for particle 1
 #   p's for particle 1
 #   q's for particle 2

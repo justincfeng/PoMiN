@@ -23,7 +23,7 @@ include("integrators/epsi.jl")          # Symplectic Integrator (Tao 2016)
 include("integrators/rk4i.jl")          # 4th order Runge-Kutta
 include("integrators/int.jl")           # Julia integrator functions
 include("gwsc.jl")          # GW strain calculator
-include("convergence_HO.jl")
+include("sun_orbit_test.jl")
 
 end
 
