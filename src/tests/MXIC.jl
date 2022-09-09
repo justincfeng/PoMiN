@@ -68,3 +68,5 @@ function MXICgen(m1,μ,p,b,d;
 
     return (dp,[qx1;qy1;qz1;qx2;qy2;qz2;px1;py1;pz1;px2;py2;pz2])
 end
+
+
