@@ -374,3 +374,54 @@ end
 
 # Right hand side of Hamilton's equations
 FHE = (d,m,z)->Jsympl(dH(d,m,z))
+
+#-----------------------------------------------------------------------
+#   SIMPLE ADAPTIVE TIMESTEPPING
+#-----------------------------------------------------------------------
+"""
+    tcour( dt::Real , Z::RealVec , Zdot::RealVec , C = 0.001 , d=3 )
+
+This function implements a simple adaptive timestepping function 
+inspired by the Courant-Friedrichs-Condition. 
+"""
+function tcour( dt::Real , Z::RealVec , Zdot::RealVec , C = 0.001 , d=3 )
+    tpfl = typeof(Z[1])
+    n2 = length(Z)
+    rs = tpfl(1)
+    vs = tpfl(1)
+    Δt = dt
+
+    ndof = Int(round(n2 / 2, digits=0))
+    n    = Int(round(ndof/d, digits=0))
+
+    if iseven(n2) && n*d==ndof
+        qa  = Z2q(n,d,1,Z)
+        qb  = Z2q(n,d,2,Z)
+        va  = Z2q(n,d,1,Zdot)
+        vb  = Z2q(n,d,2,Zdot)
+        vab = norm(va-vb)
+        rab = rf(qa,qb)
+        vs  = vab
+        rs  = rab
+        for a=2:n
+            qa = Z2q(n,d,a,Z)    
+            va = Z2q(n,d,a,Zdot)
+            for b=3:n
+                if b!=a
+                    qb = Z2q(n,d,b,Z)
+                    vb = Z2q(n,d,b,Zdot)
+                    rab = rf(qa,qb)
+                    vab = norm(va-vb)
+                    if (vab*dt/rab)>C && rab<rs
+                        Δt = C * rab/vab
+                        vs = vab
+                        rs = rab
+                    end
+                end
+            end
+        end
+        return Δt
+    else
+        return Δt
+    end
+end  # End tcour
