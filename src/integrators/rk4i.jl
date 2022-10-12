@@ -62,7 +62,7 @@ Returns a struct of type "soln" (defined in pomin-types)
 - `z0::RealVec`: Initial values phase space vector ``\\{ \\vec{q}, \\vec{p} \\}``
 - `dH::Function`: Gradient of the Hamiltonian with respect to the phase space vector ``\\vec{z}``.  Takes a single parameter ``\\vec{zi}`` of the values of the phase space variables at the current time and returns a the gradient of H which is a vector with the same dimensionality as ``\\vec{zi}``
 - `δ::Real`: Time step to be used by the integrator
-- `tadap::Function`: Adaptive time-stepping function.  Takes a three parameter: the timestep ``δ``, ``\\vec{zi}`` of the values of the phase space variables at the current time, and ``\\dot{\\vec{zi}}`` the time derivative of the phase space variables, then returns the time step
+- `f::Function`: Adaptive time-stepping function.  Takes three parameters: the timestep ``δ``, ``\\vec{zi}`` of the values of the phase space variables at the current time, and ``\\dot{\\vec{zi}}`` the time derivative of the phase space variables, then returns the time step
 - `tspan::Tuple{Real,Real}`: Tuple containing the start time and end time for the integration
 - `maxit::Real`: Maximum number of iterations.  When this number of iterations is exceeded, integration stops.
 """

@@ -350,7 +350,12 @@ end
 
 # Gradient of the Hamiltonian function
 function dH( d::Int , m::RealVec , Z::RealVec )
-    return ForwardDiff.gradient(x -> H(d, m, x), Z) + dMilkyWay(d, m, Z, 1.7552537847E+17, 9.5091683066E+09, 6.6401429544E+10, 2.3668296665E+10, 4.8060520294E+15, 8.8180606801E+16, 6.1015964896E+15, 5.3535240432E+16) #+ dH3m0( d , m , Z )
+    return ForwardDiff.gradient(x -> H(d, m, x), Z) #+ dH3m0( d , m , Z )
+end
+
+# Gradient of the Hamiltonian function plus gradient of Milky Way potential
+function dH_plus_MW(d::Int, m::RealVec, Z::RealVec)
+    return ForwardDiff.gradient(x -> H(d, m, x), Z) + dMilkyWay(d, m, Z, 1.7552537847E+17, 9.5091683066E+09, 6.6401429544E+10, 2.3668296665E+10, 4.8060520294E+15, 8.8180606801E+16, 6.1015964896E+15, 5.3535240432E+16)
 end
 
 ## Symplectic operator: Maps output of dH to time derivative of phase space variables
@@ -382,7 +387,18 @@ FHE = (d,m,z)->Jsympl(dH(d,m,z))
     tcour( dt::Real , Z::RealVec , Zdot::RealVec , C = 0.001 , d=3 )
 
 This function implements a simple adaptive timestepping function 
-inspired by the Courant-Friedrichs-Condition. 
+inspired by the Courant-Friedrichs Condition. 
+
+Returns a new timestep that satisfies the CFL condition.
+If the current timestep already satisfies CFL condition, the timestep is returned unchanged.
+
+# Arguments
+- `dt::Real` is the current timestep
+- `Z::RealVec` is the current state of the system
+- `Zdot::RealVec` is the time derivative of Z
+- `C` is the Courant factor
+- `d` is the number of dimensions
+
 """
 function tcour( dt::Real , Z::RealVec , Zdot::RealVec , C = 0.001 , d=3 )
     tpfl = typeof(Z[1])
@@ -420,8 +436,10 @@ function tcour( dt::Real , Z::RealVec , Zdot::RealVec , C = 0.001 , d=3 )
                 end
             end
         end
+        println("in tcour: old dt = " * string(dt) * " new dt = " * string(Δt))
         return Δt
     else
+        error("in tcour delta t is not changing bc ( iseven(n2) && n*d==ndof ) returned false")
         return Δt
     end
 end  # End tcour

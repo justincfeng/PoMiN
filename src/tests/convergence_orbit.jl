@@ -2,7 +2,7 @@ using DoubleFloats
 
 numhalves = 7  # how many times to halve the timestep; smallest timestep will be δ divided by 2^(numhalves-1)
 
-tadap = (δ,z,zdot) -> δ  # effectively turns off adaptive time stepping since δ will be multiplied by 1 each timestep
+tadap = (δ,z,zdot) -> δ  # effectively turns off adaptive time stepping
 maxit = 1000000
 
 # Sun's mass and Mercury's mass

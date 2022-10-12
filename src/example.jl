@@ -18,7 +18,7 @@ maxit = 1000000
 
 ω = Double64(1/2)
 
-tadap = (δ,z,zdot) -> δ  # effectively turns off adaptive time stepping since δ will be multiplied by 1 each timestep
+tadap = (δ,z,zdot) -> δ  # effectively turns off adaptive time stepping
 
 sol = hrkintegrator( z0, HamHO.dH , δ , tadap, tspan , maxit )
 sols = hsintegrator( z0, HamHO.dH , δ , ω , tspan , maxit )
