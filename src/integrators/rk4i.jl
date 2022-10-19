@@ -51,7 +51,7 @@ end
 
 """
     hrkintegrator( z0::RealVec, dH::Function , δ::Real 
-                    , tadap::Function , tspan::Tuple{Real,Real} , maxit::Real )
+                    , tadapt::Function , tspan::Tuple{Real,Real} , maxit::Real )
     
 4th order Runge-Kutta integrator.
 Returns a struct of type "soln" (defined in pomin-types)
@@ -66,31 +66,26 @@ Returns a struct of type "soln" (defined in pomin-types)
 - `tspan::Tuple{Real,Real}`: Tuple containing the start time and end time for the integration
 - `maxit::Real`: Maximum number of iterations.  When this number of iterations is exceeded, integration stops.
 """
-function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, tadap::Function, tspan::Tuple{Real,Real}, maxit::Real)
+function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, tadapt::Function, tspan::Tuple{Real,Real}, maxit::Real)
+    
     tpfl = typeof(z0[1])  # tpfl = type of data stored in z0
-
-    ddof = Int(length(z0))  # ddof = number of elements in z0
-
-    tdiff = abs(tspan[2] - tspan[1])  # tdiff = timespan size
-
-    n = Int(round(tdiff / δ, digits=0))  # n = number of timesteps
-
-    if n > abs(Int(round(maxit, digits=0)))
-        n = abs(Int(round(maxit, digits=0)))
-    end
-
-    # initialize soln data structure and fill with zeros
-    sol = soln(d,N,zeros(tpfl, n), fill(zeros(tpfl, ddof), n), fill(zeros(tpfl, ddof), n))
 
     zi = vec(z0)
 
+    # initialize soln data structure
+    sol = soln(d,N,zeros(tpfl, 1), [zi], [zi])
+
     f = zx -> Jsympl(dH(zx))
 
-    for i = 1:n
+    for i = 1:maxit
+        δ = tadapt(δ,zi,f(zi))
+        new_t = sol.t[i] + δ
+        if new_t > tspan[2]
+            break
+        end
         zi = rk4map(zi, f, δ)
-        δ = tadap(δ,zi,f(zi))
-        sol.t[i] = i * δ
-        sol.z[i] = zi
+        sol.t = [sol.t; new_t]     # append to t
+        sol.z = [sol.z; [zi] ]     # append to z
     end
 
     return sol

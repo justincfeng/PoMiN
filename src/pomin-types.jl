@@ -17,7 +17,7 @@ struct Parameters
 end
 
 #   Datatype for solutions
-struct soln
+mutable struct soln
     d::Int                  # number of dimensions
     N::Int                  # number of particles
     t::RealVec              # Vector recording times at each timestep

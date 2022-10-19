@@ -405,41 +405,44 @@ function tcour( dt::Real , Z::RealVec , Zdot::RealVec , C = 0.001 , d=3 )
     n2 = length(Z)
     rs = tpfl(1)
     vs = tpfl(1)
-    Δt = dt
 
     ndof = Int(round(n2 / 2, digits=0))
     n    = Int(round(ndof/d, digits=0))
 
     if iseven(n2) && n*d==ndof
+        # calculate separation and relative velocity between first two particles
+        # and store these as starting minimum values
         qa  = Z2q(n,d,1,Z)
         qb  = Z2q(n,d,2,Z)
         va  = Z2q(n,d,1,Zdot)
         vb  = Z2q(n,d,2,Zdot)
         vab = norm(va-vb)
         rab = rf(qa,qb)
-        vs  = vab
-        rs  = rab
-        for a=2:n
+        rs  = rab  # smallest separation among particle pairs
+        vs  = vab       # relative velocity for particle pair with smallest separation
+        for a=1:n
             qa = Z2q(n,d,a,Z)    
             va = Z2q(n,d,a,Zdot)
-            for b=3:n
+            for b=2:n
                 if b!=a
                     qb = Z2q(n,d,b,Z)
                     vb = Z2q(n,d,b,Zdot)
                     rab = rf(qa,qb)
                     vab = norm(va-vb)
-                    if (vab*dt/rab)>C && rab<rs
-                        Δt = C * rab/vab
+                    if rab<=rs  
                         vs = vab
                         rs = rab
                     end
                 end
             end
         end
-        println("in tcour: old dt = " * string(dt) * " new dt = " * string(Δt))
+        Δt = C * rs/vs
+        # return \Delta t if it is smaller than the maximum timestep, otherwise return maximum timestep
+
+        # println("time step = " * string(Δt))
         return Δt
     else
         error("in tcour delta t is not changing bc ( iseven(n2) && n*d==ndof ) returned false")
-        return Δt
+        return dt
     end
 end  # End tcour
