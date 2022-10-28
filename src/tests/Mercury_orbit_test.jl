@@ -23,8 +23,8 @@ tspan = (Double64(0), Double64(2.70E+17))
 δ = Double64(2.70E+13)
 
 no_adapt = (δ, z, zdot) -> δ                        # turns off adaptive time stepping
-adapt = (δ, z, zdot) -> tcour(δ, z, zdot, 0.005)   # last parameter is Courant number
-maxit = 10000
+adapt = (δ, z, zdot) -> tcour(δ, z, zdot, 0.001)   # last parameter is Courant number
+maxit = 30000
 
 sol = hrkintegrator(3, 2, Z_init, x -> pomin.dH(3, masses, x), δ, adapt, tspan, maxit)
 #sol = hsintegrator(3, 1, Z_init, x -> pomin.dH(3, masses, x), δ, 1/(δ*100000), tspan, maxit)
