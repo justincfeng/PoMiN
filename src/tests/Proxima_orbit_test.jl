@@ -13,4 +13,4 @@ maxit = 10000
 sol = hrkintegrator(3, 2, Z_init, x -> pomin.dH(3, masses, x), δ, no_adapt, tspan, maxit)
 #sol = hsintegrator(3, 1, Z_init, x -> pomin.dH(3, masses, x), δ, 1/(δ*100000), tspan, maxit)
 
-println(soln2csv(sol))
+printcsv(sol)

@@ -78,6 +78,9 @@ function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, tada
     f = zx -> Jsympl(dH(zx))
 
     for i = 1:maxit
+        if i % 1000 == 0
+            println(stderr,i)
+        end
         δ = tadapt(δ,zi,f(zi))
         new_t = sol.t[i] + δ
         if new_t > tspan[2]
