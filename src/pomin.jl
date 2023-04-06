@@ -24,7 +24,7 @@ include("integrators/rk4i.jl")          # 4th order Runge-Kutta
 include("integrators/int.jl")           # Julia integrator functions
 include("gwsc.jl")          # GW strain calculator
 
-include("tests/AlphaAB_orbit_test.jl")
+include("tests/Earth_Sun_galactocentric.jl")
 
 end
 

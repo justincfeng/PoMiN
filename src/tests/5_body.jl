@@ -1,8 +1,8 @@
 using DoubleFloats
 
-masses = Double64[1.988, 0.1221]        # the Alpha Centauri binary star and Proxima Centauri with mass in units of solar masses
+masses = Double64[0.1221]
 
-Z_init = Double64[-1.0422461557E+13, -8.7018418912E+12, -2.4325683942E+13, -9.9157696012E+12, -7.5891180437E+12, -2.4171267294E+13, -6.19207190E-05, 1.47027953E-04, 1.43891876E-04, -3.8172314445E-06, 9.0494364315E-06, 8.9932012183E-06]
+Z_init = Double64[-9.9157696012E+12, -7.5891180437E+12, -2.4171267294E+13, -3.8172314445E-06, 9.0494364315E-06, 8.9932012183E-06]
 tspan = (Double64(0), Double64(3.53E+18))
 δ = Double64(3.53E+14)
 
