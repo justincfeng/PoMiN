@@ -1,4 +1,14 @@
 using DoubleFloats
+using LinearAlgebra
+using ForwardDiff
+using OrdinaryDiffEq
+
+include("../pomin-types.jl")        # data type definitions
+include("../pomin-io.jl")           # input/output routines
+include("../idxer.jl")              # routines for index management
+include("../integrators/rk4i.jl")   # Julia integrator functions
+include("../HamPM.jl")              # Julia integrator functions
+include("../integrators/int.jl")    # Julia integrator functions
 
 #   Datatype for parameters
 struct Parameters
@@ -92,8 +102,10 @@ mxicd=MXICgen(m1,μ,p,b,d;
                     G=Double64(1),c=Double64(1),
                     StartTime=Double64(0),MaxTimeStepFactor=Double64(1e5))
 
-                    
-hrkintegrator(3, 2, mxicd[4] , x -> pomin.dH_plus_MW(3, mxicd[3], x), δ, no_adapt, mxicd[2].tspan, mxicd[2].iter)
+
+S = hointegrator( mxicd[4] , z->FHE(3,mxicd[3],z) , mxicd[2].tspan )
+
+# hrkintegrator(3, 2, mxicd[4] , x -> pomin.dH_plus_MW(3, mxicd[3], x), δ, no_adapt, mxicd[2].tspan, mxicd[2].iter)
 
 #-----------------------------------------------------------------------
 function MXICmassive(m1,μ,p,b,d;
