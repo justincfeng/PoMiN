@@ -79,7 +79,7 @@ function MXICgen(m1,μ,p,b,d;
     py1  = Double64(0.)
     pz1  = Double64(0.)
 
-    px2  = p
+    px2  = -p
     py2  = Double64(0.)
     pz2  = Double64(0.)
 
