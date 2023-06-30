@@ -53,6 +53,8 @@ function MXICgen(m1,μ,p,b,d;
         end
     end
 
+    Dur = 2*d*(p/m1)
+
     MaxTimeStep = Int(Dur/MaxTimeStepFactor)
 
     E1  = c*√((c*m1)^2 + p^2)
@@ -67,11 +69,13 @@ function MXICgen(m1,μ,p,b,d;
 
     m2  = μ*m1
 
-    qx1  = - r1
+    #qx1  = - r1
+    qx1  = -d
     qy1  = - b/Double64(2)
     qz1  = Double64(0.)
 
-    qx2  = r2
+    #qx2  = r2
+    qx2  = d
     qy2  = b/Double64(2)
     qz2  = Double64(0.)
 
@@ -95,7 +99,7 @@ m1  = Double64(0.0497992);
 μ   = Double64(π/4);
 db  = Double64(100000);
 p   = Double64(10*m1);
-b   = Double64(10*1.1108305558745590335689712446765042841434478759765625);
+b   = Double64(10*(1.1108305558745590335689712446765042841434478759765625)^2);
 d   = Double64(db*b);
 
 mxicd=MXICgen(m1,μ,p,b,d;
