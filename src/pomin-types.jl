@@ -1,4 +1,5 @@
 const RealVec{T<:Real} = Array{T}
+const RealMtx{T<:Real} = Array{T,2}
 
 #   Particle datatype
 struct Particles
