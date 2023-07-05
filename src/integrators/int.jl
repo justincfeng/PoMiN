@@ -27,16 +27,16 @@ function hointegratorfull( z0::RealVec , F::Function
 end
 
 function hointegrator( z0::RealVec , F::Function 
-                    , tspan::Tuple{Real,Real} , abstol::Real=1e-10 
-                    , reltol::Real=1e-10 , integrator=Tsit5() )
+                    , tspan::Tuple{Real,Real} , atol::Real=1e-10 
+                    , rtol::Real=1e-10 , integrator=Tsit5() )
 
     f=(zx,p,t)->F(zx)
 
-    prob = ODEProblem(f,z0,tspan,abstol,reltol)
+    prob = ODEProblem(f,z0,tspan)
 
-    S = solve(prob,integrator)
+    S = solve(prob,integrator,abstol=atol,reltol=rtol)
 
-    return soln(S.t,S.u)
+    return S
 end
 
 #-----------------------------------------------------------------------
