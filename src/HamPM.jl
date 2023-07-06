@@ -31,7 +31,7 @@ Euclidean distance function. Returns ``r_{ab}=\\sqrt{(qa-qb)⋅(qa-qb)}``,
 given particle positions ``\\vec{q}_a`` and ``\\vec{q}_b``.
 """
 function rf( qa::RealVec , qb::RealVec )
-    return sqrt(dot(qa-qb,qa-qb))
+    return norm(qa-qb)
 end
 
 """
@@ -118,20 +118,10 @@ function H( d::Int , m::RealVec , Z::RealVec )
                 H2 += ( 7*Ξab - Θab*Θba )/(4*rab)
 
                 if m[b] != zero(tpfl)
-                    H3 -= 
-                    (
-                    2*(
-                       -2*(Ξab*Θba)^2 + 2*Θab*Θba*Ξab*psb + (Θab*psb)^2 - psb*Ξab^2
-                      )/Enb^2
-                    +
-                    2*(
-                       psa*Θba^2 - (Θab*Θba)^2 - 2*Θab*Θba*Ξab + Ξab^2 - psb*Θab^2 
-                      )
-                    +
-                    yba*(
-                         3*psa*Θba^2 - (Θab*Θba)^2 - 8*Θab*Θba*Ξab + psa*psb - 3*psb*Θab^2
-                        )
-                    ) / (4*Ena*Enb*rab*yba*(yba+1)^2)
+                    H3 += ( 2*(-2*(Ξab*Θba)^2 - 2*Θab*Θba*Ξab*psb - (Θab*psb)^2 + psb*Ξab^2)/Enb^2 + 
+                            2*(psa*Θba^2 - (Θab*Θba)^2 + 2*Θab*Θba*Ξab - Ξab^2 + psb*Θab^2) +
+                            yba*(3*psa*Θba^2 - (Θab*Θba)^2 + 8*Θab*Θba*Ξab - psa*psb + 3*psb*Θab^2)
+                            ) / (4*Ena*Enb*rab*yba*(yba+1)^2)
                 # else  # This does not work
                 #    H3 -= 
                 #    (

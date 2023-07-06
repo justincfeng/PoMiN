@@ -95,19 +95,25 @@ function MXICgen(m1,μ,p,b,d;
                     [qx1;qy1;qz1;qx2;qy2;qz2;px1;py1;pz1;px2;py2;pz2] )
 end #-------------------------------------------------------------------
 
+nn=250;
+
 m1  = Double64(0.0497992);
 μ   = Double64(π/4);
 db  = Double64(100000);
 p   = Double64(10*m1);
-b   = Double64(10*(1.1108305558745590335689712446765042841434478759765625)^2);
+b   = Double64(10)*Double64("1.1108305558745590335689712446765042841434478759765625")^Double64(nn);
 d   = Double64(db*b);
 
 mxicd=MXICgen(m1,μ,p,b,d;
                     G=Double64(1),c=Double64(1),
                     StartTime=Double64(0),MaxTimeStepFactor=Double64(1e5))
 
+S = hointegrator( mxicd[4] , z->FHE(3,mxicd[3],z) , mxicd[2].tspan , 1e-25, 1e-25, AutoTsit5(Rodas5()) )
 
-S = hointegrator( mxicd[4] , z->FHE(3,mxicd[3],z) , mxicd[2].tspan )
+100*(abs((S[end]-S[1])[11])-mxicd[1])/mxicd[1]
+
+# S[end]-S[1]
+# mxicd[1]
 
 # hrkintegrator(3, 2, mxicd[4] , x -> pomin.dH_plus_MW(3, mxicd[3], x), δ, no_adapt, mxicd[2].tspan, mxicd[2].iter)
 
