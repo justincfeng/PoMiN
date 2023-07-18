@@ -21,10 +21,10 @@ function closestApproach(v_init::RealVec)
     adapt = (δ, z, zdot) -> tcour(δ, z, zdot, 0.0001)   # last parameter is Courant number
     maxit = 100000
 
-    sol = hrkintegrator(3, 6, Z_init, x -> pomin.dH(3, masses, x), δ, no_adapt, tspan, maxit)
+    sol = hrkintegrator(3, 6, Z_init, x -> pomin.dH_plus_MW(3, masses, x), δ, no_adapt, tspan, maxit)
     
     println(stderr,"integrator done")
-    #printcsv(sol)
+    printcsv(sol)
 
     # find distance of closest approach
     mindist = Double64(1E100)
@@ -87,7 +87,6 @@ function runExperiment(iterations)
 end
 
 function secantMethod(f, x0, x1, tol, cutoff)
-    x2 = NaN
     f0 = f(x0)
     println("f0 = ", f0 * 1.47669196951425 * 6.6845871226706E-09)
     for iterations in 1:cutoff

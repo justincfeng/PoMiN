@@ -289,9 +289,12 @@ function dH3m0( d::Int , m::RealVec , Z::RealVec )
 end
 
 # Gradient of Milky Way potentials
-function dMilkyWay(d::Int, m::RealVec, Z::RealVec, r_sun =8.4, Mb =409, Md =2856, Mh =1018, b_b =0.23, a_d =4.22, b_d =0.292, a_h =2.562)
+function dMilkyWay(d::Int, m::RealVec, Z::RealVec, origin_x=-1.708859462494220E+17, origin_y=0, origin_z =4.346342845091530E+14, r_sun=8.4, Mb=409, Md=2856, Mh=1018, b_b=0.23, a_d=4.22, b_d=0.292, a_h=2.562)
+    # (origin_x, origin_y, origin_z) is the location (in units of M) in the galactocentric frame where the simulation's origin is placed
+    # it defaults to the location of the Sun as given by astropy and 2019 data from https://arxiv.org/abs/1904.05721
+    
     # Milky Way Model I (Irrgang et al):
-    #   r_sun = 8.4 kpc       radius of sun's orbit
+    #   r_sun = 8.4 kpc       radius of sun's orbit -- not used
     #   Mb = 409 M_gal        mass bulge
     #   Md = 2856 M_gal       mass disk
     #   Mh = 1018 M_gal       mass halo
@@ -325,24 +328,27 @@ function dMilkyWay(d::Int, m::RealVec, Z::RealVec, r_sun =8.4, Mb =409, Md =2856
         xind = part_index
         yind = part_index + 1
         zind = part_index + 2
-        pos = [ Z[xind], Z[yind], Z[zind]]
+        pos = [ Z[xind] + origin_x, Z[yind] + origin_y, Z[zind] + origin_z]
         
+        # bulge
         bulge_denom = ( dot(pos,pos) + b_b^2)^1.5
-        dΦB[xind] += Mb * Z[xind] / bulge_denom
-        dΦB[yind] += Mb * Z[yind] / bulge_denom
-        dΦB[zind] += Mb * Z[zind] / bulge_denom
+        dΦB[xind] += Mb * pos[1] / bulge_denom
+        dΦB[yind] += Mb * pos[2] / bulge_denom
+        dΦB[zind] += Mb * pos[3] / bulge_denom
 
-        rsq = Z[xind]^2 + Z[yind]^2
-        disc_denom = ( rsq + (a_d + sqrt(Z[zind]^2 + b_d^2))^2)^1.5
-        dΦD[xind] += Md * Z[xind] / disc_denom
-        dΦD[yind] += Md * Z[yind] / disc_denom
-        dΦD[zind] += Md * Z[zind] * (a_d + sqrt(Z[zind]^2 + b_d^2)) / ( disc_denom * sqrt(Z[zind]^2 + b_d^2))
+        # disc
+        rsq = pos[1]^2 + pos[2]^2
+        disc_denom = ( rsq + (a_d + sqrt(pos[3]^2 + b_d^2))^2)^1.5
+        dΦD[xind] += Md * pos[1] / disc_denom
+        dΦD[yind] += Md * pos[2] / disc_denom
+        dΦD[zind] += Md * pos[3] * (a_d + sqrt(pos[3]^2 + b_d^2)) / ( disc_denom * sqrt(pos[3]^2 + b_d^2))
 
+        # halo
         R = sqrt(dot(pos,pos))
         halo_coeff = Mh / a_h^2 * (1 + R/a_h)^(-1) / R
-        dΦH[xind] += halo_coeff * Z[xind]
-        dΦH[yind] += halo_coeff * Z[yind]
-        dΦH[zind] += halo_coeff * Z[zind]
+        dΦH[xind] += halo_coeff * pos[1]
+        dΦH[yind] += halo_coeff * pos[2]
+        dΦH[zind] += halo_coeff * pos[3]
     end
 
     return dΦB + dΦD + dΦH
@@ -354,8 +360,11 @@ function dH( d::Int , m::RealVec , Z::RealVec )
 end
 
 # Gradient of the Hamiltonian function plus gradient of Milky Way potential
-function dH_plus_MW(d::Int, m::RealVec, Z::RealVec)
-    return ForwardDiff.gradient(x -> H(d, m, x), Z) + dMilkyWay(d, m, Z, 1.7552537847E+17, 9.5091683066E+09, 6.6401429544E+10, 2.3668296665E+10, 4.8060520294E+15, 8.8180606801E+16, 6.1015964896E+15, 5.3535240432E+16)
+function dH_plus_MW(d::Int, m::RealVec, Z::RealVec, origin_x=-1.708859462494220E+17, origin_y=0, origin_z =4.346342845091530E+14)
+    # (origin_x, origin_y, origin_z) is the location (in units of M) in the galactocentric frame where the simulation's origin is placed
+    # it defaults to the location of the Sun as given by astropy and 2019 data from https://arxiv.org/abs/1904.05721
+
+    return ForwardDiff.gradient(x -> H(d, m, x), Z) + dMilkyWay(d, m, Z, origin_x, origin_y, origin_z, 1.7552537847E+17, 9.5091683066E+09, 6.6401429544E+10, 2.3668296665E+10, 4.8060520294E+15, 8.8180606801E+16, 6.1015964896E+15, 5.3535240432E+16)
 end
 
 ## Symplectic operator: Maps output of dH to time derivative of phase space variables
