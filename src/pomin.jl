@@ -13,6 +13,7 @@ using CSV
 using ForwardDiff
 using OrdinaryDiffEq
 using Logging
+using DoubleFloats
 
 include("pomin-types.jl")   # data type definitions
 include("pomin-io.jl")      # input/output routines
@@ -24,7 +25,7 @@ include("integrators/rk4i.jl")          # 4th order Runge-Kutta
 include("integrators/int.jl")           # Julia integrator functions
 include("gwsc.jl")          # GW strain calculator
 
-include("starshot.jl")
+# include("starshot.jl")
 
 # runExperiment(3)
 
@@ -36,9 +37,16 @@ include("starshot.jl")
 # println(secantMethod(closestApproach, v_init2, v_init3, 1, 20))
 # println(closestApproach(v_init) * 1.47669196951425 * 6.6845871226706E-09)
 # println(stderr, closestApproach(v_init2) * 1.47669196951425 * 6.6845871226706E-09)
-# println(closestApproach(v_init4) * 1.47669196951425 * 6.6845871226706E-09)
+# minvec = closestApproach(v_init4) * 1.47669196951425 * 6.6845871226706E-09
+# println(norm(minvec))
 
-include("tests/Earth_orbit_test.jl")
+#println(ForwardDiff.jacobian(x -> closestApproach(x),v_init4))
+
+#println(BroydenMethod(v_init4))
+
+# include("tests/broyden_test.jl")
+
+include("tests/Earth_Moon_SunPotential.jl")
 
 end
 

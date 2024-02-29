@@ -1,5 +1,7 @@
 using DoubleFloats
 
+include("broyden.jl")
+
 function closestApproach(v_init::RealVec)
     println(stderr,"closestApproach() called")
     # Mass of Sun, Earth, Spacechip, Proxima, Alpha A, Alpha B in M
@@ -21,13 +23,15 @@ function closestApproach(v_init::RealVec)
     adapt = (δ, z, zdot) -> tcour(δ, z, zdot, 0.0001)   # last parameter is Courant number
     maxit = 100000
 
-    sol = hrkintegrator(3, 6, Z_init, x -> pomin.dH_plus_MW(3, masses, x), δ, no_adapt, tspan, maxit)
-    
+    sol = hrkintegrator(3, 6, Z_init, x -> pomin.dH(3, masses, x), δ, no_adapt, tspan, maxit)
+    # sol = hointegrator(Z_init, x -> pomin.dH(3, masses, x), tspan)
+
     println(stderr,"integrator done")
-    printcsv(sol)
+    #printcsv(sol)
 
     # find distance of closest approach
     mindist = Double64(1E100)
+    minvec = zeros(3)
     numsteps = length(sol.t)
     for tn in 1:numsteps  # tn is timestep number
         # get q vector for particle 3 (spacecraft) at timestep tn
@@ -38,9 +42,10 @@ function closestApproach(v_init::RealVec)
         dist = norm(q1-q2)
         if dist < mindist
             mindist = dist
+            minvec = q1-q2
         end
     end
-    return mindist
+    return minvec
 end
 
 function generateInitVelocity(theta_tol, baseVector::RealVec)
@@ -76,8 +81,10 @@ function runExperiment(iterations)
 
     for i in 1:iterations
        (theta_deg, v_init) = generateInitVelocity(0.1, Double64[-7.00365851051320E-02, -5.35052039083642E-02, -1.70575701379575E-01])
+        
+        minvec = closestApproach(v_init)
 
-        distance_in_M = closestApproach(v_init) 
+        distance_in_M = norm(minvec)
         distance_in_AU = distance_in_M * 1.47669196951425 * 6.6845871226706E-09
 
         println(stderr,"For initial velocity ", v_init, ", closest approach was ", distance_in_AU, " AU")
@@ -103,4 +110,12 @@ function secantMethod(f, x0, x1, tol, cutoff)
         f0 = f1
     end
     return x2
+end
+
+function BroydenMethod(v_0)
+    J = ForwardDiff.jacobian(x -> closestApproach(x), v_0)
+    # J = Double64[1.2417723007378808e14 -1.4560336524476594e13 -4.641925143472228e13; -1.456033137057556e13 1.3211341961647948e14 -3.546165106914633e13; -4.64192486563975e13 -3.5461661518072055e13 3.018271672896033e13]
+    f_0 = closestApproach(v_0)
+    println(stderr,"Init norm F = ", norm(f_0))
+    return bsolve(x -> closestApproach(x), J, f_0, v_0)
 end

@@ -125,3 +125,11 @@ function printcsv(sol::soln)
         csv_str = ""
     end
 end
+
+# prints Julia's ODECompositeSolution data structure as CSV
+# function printODEsoln(sol::OrdinaryDiffEq.ODECompositeSolution)
+function printODEsoln(sol::SciMLBase.ODESolution)
+    for i in 1:length(sol.t)
+        println(string(sol.t[i]) * ',' * join(sol.u[i], ','))
+    end
+end
