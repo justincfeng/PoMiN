@@ -15,7 +15,7 @@ function closestApproach(v_init::RealVec)
     # Initial Z: Positions first, momenta second
     Z_init = [0, 0, 0, -1.8667826140E+07, 8.9633743993E+07, 3.8883291714E+07, -1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07, -9.9157694997E+12, -7.5891180191E+12, -2.4171267258E+13, -1.0514396564E+13, -8.7920419314E+12, -2.4558076740E+13, -1.0514148951E+13, -8.7899759755E+12, -2.4558922285E+13, 0, 0, 0, -2.9839042080E-10, -5.0388889700E-11, -2.1846049145E-11, p_init[1], p_init[2], p_init[3], -3.8172314441E-06, 9.0494364315E-06, 8.9932012189E-06, -3.2681576581E-05, 8.2784394610E-05, 7.2543810801E-05, -2.9658611095E-05, 6.6362559735E-05, 6.7386459079E-05]
 
-    tspan = (Double64(0), Double64(1.922E+14)) # 30 years
+    tspan = (Double64(0), Double64(1.6018E+14)) # 25 years
     # tspan = (Double64(0), Double64(1.922E+11)) # 10 days
     δ = Double64(1.922E+10) # about one day
 
@@ -23,7 +23,7 @@ function closestApproach(v_init::RealVec)
     adapt = (δ, z, zdot) -> tcour(δ, z, zdot, 0.0001)   # last parameter is Courant number
     maxit = 100000
 
-    sol = hrkintegrator(3, 6, Z_init, x -> pomin.dH(3, masses, x), δ, no_adapt, tspan, maxit)
+    sol = hrkintegrator(3, 6, Z_init, x -> pomin.dH_plus_MW(3, masses, x), δ, no_adapt, tspan, maxit)
     # sol = hointegrator(Z_init, x -> pomin.dH(3, masses, x), tspan)
 
     println(stderr,"integrator done")
@@ -54,12 +54,25 @@ function generateInitVelocity(theta_tol, baseVector::RealVec)
     # normalize baseVector
     baseVector = baseVector / norm(baseVector)
 
+    i = 0
     while true
-        # generate random vector in [-1,1]^3
-        x = rand() * 2 - 1
-        y = rand() * 2 - 1
-        z = rand() * 2 - 1
-        rand_v = [x, y, z]
+        # generate random point on unit sphere using method of Marsaglia
+        x = 1
+        y = 1
+        while true
+            # pick x and y randomly from (-1,1) until x^2 + y^2 < 1
+            x = rand() * 2 - 1
+            y = rand() * 2 - 1
+            if x^2 + y^2 < 1 
+                break
+            end
+        end
+        Xsquare = x^2 + y^2
+        a = 2 * x * sqrt(1-Xsquare)
+        b = 2 * y * sqrt(1-Xsquare)
+        c = 1 - 2 * Xsquare
+        rand_v = [a, b, c]
+        i += 1
 
         # normalize random vector
         rand_v = rand_v / norm(rand_v)
@@ -71,16 +84,16 @@ function generateInitVelocity(theta_tol, baseVector::RealVec)
 
         # compare to tolerance angle
         if theta_deg < theta_tol
-            println(stderr,"For initial velocity ", rand_v, " angle with base vector is ", theta_deg)
+            println(stderr,"For initial velocity ", rand_v, " angle with base vector is ", theta_deg, " (after ", i, " tries)")
             return theta_deg, rand_v
         end
     end
 end
 
-function runExperiment(iterations)
+function runExperiment(iterations,tolerance)
 
     for i in 1:iterations
-       (theta_deg, v_init) = generateInitVelocity(0.1, Double64[-7.00365851051320E-02, -5.35052039083642E-02, -1.70575701379575E-01])
+       (theta_deg, v_init) = generateInitVelocity(tolerance, Double64[-7.00365851051320E-02, -5.35052039083642E-02, -1.70575701379575E-01])
         
         minvec = closestApproach(v_init)
 
