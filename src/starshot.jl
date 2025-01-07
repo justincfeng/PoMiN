@@ -48,7 +48,7 @@ function closestApproach(v_init::RealVec)
     return minvec
 end
 
-function generateInitVelocity(theta_tol, baseVector::RealVec)
+function generateInitVelocityMonteCarlo(theta_tol, baseVector::RealVec)
     println(stderr, "Finding initial velocity vector using Monte Carlo method")
 
     # normalize baseVector
@@ -88,6 +88,124 @@ function generateInitVelocity(theta_tol, baseVector::RealVec)
             return theta_deg, rand_v
         end
     end
+end
+
+function generateInitVelocity(theta_tol, baseVector::RealVec)
+
+    # generates initial velocity vector within theta_tol of baseVector
+    # using method based on Archimedes' Hat-Box Theorem
+    # see https://mathworld.wolfram.com/SpherePointPicking.html equations (1) and (2)
+    # and https://mathworld.wolfram.com/ArchimedesHat-BoxTheorem.html 
+    # and https://www.bogotobogo.com/Algorithms/uniform_distribution_sphere.php 
+    # and https://math.stackexchange.com/questions/711594/uniform-sampling-from-part-of-sphere-surface 
+
+    # normalize baseVector
+    baseVector = baseVector / norm(baseVector)
+
+    # convert baseVector to spherical coordinates
+    x_0 = baseVector[1]
+    y_0 = baseVector[2]
+    z_0 = baseVector[3]
+    theta_0 = acos(z_0)
+    phi_0 = sign(y_0) * acos(x_0 / sqrt(x_0^2 + y_0^2))
+    
+    # store sign of phi_0 for later
+    sign_phi = sign(phi_0)
+
+    # println("theta_0 = ", theta_0, " phi_0 = ", phi_0)
+
+    # find theta min/max and phi min/max
+    delta = deg2rad(theta_tol)
+    theta_min = theta_0 - delta/2
+    theta_max = theta_0 + delta/2
+    phi_min = phi_0 - delta/2
+    phi_max = phi_0 + delta/2
+
+    # println("phi_min = ", phi_min, " phi_max = ", phi_max)
+
+    # find u min/max and v min/max
+    u_min = theta_min / (2*pi)
+    u_max = theta_max / (2*pi)
+    v_min = (cos(phi_min) + 1) / 2
+    v_max = (cos(phi_max) + 1) / 2
+
+    # println("u_min = ", u_min, " u_max = ", u_max)
+    # println("v_min = ", v_min, " v_max = ", v_max)
+
+    while true
+            # putting this in a loop that repeats until angle is less than tolerance angle
+            # because I'm sampling from unit square rather than unit disk, 
+            # so there's a chance new vector could end up pointing to one of the corners inside unit square but outside unit disk
+
+        # generate random u and v
+        u = u_min + rand() * (u_max - u_min)
+        v = v_min + rand() * (v_max - v_min)
+
+        # println("u = ", u, " v = ", v)
+
+        # find theta, phi
+        theta = 2 * pi * u
+        phi = acos(2*v - 1)
+
+        # ensure phi is still in same quadrant as phi_0
+        # NOTE: this won't work if phi ends up in a different quadrant than phi_0 after varying it by random angle!  But it works as long as random
+        # angle is small enough (which it typically is in our case) that phi stays in the same quadrant as phi_0
+        phi = sign_phi * abs(phi)
+
+        # convert theta, phi to unit vector in cartesian coords
+        x = sin(theta) * cos(phi)
+        y = sin(theta) * sin(phi)
+        z = cos(theta)
+        rand_v = [x, y, z]
+
+        # find angle between baseVector and random vector
+        cosine_theta = dot(rand_v,baseVector) # both unit vectors
+        theta_rad = acos(cosine_theta)
+        theta_deg = rad2deg(theta_rad)
+
+        # println("theta_deg = ", theta_deg)
+
+        if theta_deg < theta_tol
+            println(stderr,"For initial velocity ", rand_v, " angle with base vector is ", theta_deg)
+            return theta_deg, rand_v
+        end
+
+    end
+end
+
+function testInitVector(theta_tol)
+
+    # # test conversion to spherical and back
+    # baseVector = Double64[-7.00365851051320E-02, -5.35052039083642E-02, -1.70575701379575E-01]
+    # # normalize baseVector
+    # baseVector = baseVector / norm(baseVector)
+    # println("Before = ", baseVector)
+    # # convert baseVector to spherical coordinates
+    # x_0 = baseVector[1]
+    # y_0 = baseVector[2]
+    # z_0 = baseVector[3]
+    # theta_0 = acos(z_0)
+    # phi_0 = sign(y_0) * acos(x_0 / sqrt(x_0^2 + y_0^2))
+    # # convert theta_0, phi_0 to unit vector in cartesian coords
+    # x = sin(theta_0) * cos(phi_0)
+    # y = sin(theta_0) * sin(phi_0)
+    # z = cos(theta_0)
+    # rand_v = [x, y, z]
+    # println("After =  ", rand_v)
+
+    for i in 1:20
+        generateInitVelocity(theta_tol, Double64[-7.00365851051320E-02, -5.35052039083642E-02, -1.70575701379575E-01])
+        # test all octants
+        # generateInitVelocity(theta_tol, [1,1,1])
+        # generateInitVelocity(theta_tol, [1,1,-1])
+        # generateInitVelocity(theta_tol, [1,-1,1])
+        # generateInitVelocity(theta_tol, [1,-1,-1])
+        # generateInitVelocity(theta_tol, [-1,1,1])
+        # generateInitVelocity(theta_tol, [-1,1,-1])
+        # generateInitVelocity(theta_tol, [-1,-1,1])
+        # generateInitVelocity(theta_tol, [-1,-1,-1])
+    end
+
 end
 
 function runExperiment(iterations,tolerance)

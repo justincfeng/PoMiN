@@ -27,7 +27,9 @@ include("gwsc.jl")          # GW strain calculator
 
 include("starshot.jl")
 
-runExperiment(100,1)
+runExperiment(100,0.001)
+
+# testInitVector(0.001)
 
 # v_init1 = Double64[-7.00365851051320E-02, -5.35052039083642E-02, -1.70575701379575E-01]  # closest approach ~= 6 AU
 # v_init2 = Double64[-0.07295215750065391, -0.05573727243527886, -0.1776832551972042] # closest approach = 4.15 AU
