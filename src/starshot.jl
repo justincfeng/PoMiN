@@ -211,6 +211,8 @@ end
 function runExperiment(iterations,tolerance)
 
     for i in 1:iterations
+        println(stderr,"Trial ",i)
+
        (theta_deg, v_init) = generateInitVelocity(tolerance, Double64[-7.00365851051320E-02, -5.35052039083642E-02, -1.70575701379575E-01])
         
         minvec = closestApproach(v_init)

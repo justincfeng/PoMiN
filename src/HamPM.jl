@@ -491,3 +491,47 @@ function tcour( dt::Real , Z::RealVec , Zdot::RealVec , C = 0.001 , d=3 )
         return dt
     end
 end  # End tcour
+
+function dt_lin_int(dt::Real , Z::RealVec , Zdot::RealVec , start_dist::Real , min_dist::Real , max_dt::Real , min_dt::Real, d = 3)
+"""
+    This function implements a simple adaptive timestepping function by linear interpolation.
+    When distance between first two bodies is equal to or greater than start_dist, it uses the max_dt
+    When distance is equal to or less than min_dist, it uses the min_dt
+    Between the two, it interpolates linearly
+"""
+    # find distance between first two bodies
+
+    tpfl = typeof(Z[1])
+    n2 = length(Z)
+
+    ndof = Int(round(n2 / 2, digits=0))
+    n    = Int(round(ndof/d, digits=0))
+    if iseven(n2) && n*d==ndof
+        qa  = Z2q(n,d,1,Z)
+        qb  = Z2q(n,d,2,Z)
+        rab = rf(qa,qb)
+    else
+        error("in dt_lin_int delta t is not changing bc ( iseven(n2) && n*d==ndof ) returned false")
+        return dt
+    end
+
+    if rab >= start_dist
+        dt = max_dt
+    elseif rab <= min_dist
+        dt = min_dt
+    else
+        # interpolate linearly
+        dt = abs(start_dist - rab) / abs(start_dist - min_dist) * min_dt + abs(rab - min_dist) / abs(start_dist - min_dist) * max_dt
+    end
+
+    # double-check that we haven't gone outside range of [min_dt, max_dt]
+    if dt > max_dt
+        dt = max_dt
+    end
+    if dt <= min_dt
+        dt = min_dt
+    end
+
+    return dt
+
+end

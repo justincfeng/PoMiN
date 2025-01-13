@@ -27,7 +27,7 @@ include("gwsc.jl")          # GW strain calculator
 
 include("starshot.jl")
 
-runExperiment(100,0.001)
+# runExperiment(250,0.001)
 
 # testInitVector(0.001)
 
@@ -49,6 +49,14 @@ runExperiment(100,0.001)
 # include("tests/broyden_test.jl")
 
 # include("tests/Earth_Moon_SunPotential.jl")
+
+# include("tests/Proxima.jl")
+
+v_straight_line = Double64[-3.6476077940293500E-01, -2.7868636606207900E-01, -8.8841627809292000E-01]
+minvec = closestApproach(v_straight_line)
+distance_in_M = norm(minvec)
+distance_in_AU = distance_in_M * 1.47669196951425 * 6.6845871226706E-09
+println(stderr,"For initial velocity ", v_straight_line, ", closest approach was ", distance_in_AU, " AU")
 
 end
 
