@@ -93,3 +93,4 @@ dkms.conf
 
 # gnuplottex
 *-gnuplottex-*
+.DS_Store

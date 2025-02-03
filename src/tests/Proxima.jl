@@ -13,9 +13,9 @@ tspan = (Double64(0), Double64(1.922E+14)) # 30 years
 
 no_adapt = (δ, z, zdot) -> δ                        # turns off adaptive time stepping
 start_dist = 2.720605E+13  # 4.2465 light years
-min_dist = 0
+min_dist = 1E9 # about 10 AU -- once within this distance it will use min_dt
 max_dt = Double64(1.75E+10) # about one day
-min_dt = Double64(1E7) # less than a minute
+min_dt = Double64(2E5) # about a second
 # adapt = (δ, z, zdot) -> tcour(δ, z, zdot, 0.1)   # last parameter is Courant number
 adapt = (δ, z, zdot) -> dt_lin_int(δ, z, zdot, start_dist, min_dist, max_dt, min_dt)
 maxit = 10000000
