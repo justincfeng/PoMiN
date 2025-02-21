@@ -67,9 +67,7 @@ Returns a struct of type "soln" (defined in pomin-types)
 - `maxit::Real`: Maximum number of iterations.  When this number of iterations is exceeded, integration stops.
 """
 function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, tadapt::Function, tspan::Tuple{Real,Real}, maxit::Real)
-    
     tpfl = typeof(z0[1])  # tpfl = type of data stored in z0
-
     zi = vec(z0)
 
     # initialize soln data structure

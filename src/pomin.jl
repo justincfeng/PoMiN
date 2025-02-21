@@ -22,10 +22,10 @@ include("HamPM.jl")         # post-Minkowski Hamiltonian
 #include("exf.jl")           # External forces
 include("integrators/epsi.jl")          # Symplectic Integrator (Tao 2016)
 include("integrators/rk4i.jl")          # 4th order Runge-Kutta
-include("integrators/int.jl")           # Julia integrator functions
+include("integrators/intjul.jl")        # Julia integrator functions
 include("gwsc.jl")          # GW strain calculator
 
-include("starshot.jl")
+# include("starshot.jl")
 
 # runExperiment(250,0.001)
 
@@ -52,11 +52,15 @@ include("starshot.jl")
 
 # include("tests/Proxima.jl")
 
-v_straight_line = Double64[-3.6476077940293500E-01, -2.7868636606207900E-01, -8.8841627809292000E-01]
-minvec = closestApproach(v_straight_line)
-distance_in_M = norm(minvec)
-distance_in_AU = distance_in_M * 1.47669196951425 * 6.6845871226706E-09
-println(stderr,"For initial velocity ", v_straight_line, ", closest approach was ", distance_in_AU, " AU")
+# v_straight_line = Double64[-3.6476077940293500E-01, -2.7868636606207900E-01, -8.8841627809292000E-01]
+# minvec = closestApproach(v_straight_line)
+# distance_in_M = norm(minvec)
+# distance_in_AU = distance_in_M * 1.47669196951425 * 6.6845871226706E-09
+# println(stderr,"For initial velocity ", v_straight_line, ", closest approach was ", distance_in_AU, " AU")
+
+# Export types and functions
+export RealVec, Particles, soln
+export jlintegrator, jlintegratorfull
+export H, dH, Jsympl
 
 end
-
