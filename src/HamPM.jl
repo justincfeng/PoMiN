@@ -17,11 +17,15 @@ end
 """
     Enf( m::Real, ps::Real )
 
-Kinetic energy function. Returns ``E=\\sqrt{m^2+p^2}``, given ``m``
-and ``\\vec{p}``.
+Kinetic energy function. Returns ``E=\\sqrt{m^2+p^2}`` for massive particles (m>0),
+and ``E=\\sqrt{p^2}=|p|`` for massless particles (m=0), given ``m`` and ``\\vec{p}``.
 """
 function Enf( m::Real, ps::Real )
-    return sqrt(m^2+ps)
+    if m > zero(m)
+        return sqrt(m^2+ps)
+    else
+        return sqrt(ps)
+    end
 end
 
 """
@@ -49,12 +53,18 @@ end
     ybaf( mb::Real, qb::RealVec , qa::RealVec , pb::RealVec , pa::RealVec )
 
 Returns ``y_{ba}=\\sqrt{m_b^2+(\\vec{n}_{ab}⋅\\vec{p}_b)^2}/E_b``, where ``E_b`` is
-Kinetic energy for particle ``b``. Inputs are particle ``b`` mass ``m_b``,
+Kinetic energy for particle ``b``. For massless particles (mb=0), returns
+``y_{ba}=\\text{sign}(\\vec{n}_{ab}⋅\\vec{p}_b)``. Inputs are particle ``b`` mass ``m_b``,
 particle positions ``\\vec{q}_b`` and ``\\vec{q}_a``, and particle momenta
 ``\\vec{p}_b`` and ``\\vec{p}_a``.
 """
 function ybaf( mb::Real, qb::RealVec , qa::RealVec , pb::RealVec , pa::RealVec )
-    return sqrt(mb^2+dot(nabf(qb,qa),pb)^2)/Enf(mb,psf(pb))
+    Θba = Θabf(qb,qa,pb)
+    if mb > zero(mb)
+        return sqrt(mb^2+Θba^2)/Enf(mb,psf(pb))
+    else
+        return sign(Θba)
+    end
 end
 
 """
@@ -137,7 +147,39 @@ function H( d::Int , m::RealVec , Z::RealVec )
 
 end
 
-# Derivative of H3 for massless particles  (CHECK THAT THIS IS CAPTURING THE CORRECT CROSS-TERM)
+#-----------------------------------------------------------------------
+#   POST-MINKOWSKIAN HAMILTONIAN - MASSLESS PARTICLE IMPLEMENTATION
+#-----------------------------------------------------------------------
+
+"""
+    compute_dH3_term(Ena, Enc, dyac, rac, yca, psc, Θac, Θca, Ξac, psa, dE, dr, dTh, dXi)
+
+Helper function to compute the H3 derivative terms for massless particles.
+This matches the C implementation's calculation for the massless case.
+"""
+function compute_dH3_term(Ena, Enc, dyac, rac, yca, psc, Θac, Θca, Ξac, psa, dE, dr, dTh, dXi)
+    return (1/4)*(-((2*Ena*Enc*dyac*rac*yca*(2*psc*psc*Θac*Θac + 4*psc*Θac*Θca*Ξac - 
+           2*(psc - 2*Θca*Θca)*Ξac*Ξac + Enc*Enc*(2*(-(Θac*Θca) + Ξac)*(-(Θac*Θca) + Ξac) + 
+           Θac*Θca*(Θac*Θca - 8*Ξac)*yca - psa*Θca*Θca*(2 + 3*yca) + 
+           psc*(psa*yca - Θac*Θac*(2 + 3*yca))))))/(Ena*Ena*Enc*Enc*Enc*Enc*rac*rac*yca*yca*(1 + yca)*(1 + yca)*(1 + yca)))
+end
+
+"""
+    compute_dy_massless(Ena, dTha, dEa, Tha)
+
+Compute the y-parameter derivative for massless particles.
+This matches the C implementation's calculation.
+"""
+function compute_dy_massless(Ena, dTha, dEa, Tha)
+    return sign(Tha)*(Ena*dTha - dEa*Tha)/(Ena*Ena)
+end
+
+"""
+    dH3m0( d::Int , m::RealVec , Z::RealVec )
+
+Derivative of H3 for massless particles. This function handles the special case
+where particle c has zero mass.
+"""
 function dH3m0( d::Int , m::RealVec , Z::RealVec )
     tpfl = typeof(Z[1])
     n = length(m)
@@ -145,137 +187,164 @@ function dH3m0( d::Int , m::RealVec , Z::RealVec )
 
     o = zero(tpfl)
 
-    qa, qb, qc, pa, pb, pc  = [zeros(tpfl,d) for _ = 1:6]
-
-    psa, psb, psc, Ena, Enb, Enc = [o for _ = 1:6]
-
-    rcb, ybc, Θcb, Θbc, Ξcb  = [o for _ = 1:5]
-    rac, yca, Θac, Θca, Ξac  = [o for _ = 1:5]
-
-    dpsa, dEna, dEna = [o for _ = 1:3]
-    dpsb, dEnb, dEnb = [o for _ = 1:3]
-    dpsc, dEnc, dEnc = [o for _ = 1:3]
-
-    drcb, dybc, dΘcb, dΘbc, dΞcb  = [o for _ = 1:5]
-    drac, dyca, dΘac, dΘca, dΞac  = [o for _ = 1:5]
+    # Initialize arrays for derivatives
+    dps = zeros(tpfl,n)
+    dE = zeros(tpfl,n)
+    dr = [zeros(tpfl,n) for _ = 1:n]
+    dy = [zeros(tpfl,n) for _ = 1:n]
+    dTh = [zeros(tpfl,n) for _ = 1:n]
+    dXi = [zeros(tpfl,n) for _ = 1:n]
 
     dH3 = zeros(tpfl,nn)
 
+    # Loop over particles
     for c=1:n
+        # Only proceed if particle c is massless
+        if m[c] == o
+            # Position derivatives (zindex < 3)
+            for i=1:d
+                # First loop over a (c fixed)
+                for a=1:n
+                    if a != c
+                        qa = Z2q(n,d,a,Z)
+                        qc = Z2q(n,d,c,Z)
+                        pa = Z2p(n,d,a,Z)
+                        pc = Z2p(n,d,c,Z)
 
-    if m[c] == zero(tpfl)
+                        rac = sqrt(sum((qa .- qc).^2))
+                        psa = sqrt(sum(pa.^2))
+                        psc = sqrt(sum(pc.^2))
+                        Ena = sqrt(m[a]^2 + psa^2)
+                        Enc = psc  # For massless particle c
 
-        qc = Z2q(n,d,c,Z)
-        pc = Z2p(n,d,c,Z)
-        psc = psf(pc)
-        Enc = Enf(m[c],psb)
+                        # Calculate Theta and Xi
+                        Θac = sum((qa .- qc).*pc)/rac
+                        Θca = -sum((qa .- qc).*pa)/rac
+                        Ξac = sum(pa.*pc)
 
-        for i=1:d
-            for a=1:n
+                        # Compute derivatives
+                        dr_ac = (qc[i]-qa[i])/rac
+                        dTh_ac = (pa[i]-Θac*dr_ac)/rac
+                        dXi_ac = zero(tpfl)
 
-                qa = Z2q(n,d,a,Z)
-                pa = Z2p(n,d,a,Z)
+                        # Use proper y-parameter derivative for massless case
+                        dy_ac = compute_dy_massless(Ena, dTh_ac, zero(tpfl), Θac)
 
-                psa = psf(pa)
-                Ena = Enf(m[a],psa)
-
-                rac = rf(qa,qc)
-                yca = ybaf(m[c],qc,qa,pc,pa)
-                Θac = Θabf(qa,qc,pa)
-                Θca = Θabf(qc,qa,pc)
-                Ξac = Ξabf(pa,pc)
-
-                # qs
-                dpsa = o
-                dpsc = o
-                dEna = o
-                dEnc = o
-                drac = (qc[i]-qa[i])/rac
-                dΘac = (pc[i]-Θac*drac)/rac
-                dΞac = o
-
-                dyac = sign(Θac)*(Ena*dΘac - dEna*Θac)/(Ena^2)
-
-                dH3[d*(c-1)+i] -= 
-                        (1/4)*(-((2*Ena*Enc*dyca*rac*yca*(2*psc*psc*Θac*Θac + 4*psc*Θac*Θca*Ξac - 2*(psc - 2*Θca*Θca)*Ξac*Ξac + Enc*Enc*(2*(-(Θac*Θca) + Ξac)*(-(Θac*Θca) + Ξac) + Θac*Θca*(Θac*Θca - 8*Ξac)*yca - psa*Θca*Θca*(2 + 3*yca) + psc*(psa*yca - Θac*Θac*(2 + 3*yca)))) + dEnc*Ena*rac*yca*(1 + yca)*(2*psc*psc*Θac*Θac + 4*psc*Θac*Θca*Ξac - 2*(psc - 2*Θca*Θca)*Ξac*Ξac + Enc*Enc*(2*(-(Θac*Θca) + Ξac)*(-(Θac*Θca) + Ξac) + Θac*Θca*(Θac*Θca - 8*Ξac)*yca - psa*Θca*Θca*(2 + 3*yca) + psc*(psa*yca - Θac*Θac*(2 + 3*yca)))) - Ena*Enc*dyca*rac*(1 + yca)*(-2*psc*psc*Θac*Θac - 4*Θca*Θca*Ξac*Ξac + 2*psc*Ξac*(-2*Θac*Θca + Ξac) + Enc*Enc*(-2*(-(Θac*Θca) + Ξac)*(-(Θac*Θca) + Ξac) + Θac*Θca*(-(Θac*Θca) + 8*Ξac)*yca + psa*Θca*Θca*(2 + 3*yca) + psc*(-(psa*yca) + Θac*Θac*(2 + 3*yca)))) - Ena*Enc*drac*yca*(1 + yca)*(-2*psc*psc*Θac*Θac - 4*Θca*Θca*Ξac*Ξac + 2*psc*Ξac*(-2*Θac*Θca + Ξac) + Enc*Enc*(-2*(-(Θac*Θca) + Ξac)*(-(Θac*Θca) + Ξac) + Θac*Θca*(-(Θac*Θca) + 8*Ξac)*yca + psa*Θca*Θca*(2 + 3*yca) + psc*(-(psa*yca) + Θac*Θac*(2 + 3*yca)))) - dEna*Enc*rac*yca*(1 + yca)*(-2*psc*psc*Θac*Θac - 4*Θca*Θca*Ξac*Ξac + 2*psc*Ξac*(-2*Θac*Θca + Ξac) + Enc*Enc*(-2*(-(Θac*Θca) + Ξac)*(-(Θac*Θca) + Ξac) + Θac*Θca*(-(Θac*Θca) + 8*Ξac)*yca + psa*Θca*Θca*(2 + 3*yca) + psc*(-(psa*yca) + Θac*Θac*(2 + 3*yca)))) + Ena*rac*yca*(1 + yca)*(2*dpsc*Enc*Enc*Enc*Θac*Θac + 4*psc*psc*Θac*(-(Enc*dΘac) + dEnc*Θac) - 4*Enc*Enc*Enc*dΞac*Ξac + 4*Enc*Enc*Enc*dΘca*Θac*Ξac + 2*dpsc*Enc*Ξac*Ξac - dpsc*Enc*Enc*Enc*psa*yca + 3*dpsc*Enc*Enc*Enc*Θac*Θac*yca + 8*Enc*Enc*Enc*dΘca*Θac*Ξac*yca + Θca*Θca*(-8*Enc*dΞac*Ξac + 8*dEnc*Ξac*Ξac + Enc*Enc*Enc*(dyca*(3*psa - Θac*Θac) - 2*dΘac*Θac*(2 + yca) + dpsa*(2 + 3*yca))) + psc*((-4*dpsc*Enc + 3*Enc*Enc*Enc*dyca)*Θac*Θac + 4*Enc*(dΞac - dΘac*Θca)*Ξac - 4*dEnc*Ξac*Ξac - Enc*Enc*Enc*(psa*dyca + dpsa*yca) + Θac*(-4*Enc*dΘca*Ξac + Θca*(-4*Enc*dΞac + 8*dEnc*Ξac) + 2*Enc*Enc*Enc*dΘac*(2 + 3*yca))) + Θca*(-4*Enc*Ξac*(dpsc*Θac + 2*dΘca*Ξac) + Enc*Enc*Enc*(4*dΞac*Θac*(1 + 2*yca) + 4*Ξac*(2*dyca*Θac + dΘac*(1 + 2*yca)) + 2*dΘca*(-(Θac*Θac*(2 + yca)) + psa*(2 + 3*yca))))))/(Ena*Ena*Enc*Enc*Enc*Enc*rac*rac*yca*yca*(1 + yca)*(1 + yca)*(1 + yca))))
-
-                # ps
-                dpsc = 2*pc
-                dEnc = dpsc/(2*Enc)
-                if c==a
-                    dpsa = dpsc
-                else
-                    dpsa = o
+                        # Add contribution from a terms
+                        dH3[i+d*(c-1)] += compute_dH3_term(Ena, Enc, dy_ac, rac, sign(Θca), psc, Θac, Θca, Ξac, psa, Ena, dr_ac, dTh_ac, dXi_ac)
+                    end
                 end
-                dEna = dpsa/(2*Ena)
-                drac = o
-                dΘac = o
-                dΞac = pa[i]
 
-                dyac = sign(Θac)*(Ena*dΘac - dEna*Θac)/(Ena^2)
+                # Second loop over b (c fixed)
+                for b=1:n
+                    if b != c
+                        qb = Z2q(n,d,b,Z)
+                        qc = Z2q(n,d,c,Z)
+                        pb = Z2p(n,d,b,Z)
+                        pc = Z2p(n,d,c,Z)
 
-                dH3[d*(c-1+n)+i] -= 
-                        (1/4)*(-((2*Ena*Enc*dyca*rac*yca*(2*psc*psc*Θac*Θac + 4*psc*Θac*Θca*Ξac - 2*(psc - 2*Θca*Θca)*Ξac*Ξac + Enc*Enc*(2*(-(Θac*Θca) + Ξac)*(-(Θac*Θca) + Ξac) + Θac*Θca*(Θac*Θca - 8*Ξac)*yca - psa*Θca*Θca*(2 + 3*yca) + psc*(psa*yca - Θac*Θac*(2 + 3*yca)))) + dEnc*Ena*rac*yca*(1 + yca)*(2*psc*psc*Θac*Θac + 4*psc*Θac*Θca*Ξac - 2*(psc - 2*Θca*Θca)*Ξac*Ξac + Enc*Enc*(2*(-(Θac*Θca) + Ξac)*(-(Θac*Θca) + Ξac) + Θac*Θca*(Θac*Θca - 8*Ξac)*yca - psa*Θca*Θca*(2 + 3*yca) + psc*(psa*yca - Θac*Θac*(2 + 3*yca)))) - Ena*Enc*dyca*rac*(1 + yca)*(-2*psc*psc*Θac*Θac - 4*Θca*Θca*Ξac*Ξac + 2*psc*Ξac*(-2*Θac*Θca + Ξac) + Enc*Enc*(-2*(-(Θac*Θca) + Ξac)*(-(Θac*Θca) + Ξac) + Θac*Θca*(-(Θac*Θca) + 8*Ξac)*yca + psa*Θca*Θca*(2 + 3*yca) + psc*(-(psa*yca) + Θac*Θac*(2 + 3*yca)))) - Ena*Enc*drac*yca*(1 + yca)*(-2*psc*psc*Θac*Θac - 4*Θca*Θca*Ξac*Ξac + 2*psc*Ξac*(-2*Θac*Θca + Ξac) + Enc*Enc*(-2*(-(Θac*Θca) + Ξac)*(-(Θac*Θca) + Ξac) + Θac*Θca*(-(Θac*Θca) + 8*Ξac)*yca + psa*Θca*Θca*(2 + 3*yca) + psc*(-(psa*yca) + Θac*Θac*(2 + 3*yca)))) - dEna*Enc*rac*yca*(1 + yca)*(-2*psc*psc*Θac*Θac - 4*Θca*Θca*Ξac*Ξac + 2*psc*Ξac*(-2*Θac*Θca + Ξac) + Enc*Enc*(-2*(-(Θac*Θca) + Ξac)*(-(Θac*Θca) + Ξac) + Θac*Θca*(-(Θac*Θca) + 8*Ξac)*yca + psa*Θca*Θca*(2 + 3*yca) + psc*(-(psa*yca) + Θac*Θac*(2 + 3*yca)))) + Ena*rac*yca*(1 + yca)*(2*dpsc*Enc*Enc*Enc*Θac*Θac + 4*psc*psc*Θac*(-(Enc*dΘac) + dEnc*Θac) - 4*Enc*Enc*Enc*dΞac*Ξac + 4*Enc*Enc*Enc*dΘca*Θac*Ξac + 2*dpsc*Enc*Ξac*Ξac - dpsc*Enc*Enc*Enc*psa*yca + 3*dpsc*Enc*Enc*Enc*Θac*Θac*yca + 8*Enc*Enc*Enc*dΘca*Θac*Ξac*yca + Θca*Θca*(-8*Enc*dΞac*Ξac + 8*dEnc*Ξac*Ξac + Enc*Enc*Enc*(dyca*(3*psa - Θac*Θac) - 2*dΘac*Θac*(2 + yca) + dpsa*(2 + 3*yca))) + psc*((-4*dpsc*Enc + 3*Enc*Enc*Enc*dyca)*Θac*Θac + 4*Enc*(dΞac - dΘac*Θca)*Ξac - 4*dEnc*Ξac*Ξac - Enc*Enc*Enc*(psa*dyca + dpsa*yca) + Θac*(-4*Enc*dΘca*Ξac + Θca*(-4*Enc*dΞac + 8*dEnc*Ξac) + 2*Enc*Enc*Enc*dΘac*(2 + 3*yca))) + Θca*(-4*Enc*Ξac*(dpsc*Θac + 2*dΘca*Ξac) + Enc*Enc*Enc*(4*dΞac*Θac*(1 + 2*yca) + 4*Ξac*(2*dyca*Θac + dΘac*(1 + 2*yca)) + 2*dΘca*(-(Θac*Θac*(2 + yca)) + psa*(2 + 3*yca))))))/(Ena*Ena*Enc*Enc*Enc*Enc*rac*rac*yca*yca*(1 + yca)*(1 + yca)*(1 + yca))))
+                        rbc = sqrt(sum((qb .- qc).^2))
+                        psb = sqrt(sum(pb.^2))
+                        psc = sqrt(sum(pc.^2))
+                        Enb = sqrt(m[b]^2 + psb^2)
+                        Enc = psc  # For massless particle c
+
+                        # Calculate Theta and Xi
+                        Θbc = sum((qb .- qc).*pc)/rbc
+                        Θcb = -sum((qb .- qc).*pb)/rbc
+                        Ξbc = sum(pb.*pc)
+
+                        # Compute derivatives
+                        dr_bc = (qc[i]-qb[i])/rbc
+                        dTh_bc = (pb[i]-Θbc*dr_bc)/rbc
+                        dXi_bc = zero(tpfl)
+
+                        # Use proper y-parameter derivative for massless case
+                        dy_bc = compute_dy_massless(Enb, dTh_bc, zero(tpfl), Θbc)
+
+                        # Add contribution from b terms
+                        dH3[i+d*(c-1)] += compute_dH3_term(Enb, Enc, dy_bc, rbc, sign(Θcb), psc, Θbc, Θcb, Ξbc, psb, Enb, dr_bc, dTh_bc, dXi_bc)
+                    end
+                end
             end
-            for b=1:n
 
-                qb = Z2q(n,d,b,Z)
-                pb = Z2p(n,d,b,Z)
+            # Momentum derivatives (zindex >= 3)
+            for i=1:d
+                # Calculate momentum derivatives once per dimension
+                dps_c = 2*pc[i]
+                dE_c = dps_c/(2*Enc)
 
-                psb = psf(pb)
-                Enb = Enf(m[b],psb)
+                # First loop over a (c fixed)
+                for a=1:n
+                    if a != c
+                        qa = Z2q(n,d,a,Z)
+                        qc = Z2q(n,d,c,Z)
+                        pa = Z2p(n,d,a,Z)
+                        pc = Z2p(n,d,c,Z)
 
-                rcb = rf(qc,qb)
-                ybc = ybaf(m[b],qb,qc,pb,pc)
-                Θcb = Θabf(qc,qb,pc)
-                Θbc = Θabf(qb,qc,pb)
-                Ξcb = Ξabf(pc,pb)
+                        rac = sqrt(sum((qa .- qc).^2))
+                        psa = sqrt(sum(pa.^2))
+                        psc = sqrt(sum(pc.^2))
+                        Ena = sqrt(m[a]^2 + psa^2)
+                        Enc = psc  # For massless particle c
 
-                # qs
-                dpsb = o
-                dpsc = o
-                dEnb = o
-                dEnc = o
-                drcb = -(qb[i]-qc[i])/rcb
-                dΘcb = (pc[i]-Θbc*drcb)/rcb
-                dΘbc = (pb[i]+Θcb*drcb)/rcb
-                dΞcb = o
+                        # Calculate Theta and Xi
+                        Θac = sum((qa .- qc).*pc)/rac
+                        Θca = -sum((qa .- qc).*pa)/rac
+                        Ξac = sum(pa.*pc)
 
-                dycb = sign(Θcb)*(Enc*dΘcb - dEnc*Θcb)/(Enc^2)
+                        # Compute derivatives
+                        dTh_ac = (pa[i]-Θac*zero(tpfl))/rac
+                        dXi_ac = zero(tpfl)
 
-                signTh = sign(Θbc)
+                        # Use proper y-parameter derivative for massless case
+                        dy_ac = compute_dy_massless(Ena, dTh_ac, zero(tpfl), Θac)
 
-                dH3[d*(c-1)+i] -= 
-                        (1/4)*(2*Enc*psb*drcb*(1 + ybc)*(8*signTh*sqrt(psb)*Θcb*Ξcb*ybc - 4*Ξcb*Ξcb*ybc - psb*Θcb*Θcb*(-1 + ybc)*(3 + ybc) +  psc*psb*(1 + ybc)*(-1 + 3*ybc)) + rcb*(dpsb*Enc*(1 + ybc)*(8*signTh*sqrt(psb)*Θcb*Ξcb*ybc - 2*6*Ξcb*Ξcb*ybc - psb*Θcb*Θcb*(3 + ybc*(2 + ybc)) + psc*psb*(1 + ybc*(2 + 3*ybc))) - 2*(dpsc*Enc*psb*psb*(1 + ybc)*(1 + ybc)*(-1 + 3*ybc) + dEnc*psb*(1 + ybc)*(-8*signTh*sqrt(psb)*Θcb*Ξcb*ybc + 4*Ξcb*Ξcb*ybc + psb*Θcb*Θcb*(-1 + ybc)*(3 + ybc) - psc*psb*(1 + ybc)*(-1 + 3*ybc)) + 2*Enc*sqrt(psb)*(dΘbc*(1 + ybc)*(4*sqrt(psb)*Θcb*Ξcb - 4*signTh*Ξcb*Ξcb - signTh*psb*Θcb*Θcb*(2 + ybc) + signTh*psc*psb*(2 + 3*ybc)) + sqrt(psb)*(4*dΞcb*(signTh*sqrt(psb)*Θcb - Ξcb)*ybc*(1 + ybc) - sqrt(psb)*dΘcb*(1 + ybc)*(-4*signTh*Ξcb*ybc + sqrt(psb)*Θcb*(-1 + ybc)*(3 + ybc)) + dybc*(-8*signTh*sqrt(psb)*Θcb*Ξcb*ybc + 2*Ξcb*Ξcb*(1 + 3*ybc) + psb*(-3*psc*ybc*(1 + ybc) + Θcb*Θcb*(-2 + ybc*(3 + ybc)))))))))/(2*Enc*Enc*sqrt(psb)*psb*rcb*rcb*(1 + ybc)*(1 + ybc)*(1 + ybc))
-                # ps
-                dpsc = 2*pc
-                dEnc = dpsc/(2*Enc)
-                if c==b
-                    dpsb = dpsc
-                else
-                    dpsb = o
+                        # Add contribution from a terms
+                        dH3[i+d*(n+c-1)] += compute_dH3_term(Ena, Enc, dy_ac, rac, sign(Θca), psc, Θac, Θca, Ξac, psa, dE_c, zero(tpfl), dTh_ac, dXi_ac)
+                    end
                 end
-                dEnb = dpsb/(2*Enb)
-                drbc = o
-                dΘcb = (qb[i]-qc[i])/rcb
-                dΘbc = (qc[i]-qb[i])/rcb
-                dΞcb = pb[i]
 
-                dycb = sign(Θcb)*(Enc*dΘcb - dEnc*Θcb)/(Enc^2)
+                # Second loop over b (c fixed)
+                for b=1:n
+                    if b != c
+                        qb = Z2q(n,d,b,Z)
+                        qc = Z2q(n,d,c,Z)
+                        pb = Z2p(n,d,b,Z)
+                        pc = Z2p(n,d,c,Z)
 
-                signTh = sign(Θbc)
+                        rbc = sqrt(sum((qb .- qc).^2))
+                        psb = sqrt(sum(pb.^2))
+                        psc = sqrt(sum(pc.^2))
+                        Enb = sqrt(m[b]^2 + psb^2)
+                        Enc = psc  # For massless particle c
 
-                dH3[d*(c-1+n)+i] -= 
-                        (1/4)*(2*Enc*psb*drcb*(1 + ybc)*(8*signTh*sqrt(psb)*Θcb*Ξcb*ybc - 4*Ξcb*Ξcb*ybc - psb*Θcb*Θcb*(-1 + ybc)*(3 + ybc) +  psc*psb*(1 + ybc)*(-1 + 3*ybc)) + rcb*(dpsb*Enc*(1 + ybc)*(8*signTh*sqrt(psb)*Θcb*Ξcb*ybc - 2*6*Ξcb*Ξcb*ybc - psb*Θcb*Θcb*(3 + ybc*(2 + ybc)) + psc*psb*(1 + ybc*(2 + 3*ybc))) - 2*(dpsc*Enc*psb*psb*(1 + ybc)*(1 + ybc)*(-1 + 3*ybc) + dEnc*psb*(1 + ybc)*(-8*signTh*sqrt(psb)*Θcb*Ξcb*ybc + 4*Ξcb*Ξcb*ybc + psb*Θcb*Θcb*(-1 + ybc)*(3 + ybc) - psc*psb*(1 + ybc)*(-1 + 3*ybc)) + 2*Enc*sqrt(psb)*(dΘbc*(1 + ybc)*(4*sqrt(psb)*Θcb*Ξcb - 4*signTh*Ξcb*Ξcb - signTh*psb*Θcb*Θcb*(2 + ybc) + signTh*psc*psb*(2 + 3*ybc)) + sqrt(psb)*(4*dΞcb*(signTh*sqrt(psb)*Θcb - Ξcb)*ybc*(1 + ybc) - sqrt(psb)*dΘcb*(1 + ybc)*(-4*signTh*Ξcb*ybc + sqrt(psb)*Θcb*(-1 + ybc)*(3 + ybc)) + dybc*(-8*signTh*sqrt(psb)*Θcb*Ξcb*ybc + 2*Ξcb*Ξcb*(1 + 3*ybc) + psb*(-3*psc*ybc*(1 + ybc) + Θcb*Θcb*(-2 + ybc*(3 + ybc)))))))))/(2*Enc*Enc*sqrt(psb)*psb*rcb*rcb*(1 + ybc)*(1 + ybc)*(1 + ybc))
+                        # Calculate Theta and Xi
+                        Θbc = sum((qb .- qc).*pc)/rbc
+                        Θcb = -sum((qb .- qc).*pb)/rbc
+                        Ξbc = sum(pb.*pc)
+
+                        # Compute derivatives
+                        dTh_bc = (pb[i]-Θbc*zero(tpfl))/rbc
+                        dXi_bc = zero(tpfl)
+
+                        # Use proper y-parameter derivative for massless case
+                        dy_bc = compute_dy_massless(Enb, dTh_bc, zero(tpfl), Θbc)
+
+                        # Add contribution from b terms
+                        dH3[i+d*(n+c-1)] += compute_dH3_term(Enb, Enc, dy_bc, rbc, sign(Θcb), psc, Θbc, Θcb, Ξbc, psb, dE_c, zero(tpfl), dTh_bc, dXi_bc)
+                    end
+                end
             end
         end
-
-    end   # End massless check
-    end   # End c loop
+    end
 
     return dH3
-
 end
+
+#-----------------------------------------------------------------------
+#   MIKLY WAY POTENTIAL GRADIENTS
+#-----------------------------------------------------------------------
 
 # Gradient of Milky Way potentials
 function dMilkyWay(d::Int, m::RealVec, Z::RealVec, origin_x=Double64(-1.708859462494220E+17), origin_y=Double64(0), origin_z =Double64(4.346342845091530E+14), r_sun=Double64(8.4), Mb=Double64(409), Md=Double64(2856), Mh=Double64(1018), b_b=Double64(0.23), a_d=Double64(4.22), b_d=Double64(0.292), a_h=Double64(2.562))
@@ -317,6 +386,7 @@ function dMilkyWay(d::Int, m::RealVec, Z::RealVec, origin_x=Double64(-1.70885946
         xind = part_index
         yind = part_index + 1
         zind = part_index + 2
+
         pos = [ Z[xind] + origin_x, Z[yind] + origin_y, Z[zind] + origin_z]
         
         # bulge
@@ -379,7 +449,7 @@ end
 
 # Gradient of the Hamiltonian function
 function dH( d::Int , m::RealVec , Z::RealVec )
-    return ForwardDiff.gradient(x -> H(d, m, x), Z) #+ dH3m0( d , m , Z )
+    return ForwardDiff.gradient(x -> H(d, m, x), Z) + dH3m0( d , m , Z )
 end
 
 # Gradient of the Hamiltonian function plus gradient of Milky Way potential
