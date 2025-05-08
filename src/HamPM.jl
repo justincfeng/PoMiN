@@ -53,18 +53,12 @@ end
     ybaf( mb::Real, qb::RealVec , qa::RealVec , pb::RealVec , pa::RealVec )
 
 Returns ``y_{ba}=\\sqrt{m_b^2+(\\vec{n}_{ab}⋅\\vec{p}_b)^2}/E_b``, where ``E_b`` is
-Kinetic energy for particle ``b``. For massless particles (mb=0), returns
-``y_{ba}=\\text{sign}(\\vec{n}_{ab}⋅\\vec{p}_b)``. Inputs are particle ``b`` mass ``m_b``,
+Kinetic energy for particle ``b``. Inputs are particle ``b`` mass ``m_b``,
 particle positions ``\\vec{q}_b`` and ``\\vec{q}_a``, and particle momenta
 ``\\vec{p}_b`` and ``\\vec{p}_a``.
 """
 function ybaf( mb::Real, qb::RealVec , qa::RealVec , pb::RealVec , pa::RealVec )
-    Θba = Θabf(qb,qa,pb)
-    if mb > zero(mb)
-        return sqrt(mb^2+Θba^2)/Enf(mb,psf(pb))
-    else
-        return sign(Θba)
-    end
+    return sqrt(mb^2+Θabf(qb,qa,pb)^2)/Enf(mb,psf(pb))
 end
 
 """
@@ -127,17 +121,13 @@ function H( d::Int , m::RealVec , Z::RealVec )
                 H1 -= Ena*Enb*( 1 + psa/(Ena^2) + psb/(Enb^2) )/(2*rab)
                 H2 += ( 7*Ξab - Θab*Θba )/(4*rab)
 
-                if m[b] != zero(tpfl)
+                if m[b] != zero(tpfl) && yba != zero(tpfl) && yba != one(tpfl)
                     H3 += ( 2*(-2*(Ξab*Θba)^2 - 2*Θab*Θba*Ξab*psb - (Θab*psb)^2 + psb*Ξab^2)/Enb^2 + 
                             2*(psa*Θba^2 - (Θab*Θba)^2 + 2*Θab*Θba*Ξab - Ξab^2 + psb*Θab^2) +
                             yba*(3*psa*Θba^2 - (Θab*Θba)^2 + 8*Θab*Θba*Ξab - psa*psb + 3*psb*Θab^2)
                             ) / (4*Ena*Enb*rab*yba*(yba+1)^2)
-                # else  # This does not work
-                #    H3 -= 
-                #    (
-                #    4*yba*Ξab^2 - 2*yba*psa*psb + 2*yba*psb*Θab^2 - 3*psa*psb*yba^2 +
-                #    yba*psb*Θab^2 - 8*Θab*Θba*Ξab + psa*psb - 3*psb*Θ^2
-                #    ) / (4*Ena*Enb*rab*(yba+1)^2)
+                else
+                    H3 += (3*Enb*psb*Θab^2 - Enb*psa*(psb - 3*Θba^2) + Enb*Θab*Θba*(-(Θab*Θba) + 8*Ξab) + 2*psa*psb*abs(Θba) - 2*psb*Θab^2*abs(Θba) - 4*Ξab^2*abs(Θba))/(4*Ena*rab*(Enb + abs(Θba))^2)
                 end
             end
         end

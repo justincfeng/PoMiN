@@ -1,0 +1,1 @@
+        (3*Enb*psb*Θab^2 - Enb*psa*(psb - 3*Θba^2) + Enb*Θab*Θba*(-(Θab*Θba) + 8*Ξab) + 2*psa*psb*abs(Θba) - 2*psb*Θab^2*abs(Θba) - 4*Ξab^2*abs(Θba))/(4*Ena*rab*(Enb + abs(Θba))^2)
