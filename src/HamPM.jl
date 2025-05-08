@@ -138,202 +138,7 @@ function H( d::Int , m::RealVec , Z::RealVec )
 end
 
 #-----------------------------------------------------------------------
-#   POST-MINKOWSKIAN HAMILTONIAN - MASSLESS PARTICLE IMPLEMENTATION
-#-----------------------------------------------------------------------
-
-"""
-    compute_dH3_term(Ena, Enc, dyac, rac, yca, psc, Θac, Θca, Ξac, psa, dE, dr, dTh, dXi)
-
-Helper function to compute the H3 derivative terms for massless particles.
-This matches the C implementation's calculation for the massless case.
-"""
-function compute_dH3_term(Ena, Enc, dyac, rac, yca, psc, Θac, Θca, Ξac, psa, dE, dr, dTh, dXi)
-    return (1/4)*(-((2*Ena*Enc*dyac*rac*yca*(2*psc*psc*Θac*Θac + 4*psc*Θac*Θca*Ξac - 
-           2*(psc - 2*Θca*Θca)*Ξac*Ξac + Enc*Enc*(2*(-(Θac*Θca) + Ξac)*(-(Θac*Θca) + Ξac) + 
-           Θac*Θca*(Θac*Θca - 8*Ξac)*yca - psa*Θca*Θca*(2 + 3*yca) + 
-           psc*(psa*yca - Θac*Θac*(2 + 3*yca))))))/(Ena*Ena*Enc*Enc*Enc*Enc*rac*rac*yca*yca*(1 + yca)*(1 + yca)*(1 + yca)))
-end
-
-"""
-    compute_dy_massless(Ena, dTha, dEa, Tha)
-
-Compute the y-parameter derivative for massless particles.
-This matches the C implementation's calculation.
-"""
-function compute_dy_massless(Ena, dTha, dEa, Tha)
-    return sign(Tha)*(Ena*dTha - dEa*Tha)/(Ena*Ena)
-end
-
-"""
-    dH3m0( d::Int , m::RealVec , Z::RealVec )
-
-Derivative of H3 for massless particles. This function handles the special case
-where particle c has zero mass.
-"""
-function dH3m0( d::Int , m::RealVec , Z::RealVec )
-    tpfl = typeof(Z[1])
-    n = length(m)
-    nn = 2*n*d
-
-    o = zero(tpfl)
-
-    # Initialize arrays for derivatives
-    dps = zeros(tpfl,n)
-    dE = zeros(tpfl,n)
-    dr = [zeros(tpfl,n) for _ = 1:n]
-    dy = [zeros(tpfl,n) for _ = 1:n]
-    dTh = [zeros(tpfl,n) for _ = 1:n]
-    dXi = [zeros(tpfl,n) for _ = 1:n]
-
-    dH3 = zeros(tpfl,nn)
-
-    # Loop over particles
-    for c=1:n
-        # Only proceed if particle c is massless
-        if m[c] == o
-            # Position derivatives (zindex < 3)
-            for i=1:d
-                # First loop over a (c fixed)
-                for a=1:n
-                    if a != c
-                        qa = Z2q(n,d,a,Z)
-                        qc = Z2q(n,d,c,Z)
-                        pa = Z2p(n,d,a,Z)
-                        pc = Z2p(n,d,c,Z)
-
-                        rac = sqrt(sum((qa .- qc).^2))
-                        psa = sqrt(sum(pa.^2))
-                        psc = sqrt(sum(pc.^2))
-                        Ena = sqrt(m[a]^2 + psa^2)
-                        Enc = psc  # For massless particle c
-
-                        # Calculate Theta and Xi
-                        Θac = sum((qa .- qc).*pc)/rac
-                        Θca = -sum((qa .- qc).*pa)/rac
-                        Ξac = sum(pa.*pc)
-
-                        # Compute derivatives
-                        dr_ac = (qc[i]-qa[i])/rac
-                        dTh_ac = (pa[i]-Θac*dr_ac)/rac
-                        dXi_ac = zero(tpfl)
-
-                        # Use proper y-parameter derivative for massless case
-                        dy_ac = compute_dy_massless(Ena, dTh_ac, zero(tpfl), Θac)
-
-                        # Add contribution from a terms
-                        dH3[i+d*(c-1)] += compute_dH3_term(Ena, Enc, dy_ac, rac, sign(Θca), psc, Θac, Θca, Ξac, psa, Ena, dr_ac, dTh_ac, dXi_ac)
-                    end
-                end
-
-                # Second loop over b (c fixed)
-                for b=1:n
-                    if b != c
-                        qb = Z2q(n,d,b,Z)
-                        qc = Z2q(n,d,c,Z)
-                        pb = Z2p(n,d,b,Z)
-                        pc = Z2p(n,d,c,Z)
-
-                        rbc = sqrt(sum((qb .- qc).^2))
-                        psb = sqrt(sum(pb.^2))
-                        psc = sqrt(sum(pc.^2))
-                        Enb = sqrt(m[b]^2 + psb^2)
-                        Enc = psc  # For massless particle c
-
-                        # Calculate Theta and Xi
-                        Θbc = sum((qb .- qc).*pc)/rbc
-                        Θcb = -sum((qb .- qc).*pb)/rbc
-                        Ξbc = sum(pb.*pc)
-
-                        # Compute derivatives
-                        dr_bc = (qc[i]-qb[i])/rbc
-                        dTh_bc = (pb[i]-Θbc*dr_bc)/rbc
-                        dXi_bc = zero(tpfl)
-
-                        # Use proper y-parameter derivative for massless case
-                        dy_bc = compute_dy_massless(Enb, dTh_bc, zero(tpfl), Θbc)
-
-                        # Add contribution from b terms
-                        dH3[i+d*(c-1)] += compute_dH3_term(Enb, Enc, dy_bc, rbc, sign(Θcb), psc, Θbc, Θcb, Ξbc, psb, Enb, dr_bc, dTh_bc, dXi_bc)
-                    end
-                end
-            end
-
-            # Momentum derivatives (zindex >= 3)
-            for i=1:d
-                # Calculate momentum derivatives once per dimension
-                dps_c = 2*pc[i]
-                dE_c = dps_c/(2*Enc)
-
-                # First loop over a (c fixed)
-                for a=1:n
-                    if a != c
-                        qa = Z2q(n,d,a,Z)
-                        qc = Z2q(n,d,c,Z)
-                        pa = Z2p(n,d,a,Z)
-                        pc = Z2p(n,d,c,Z)
-
-                        rac = sqrt(sum((qa .- qc).^2))
-                        psa = sqrt(sum(pa.^2))
-                        psc = sqrt(sum(pc.^2))
-                        Ena = sqrt(m[a]^2 + psa^2)
-                        Enc = psc  # For massless particle c
-
-                        # Calculate Theta and Xi
-                        Θac = sum((qa .- qc).*pc)/rac
-                        Θca = -sum((qa .- qc).*pa)/rac
-                        Ξac = sum(pa.*pc)
-
-                        # Compute derivatives
-                        dTh_ac = (pa[i]-Θac*zero(tpfl))/rac
-                        dXi_ac = zero(tpfl)
-
-                        # Use proper y-parameter derivative for massless case
-                        dy_ac = compute_dy_massless(Ena, dTh_ac, zero(tpfl), Θac)
-
-                        # Add contribution from a terms
-                        dH3[i+d*(n+c-1)] += compute_dH3_term(Ena, Enc, dy_ac, rac, sign(Θca), psc, Θac, Θca, Ξac, psa, dE_c, zero(tpfl), dTh_ac, dXi_ac)
-                    end
-                end
-
-                # Second loop over b (c fixed)
-                for b=1:n
-                    if b != c
-                        qb = Z2q(n,d,b,Z)
-                        qc = Z2q(n,d,c,Z)
-                        pb = Z2p(n,d,b,Z)
-                        pc = Z2p(n,d,c,Z)
-
-                        rbc = sqrt(sum((qb .- qc).^2))
-                        psb = sqrt(sum(pb.^2))
-                        psc = sqrt(sum(pc.^2))
-                        Enb = sqrt(m[b]^2 + psb^2)
-                        Enc = psc  # For massless particle c
-
-                        # Calculate Theta and Xi
-                        Θbc = sum((qb .- qc).*pc)/rbc
-                        Θcb = -sum((qb .- qc).*pb)/rbc
-                        Ξbc = sum(pb.*pc)
-
-                        # Compute derivatives
-                        dTh_bc = (pb[i]-Θbc*zero(tpfl))/rbc
-                        dXi_bc = zero(tpfl)
-
-                        # Use proper y-parameter derivative for massless case
-                        dy_bc = compute_dy_massless(Enb, dTh_bc, zero(tpfl), Θbc)
-
-                        # Add contribution from b terms
-                        dH3[i+d*(n+c-1)] += compute_dH3_term(Enb, Enc, dy_bc, rbc, sign(Θcb), psc, Θbc, Θcb, Ξbc, psb, dE_c, zero(tpfl), dTh_bc, dXi_bc)
-                    end
-                end
-            end
-        end
-    end
-
-    return dH3
-end
-
-#-----------------------------------------------------------------------
-#   MIKLY WAY POTENTIAL GRADIENTS
+#   MILKY WAY POTENTIAL GRADIENTS
 #-----------------------------------------------------------------------
 
 # Gradient of Milky Way potentials
@@ -439,7 +244,7 @@ end
 
 # Gradient of the Hamiltonian function
 function dH( d::Int , m::RealVec , Z::RealVec )
-    return ForwardDiff.gradient(x -> H(d, m, x), Z) + dH3m0( d , m , Z )
+    return ForwardDiff.gradient(x -> H(d, m, x), Z)
 end
 
 # Gradient of the Hamiltonian function plus gradient of Milky Way potential
@@ -463,26 +268,25 @@ end
 
 
 ## Symplectic operator: Maps output of dH to time derivative of phase space variables
-#function Jsympl( Zarg::RealVec )
-#    tpfl=typeof(Zarg[1])
-#    n2 = length(Zarg)
-#    Z = zeros(tpfl,n2)
+function Jsympl( Zarg::RealVec )
+    tpfl=typeof(Zarg[1])
+    n2 = length(Zarg)
+    Z = zeros(tpfl,n2)
 
-#    if iseven(n2)
-#        n = Int(round(n2 / 2, digits=0))
-#        for i=1:n
-#            Z[i]    = Zarg[n+i] 
-#            Z[n+i]  = - Zarg[i] 
-#        end
-#
-#        return Z
-#    else
-#        return Z
-#    end
-#end
+    if iseven(n2)
+        n = Int(round(n2 / 2, digits=0))
+        for i=1:n
+            Z[i]    = Zarg[n+i] 
+            Z[n+i]  = - Zarg[i] 
+        end
+        return Z
+    else
+        return Z
+    end
+end
 
 # Right hand side of Hamilton's equations
-# FHE = (d,m,z)->Jsympl(dH(d,m,z))
+FHE = (d,m,z)->Jsympl(dH(d,m,z))
 
 #-----------------------------------------------------------------------
 #   SIMPLE ADAPTIVE TIMESTEPPING
