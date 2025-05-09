@@ -1,7 +1,9 @@
-using DoubleFloats
+using ArbNumerics
 using LinearAlgebra
 using ForwardDiff
 using OrdinaryDiffEq
+
+setworkingprecision(ArbFloat, 128) # Set high precision
 
 include("../pomin-types.jl")        # data type definitions
 include("../pomin-io.jl")           # input/output routines
@@ -19,12 +21,12 @@ struct Parameters
     iter::Int                # Either the number of iterations, or maximum number of iterations, depending on integrator
 end
 
-m1  = Double64(0.01)
-μ   = Double64(0)
+m1  = ArbFloat("0.01")
+μ   = ArbFloat(0)
 
-p   = Double64(1/2)
-b   = Double64(6e15)
-d   = Double64(b*10^6)
+p   = ArbFloat("0.5")
+b   = ArbFloat("6e15")
+d   = b*ArbFloat("1e6")
 
 
 """
@@ -49,75 +51,97 @@ end
 
 #-----------------------------------------------------------------------
 function MXICgenML(p,b,dist;
-                 G=Float64(1),c=Double64(1),
-                 StartTime=Double64(0),MaxTimeStepFactor=Double64(1e5))
+                 G=ArbFloat(1),c=ArbFloat(1),
+                 StartTime=ArbFloat(0),MaxTimeStepFactor=ArbFloat("1e5"))
 
-    n   = Double64(2)
+    n   = ArbFloat(2)
 
     Dur = dist/c
-    r1  = dist/Double64(2)
-    r2  = dist/Double64(2)
+    r1  = dist/ArbFloat(2)
+    r2  = dist/ArbFloat(2)
 
-    MaxTimeStep = Int(Dur/MaxTimeStepFactor)
+    # Cap MaxTimeStep at Int64 max to avoid overflow
+    MaxTimeStep = min(Int(1e6), Int(floor(min(Dur/MaxTimeStepFactor, 1e6))))
 
-    m1 = Double64(0)
-    m2 = Double64(0)
+    m1 = ArbFloat(0)
+    m2 = ArbFloat(0)
 
-    dp  = dpfunc(p, b, dist, m1, m2, G, c,Double64)
+    dp  = dpfunc(p, b, dist, m1, m2, G, c, ArbFloat)
 
     qx1  = - r1
-    qy1  = - b/Double64(2)
-    qz1  = Double64(0.)
+    qy1  = - b/ArbFloat(2)
+    qz1  = ArbFloat(0)
 
     qx2  = r2
-    qy2  = b/Double64(2)
-    qz2  = Double64(0.)
+    qy2  = b/ArbFloat(2)
+    qz2  = ArbFloat(0)
 
     px1  = p
-    py1  = Double64(0.)
-    pz1  = Double64(0.)
+    py1  = ArbFloat(0)
+    pz1  = ArbFloat(0)
 
     px2  = -p
-    py2  = Double64(0.)
-    pz2  = Double64(0.)
+    py2  = ArbFloat(0)
+    pz2  = ArbFloat(0)
 
-    return ( dp , Parameters((false,Double64(1.)),
-                             (true,Double64(0.005)),
-                             (false,Double64(1e-6)),
-                             (Double64(0.),StartTime+Dur),MaxTimeStep) ,
-                    Double64[0.0;0.0] ,
+    return ( dp , Parameters((false,ArbFloat(1)),
+                             (true,ArbFloat("0.005")),
+                             (false,ArbFloat("1e-6")),
+                             (ArbFloat(0),StartTime+Dur),MaxTimeStep) ,
+                    ArbFloat[0;0] ,
                     [qx1;qy1;qz1;qx2;qy2;qz2;px1;py1;pz1;px2;py2;pz2] )
 end #-------------------------------------------------------------------
 
 # Test a range of nn values
-for nn in [20, 40, 80, 100, 150]
+for nn in [80, 100, 150, 200, 300, 500]
     println("\nTesting with nn = ", nn)
     
-    m1  = Double64(0.0);  # Massless particles
-    μ   = Double64(π/4);
-    db  = Double64(100);
-    p   = Double64(1.0);  # Increased momentum for better numerical stability
-    b   = Double64(10)*Double64("1.1108305558745590335689712446765042841434478759765625")^nn
-    dst   = Double64(db*b);
+    m1  = ArbFloat(0);  # Massless particles
+    μ   = ArbFloat(π)/4;
+    db  = ArbFloat(100);
+    p   = ArbFloat(1);  # Increased momentum for better numerical stability
+    b   = ArbFloat(10)*ArbFloat("1.1108305558745590335689712446765042841434478759765625")^nn
+    dst   = db*b;
     
     println("Impact parameter b = ", b)
     println("Initial separation dst = ", dst)
     
     mxicd=MXICgenML(p,b,dst;
-                        G=Double64(1),c=Double64(1),
-                        StartTime=Double64(0),MaxTimeStepFactor=Double64(1e4))  # Adjusted timestep factor
+                        G=ArbFloat(1),c=ArbFloat(1),
+                        StartTime=ArbFloat(0),MaxTimeStepFactor=ArbFloat("1e5"))  # Adjusted timestep factor
     
     # Wrap FHE in a form compatible with ODEProblem
     function wrapped_fhe!(du, u, p, t)
         du .= FHE(3, mxicd[3], u)
     end
     
-    # Use moderate tolerances
-    S = jlintegrator(mxicd[4], wrapped_fhe!, mxicd[2].tspan, nothing, Double64(1e-16), Double64(1e-16), AutoVern9(Rosenbrock23()))
+    # Initial timestep and max iterations
+    initial_dt = ArbFloat("1e-4")  # Even more conservative timestep for better precision
+    max_iterations = Int(1e6)    # Large enough for most simulations
+    
+    # Define the Hamiltonian gradient function
+    function hamiltonian_grad(x)
+        return dH(3, mxicd[3], x)
+    end
+
+    # Print initial state
+    println("Initial state: ", mxicd[4])
+    
+    # Use hrkintegrator with tcour for adaptive timestepping
+    S = hrkintegrator(3, length(mxicd[3]), mxicd[4], 
+                      hamiltonian_grad,
+                      initial_dt,
+                      tcour,
+                      mxicd[2].tspan,
+                      max_iterations)
+    
+    # Print final state
+    println("Final state: ", S.z[end])
     
     println("Analytical dp (mxicd[1]): ", mxicd[1])
-    println("Numerical dp ((S[end]-S[1])[11]): ", (S[end]-S[1])[11])
-    println("Percentage difference: ", Double64(100)*(abs((S[end]-S[1])[11])-mxicd[1])/mxicd[1], "%")
+    numerical_dp = S.z[end][11] - S.z[1][11]  # Access first and last states through the z field
+    println("Numerical dp: ", numerical_dp)
+    println("Percentage difference: ", 100*(abs(numerical_dp)-mxicd[1])/mxicd[1], "%")
 end
 
 # hrkintegrator(3, 2, mxicd[4] , x -> pomin.dH_plus_MW(3, mxicd[3], x), δ, no_adapt, mxicd[2].tspan, mxicd[2].iter)

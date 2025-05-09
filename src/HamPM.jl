@@ -118,16 +118,16 @@ function H( d::Int , m::RealVec , Z::RealVec )
                 Θba = Θabf(qb,qa,pb)
                 Ξab = Ξabf(pa,pb)
                 
-                H1 -= Ena*Enb*( 1 + psa/(Ena^2) + psb/(Enb^2) )/(2*rab)
-                H2 += ( 7*Ξab - Θab*Θba )/(4*rab)
+                H1 -= Ena*Enb*( tpfl(1) + psa/(Ena^2) + psb/(Enb^2) )/(tpfl(2)*rab)
+                H2 += ( tpfl(7)*Ξab - Θab*Θba )/(tpfl(4)*rab)
 
                 if m[b] != zero(tpfl) && yba != zero(tpfl) && yba != one(tpfl)
-                    H3 += ( 2*(-2*(Ξab*Θba)^2 - 2*Θab*Θba*Ξab*psb - (Θab*psb)^2 + psb*Ξab^2)/Enb^2 + 
-                            2*(psa*Θba^2 - (Θab*Θba)^2 + 2*Θab*Θba*Ξab - Ξab^2 + psb*Θab^2) +
-                            yba*(3*psa*Θba^2 - (Θab*Θba)^2 + 8*Θab*Θba*Ξab - psa*psb + 3*psb*Θab^2)
-                            ) / (4*Ena*Enb*rab*yba*(yba+1)^2)
+                    H3 += ( tpfl(2)*(-tpfl(2)*(Ξab*Θba)^2 - tpfl(2)*Θab*Θba*Ξab*psb - (Θab*psb)^2 + psb*Ξab^2)/Enb^2 + 
+                            tpfl(2)*(psa*Θba^2 - (Θab*Θba)^2 + tpfl(2)*Θab*Θba*Ξab - Ξab^2 + psb*Θab^2) +
+                            yba*(tpfl(3)*psa*Θba^2 - (Θab*Θba)^2 + tpfl(8)*Θab*Θba*Ξab - psa*psb + tpfl(3)*psb*Θab^2)
+                            ) / (tpfl(4)*Ena*Enb*rab*yba*(yba+tpfl(1))^2)
                 else
-                    H3 += (3*Enb*psb*Θab^2 - Enb*psa*(psb - 3*Θba^2) + Enb*Θab*Θba*(-(Θab*Θba) + 8*Ξab) + 2*psa*psb*abs(Θba) - 2*psb*Θab^2*abs(Θba) - 4*Ξab^2*abs(Θba))/(4*Ena*rab*(Enb + abs(Θba))^2)
+                    H3 += (tpfl(3)*Enb*psb*Θab^2 - Enb*psa*(psb - tpfl(3)*Θba^2) + Enb*Θab*Θba*(-(Θab*Θba) + tpfl(8)*Ξab) + tpfl(2)*psa*psb*abs(Θba) - tpfl(2)*psb*Θab^2*abs(Θba) - tpfl(4)*Ξab^2*abs(Θba))/(tpfl(4)*Ena*rab*(Enb + abs(Θba))^2)
                 end
             end
         end
@@ -344,7 +344,7 @@ function tcour( dt::Real , Z::RealVec , Zdot::RealVec , C = 0.001 , d=3 )
                 end
             end
         end
-        Δt = C * rs/vs
+        Δt = tpfl(C) * rs/vs
         # return \Delta t if it is smaller than the maximum timestep, otherwise return maximum timestep
 
         # println("time step = " * string(Δt))
