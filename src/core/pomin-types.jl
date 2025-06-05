@@ -25,3 +25,15 @@ mutable struct soln
     z::Array{RealVec,1}     # Vector recording phase space coordinates at each timestep
     zaux::Array{RealVec,1}
 end
+
+#   Generate constants for a given datatype
+function tpnum(tpfl::Type)
+    if tpfl <: Real
+        return (tpfl(0),tpfl(1),tpfl(2),tpfl(3),tpfl(4),
+                tpfl(5),tpfl(6),tpfl(7),tpfl(8),tpfl(9))
+    else
+        return (Float64(0.0),Float64(1.0),Float64(2.0),Float64(3.0),
+                Float64(4.0),Float64(5.0),Float64(6.0),Float64(7.0),
+                Float64(8.0),Float64(9.0))
+    end
+end

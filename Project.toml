@@ -4,14 +4,19 @@ authors = ["Justin C. Feng"]
 version = "0.1.0"
 
 [deps]
-LinearAlgebra   = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-OrdinaryDiffEq  = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-ForwardDiff     = "f6369f11-7733-5829-9624-2563aa707210"
-
-DoubleFloats    = "497a8b3b-efae-58df-a0af-a86822472b78"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DoubleFloats = "497a8b3b-efae-58df-a0af-a86822472b78"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
+OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 
 [compat]
 julia = "1.7"
+CSV = "0.10"
+DoubleFloats = "1.1"
+ForwardDiff = "0.10"
+OrdinaryDiffEq = "6.52"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
