@@ -2,6 +2,11 @@
 #   POST-MINKOWSKIAN HAMILTONIAN
 #-----------------------------------------------------------------------
 
+module HamPM
+
+include("../pomin-types.jl")
+include("../utils/idxer.jl")
+
 # These functions compute scalar quantities that make up the Hamiltonian
 
 """
@@ -292,3 +297,5 @@ function dt_lin_int(dt::Real , Z::RealVec , Zdot::RealVec , start_dist::Real , m
     return dt
 
 end
+
+end # end of HamPM
