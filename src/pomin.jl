@@ -16,11 +16,10 @@ using Logging
 using DoubleFloats
 
 # Core functionality
-include("core/types.jl")                 # Type definitions
-include("core/hamiltonian/HamPM.jl")    # Post-Minkowski Hamiltonian
-include("core/hamiltonian/HamPM_massless.jl") # Massless particle support
+include("core/pomin-types.jl")                 # Type definitions
 
 # Physics modules
+include("physics/Hamiltonians/HamPM.jl")       # Post-Minkowski Hamiltonian
 include("physics/gravitational_waves/gwsc.jl")  # GW strain calculator
 include("physics/post_minkowski/HO.jl")        # Harmonic oscillator
 
@@ -28,6 +27,7 @@ include("physics/post_minkowski/HO.jl")        # Harmonic oscillator
 include("integrators/epsi.jl")          # Symplectic Integrator (Tao 2016)
 include("integrators/rk4i.jl")          # 4th order Runge-Kutta
 include("integrators/intjul.jl")        # Julia integrator functions
+include("integrators/tadap.jl")         # Time adaptation functions
 
 # Utilities
 include("utils/idxer.jl")               # Index management
@@ -48,5 +48,9 @@ export H, dH, Jsympl
 
 # Integration methods
 export jlintegrator, jlintegratorfull
+
+# Initial data generation
+export setup_binary_system, setup_circular_orbit
+export setup_massless_test_particle, merge_particle_systems
 
 end
