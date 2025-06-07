@@ -52,5 +52,7 @@ export jlintegrator, jlintegratorfull
 # Initial data generation
 export setup_binary_system, setup_circular_orbit
 export setup_massless_test_particle, merge_particle_systems
+export add_particle, to_com_frame, setup_scattering
+export to_phase_tuple
 
 end
