@@ -4,7 +4,7 @@
 
 module HamPM
 
-include("../pomin-types.jl")
+include("../../core/pomin-types.jl")
 include("../utils/idxer.jl")
 
 # These functions compute scalar quantities that make up the Hamiltonian
