@@ -52,15 +52,31 @@ include("gwsc.jl")          # GW strain calculator
 
 # include("tests/Proxima.jl")
 
+<<<<<<< Updated upstream
 # v_straight_line = Double64[-3.6476077940293500E-01, -2.7868636606207900E-01, -8.8841627809292000E-01]
+=======
+# v_straight_line = Double64[-7.295215610911250E-02, -5.573727311573260E-02, -1.776832555550860E-01]
+>>>>>>> Stashed changes
 # minvec = closestApproach(v_straight_line)
 # distance_in_M = norm(minvec)
 # distance_in_AU = distance_in_M * 1.47669196951425 * 6.6845871226706E-09
 # println(stderr,"For initial velocity ", v_straight_line, ", closest approach was ", distance_in_AU, " AU")
 
+<<<<<<< Updated upstream
 # Export types and functions
 export RealVec, Particles, soln
 export jlintegrator, jlintegratorfull
 export H, dH, Jsympl
+=======
+# testInitVector(1)
+
+# include("tests/Proxima_orbit_test.jl")
+
+# minvec = closestApproach_2plus1(Double64(1), Double64[0,0,0], Double64[0,0,0])
+minvec = closestApproach_2body_Proxima_test_particle()
+distance_in_M = norm(minvec)
+distance_in_AU = distance_in_M * 1.47669196951425 * 6.6845871226706E-09
+println(stderr,"Closest approach was ", distance_in_AU, " AU")
+>>>>>>> Stashed changes
 
 end

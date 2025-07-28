@@ -12,8 +12,20 @@ function closestApproach(v_init::RealVec)
     # Find spacecraft momentum p = gamma m v
     p_init = masses[3]*v_init/sqrt(1-0.2^2)
 
-    # Initial Z: Positions first, momenta second
-    Z_init = [0, 0, 0, -1.8667826140E+07, 8.9633743993E+07, 3.8883291714E+07, -1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07, -9.9157694997E+12, -7.5891180191E+12, -2.4171267258E+13, -1.0514396564E+13, -8.7920419314E+12, -2.4558076740E+13, -1.0514148951E+13, -8.7899759755E+12, -2.4558922285E+13, 0, 0, 0, -2.9839042080E-10, -5.0388889700E-11, -2.1846049145E-11, p_init[1], p_init[2], p_init[3], -3.8172314441E-06, 9.0494364315E-06, 8.9932012189E-06, -3.2681576581E-05, 8.2784394610E-05, 7.2543810801E-05, -2.9658611095E-05, 6.6362559735E-05, 6.7386459079E-05]
+    # Initial Z:
+    Z_init = [  0, 0, 0,                                                    # Sun pos
+                -1.8667826140E+07, 8.9633743993E+07, 3.8883291714E+07,      # Earth pos
+                -1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07,      # Spacechip pos (Moon dist (semimajor axis) from Earth)
+                -9.9157694997E+12, -7.5891180191E+12, -2.4171267258E+13,    # Proxima pos
+                -1.0514396564E+13, -8.7920419314E+12, -2.4558076740E+13,    # Alpha A pos
+                -1.0514148951E+13, -8.7899759755E+12, -2.4558922285E+13,    # Alpha B pos
+                0, 0, 0,                                                    # Sun momentum
+                -2.9839042080E-10, -5.0388889700E-11, -2.1846049145E-11,    # Earth momentum
+                p_init[1], p_init[2], p_init[3],                            # Spacechip momentum
+                -3.8172314441E-06, 9.0494364315E-06, 8.9932012189E-06,      # Proxima momentum
+                -3.2681576581E-05, 8.2784394610E-05, 7.2543810801E-05,      # Alpha A momentum
+                -2.9658611095E-05, 6.6362559735E-05, 6.7386459079E-05       # Alpha B momentum
+                ]
 
     tspan = (Double64(0), Double64(1.6018E+14)) # 25 years
     # tspan = (Double64(0), Double64(1.922E+11)) # 10 days
@@ -38,7 +50,7 @@ function closestApproach(v_init::RealVec)
         q1 = Z2q(sol.N, sol.d, 3, sol.z[tn])
         # get q vector for particle 4 (Proxima Centauri) at timestep tn
         q2 = Z2q(sol.N, sol.d, 4, sol.z[tn])
-        # get distance and save it to the list of minima
+        # get distance and save it if it's the minimum distance
         dist = norm(q1-q2)
         if dist < mindist
             mindist = dist
@@ -47,6 +59,197 @@ function closestApproach(v_init::RealVec)
     end
     return minvec
 end
+
+function closestApproach_2body_Proxima_test_particle()
+    println(stderr,"closestApproach_2body_Proxima_test_particle() called")
+
+    # Mass of Spacechip, Proxima test particle
+    masses = Double64[1.0057832537E-33, 1E-40] 
+
+    # Initial Z:
+    Z_init = [  -1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07,                  # Spacechip pos (Moon dist (semimajor axis) from Earth in +y dir)
+                -9.90338347925777E+12, -7.58520275447461E+12, -2.41494965557852E+13,    # Proxima pos (Kervella 2017)
+                -7.486220592724260E-35, -5.723861062118610E-35, -1.823989847481890E-34, # Spacechip momentum (misses Proxima by 0.0009 AU in absence of gravity)
+                -3.34779933990201E-45, 7.24198145771899E-45, 6.82553747232694E-45       # Proxima momentum (Kervella 2017)
+                ]
+
+    tspan = (Double64(0), Double64(1.410E+14)) # 22 years
+    δ = Double64(1E7) # less than a minute
+    start_dist = 2.718112140945220E+13  # Proxima-Spacechip distance at time 0
+    min_dist = 1E10 # about 100 AU -- once within this distance it will use min_dt
+    max_dt = Double64(7.3E8) # about an hour
+    min_dt = Double64(1E7) # less than a minute
+    adapt = (δ, z, zdot) -> dt_lin_int(δ, z, zdot, start_dist, min_dist, max_dt, min_dt)
+    no_adapt = (δ, z, zdot) -> δ                        # turns off adaptive time stepping
+    maxit = 15000000
+
+    sol = hrkintegrator(3, 2, Z_init, x -> pomin.dH(3, masses, x), δ, no_adapt, tspan, maxit)
+    # sol = hointegrator(Z_init, x -> pomin.dH(3, masses, x), tspan)
+
+    println(stderr,"integrator done")
+    printcsv(sol)
+
+    # find distance of closest approach
+    mindist = Double64(1E100)
+    minvec = zeros(3)
+    numsteps = length(sol.t)
+    for tn in 1:numsteps  # tn is timestep number
+        # get q vector for particle 1 (spacecraft) at timestep tn
+        q1 = Z2q(sol.N, sol.d, 1, sol.z[tn])
+        # get q vector for particle 2 (Proxima Centauri) at timestep tn
+        q2 = Z2q(sol.N, sol.d, 2, sol.z[tn])
+        # get distance and save it if it's the minimum distance
+        dist = norm(q1-q2)
+        if dist < mindist
+            mindist = dist
+            minvec = q1-q2
+        end
+    end
+    return minvec
+end
+
+function closestApproach_2body_w_MW()
+    println(stderr,"closestApproach_2body_w_MW() called")
+
+    # Mass of Spacechip, Proxima test particle
+    masses = Double64[1.0057832537E-33, 1E-40] 
+
+    # Initial Z:
+    Z_init = [  -1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07,                  # Spacechip pos (Moon dist (semimajor axis) from Earth in +y dir)
+                -9.90338347925777E+12, -7.58520275447461E+12, -2.41494965557852E+13,    # Proxima pos (Kervella 2017)
+                -7.486220592724260E-35, -5.723861062118610E-35, -1.823989847481890E-34, # Spacechip momentum (misses Proxima by 0.0009 AU in absence of gravity)
+                -3.34779933990201E-45, 7.24198145771899E-45, 6.82553747232694E-45       # Proxima momentum (Kervella 2017)
+                ]
+
+    tspan = (Double64(0), Double64(1.410E+14)) # 22 years
+    δ = Double64(7.31E+8) # about one hour
+    start_dist = 2.718112140945220E+13  # Proxima-Spacechip distance at time 0
+    min_dist = 1E10 # about 100 AU -- once within this distance it will use min_dt
+    max_dt = Double64(7.3E8) # about an hour
+    min_dt = Double64(1E7) # less than a minute
+    adapt = (δ, z, zdot) -> dt_lin_int(δ, z, zdot, start_dist, min_dist, max_dt, min_dt)
+    no_adapt = (δ, z, zdot) -> δ                        # turns off adaptive time stepping
+    maxit = 10000000
+
+    sol = hrkintegrator(3, 2, Z_init, x -> pomin.dH_plus_MW(3, masses, x), δ, no_adapt, tspan, maxit)
+
+    println(stderr,"integrator done")
+    printcsv(sol)
+
+    # find distance of closest approach
+    mindist = Double64(1E100)
+    minvec = zeros(3)
+    numsteps = length(sol.t)
+    for tn in 1:numsteps  # tn is timestep number
+        # get q vector for particle 1 (spacecraft) at timestep tn
+        q1 = Z2q(sol.N, sol.d, 1, sol.z[tn])
+        # get q vector for particle 2 (Proxima Centauri) at timestep tn
+        q2 = Z2q(sol.N, sol.d, 2, sol.z[tn])
+        # get distance and save it if it's the minimum distance
+        dist = norm(q1-q2)
+        if dist < mindist
+            mindist = dist
+            minvec = q1-q2
+        end
+    end
+    return minvec
+end
+
+function closestApproach_2body_massive_Proxima()
+    println(stderr,"closestApproach_2body_massive_Proxima() called")
+
+    # Mass of Spacechip, Proxima
+    masses = Double64[1.0057832537E-33, ] 
+
+    # Initial Z:
+    Z_init = [  -1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07,                  # Spacechip pos (Moon dist (semimajor axis) from Earth in +y dir)
+                -9.90338347925777E+12, -7.58520275447461E+12, -2.41494965557852E+13,    # Proxima pos (Kervella 2017)
+                -7.486220592724260E-35, -5.723861062118610E-35, -1.823989847481890E-34, # Spacechip momentum (misses Proxima by 0.0009 AU in absence of gravity)
+                       # Proxima momentum (Kervella 2017)
+                ]
+
+    tspan = (Double64(0), Double64(1.410E+14)) # 22 years
+    δ = Double64(1E7) # less than a minute
+    start_dist = 2.718112140945220E+13  # Proxima-Spacechip distance at time 0
+    min_dist = 1E10 # about 100 AU -- once within this distance it will use min_dt
+    max_dt = Double64(7.3E8) # about an hour
+    min_dt = Double64(1E7) # less than a minute
+    adapt = (δ, z, zdot) -> dt_lin_int(δ, z, zdot, start_dist, min_dist, max_dt, min_dt)
+    maxit = 10000000
+
+    sol = hrkintegrator(3, 2, Z_init, x -> pomin.dH(3, masses, x), δ, adapt, tspan, maxit)
+    # sol = hointegrator(Z_init, x -> pomin.dH(3, masses, x), tspan)
+
+    println(stderr,"integrator done")
+    printcsv(sol)
+
+    # find distance of closest approach
+    mindist = Double64(1E100)
+    minvec = zeros(3)
+    numsteps = length(sol.t)
+    for tn in 1:numsteps  # tn is timestep number
+        # get q vector for particle 1 (spacecraft) at timestep tn
+        q1 = Z2q(sol.N, sol.d, 1, sol.z[tn])
+        # get q vector for particle 2 (Proxima Centauri) at timestep tn
+        q2 = Z2q(sol.N, sol.d, 2, sol.z[tn])
+        # get distance and save it if it's the minimum distance
+        dist = norm(q1-q2)
+        if dist < mindist
+            mindist = dist
+            minvec = q1-q2
+        end
+    end
+    return minvec
+end
+
+
+function closestApproach_2plus1(mass::Double64, q_init::RealVec, p_init::RealVec)
+    println(stderr,"closestApproach_2plus1() called")
+
+    # Mass of Spacechip, Proxima test particle, and 3rd body
+    masses = Double64[1.0057832537E-33, 1E-40, mass] 
+
+    # Initial Z:
+    Z_init = [  -1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07,                  # Spacechip pos (Moon dist (semimajor axis) from Earth in +y dir)
+                -9.90338347925777E+12, -7.58520275447461E+12, -2.41494965557852E+13,    # Proxima pos (Kervella 2017)
+                q_init[1], q_init[2], q_init[3],                                        # 3rd body pos
+                -7.486220592724260E-35, -5.723861062118610E-35, -1.823989847481890E-34, # Spacechip momentum (misses Proxima by 0.0009 AU in absence of gravity)
+                -3.34779933990201E-45, 7.24198145771899E-45, 6.82553747232694E-45,      # Proxima momentum (Kervella 2017)
+                p_init[1], p_init[2], p_init[3]                                         # 3rd body momentum
+                ]
+
+    tspan = (Double64(0), Double64(1.410E+14)) # 22 years
+    δ = Double64(7.31E+8) # about one hour
+
+    no_adapt = (δ, z, zdot) -> δ                        # turns off adaptive time stepping
+    adapt = (δ, z, zdot) -> tcour(δ, z, zdot, 0.0001)   # last parameter is Courant number
+    maxit = 1000000
+
+    sol = hrkintegrator(3, 3, Z_init, x -> pomin.dH(3, masses, x), δ, no_adapt, tspan, maxit)
+    # sol = hointegrator(Z_init, x -> pomin.dH(3, masses, x), tspan)
+
+    println(stderr,"integrator done")
+    printcsv(sol)
+
+    # find distance of closest approach
+    mindist = Double64(1E100)
+    minvec = zeros(3)
+    numsteps = length(sol.t)
+    for tn in 1:numsteps  # tn is timestep number
+        # get q vector for particle 1 (spacecraft) at timestep tn
+        q1 = Z2q(sol.N, sol.d, 1, sol.z[tn])
+        # get q vector for particle 2 (Proxima Centauri) at timestep tn
+        q2 = Z2q(sol.N, sol.d, 2, sol.z[tn])
+        # get distance and save it if it's the minimum distance
+        dist = norm(q1-q2)
+        if dist < mindist
+            mindist = dist
+            minvec = q1-q2
+        end
+    end
+    return minvec
+end
+
 
 function generateInitVelocityMonteCarlo(theta_tol, baseVector::RealVec)
     println(stderr, "Finding initial velocity vector using Monte Carlo method")
@@ -90,7 +293,42 @@ function generateInitVelocityMonteCarlo(theta_tol, baseVector::RealVec)
     end
 end
 
-function generateInitVelocity(theta_tol, baseVector::RealVec)
+function generateInitVelocityBullseye(theta_tol, baseVector::RealVec)
+
+    # use N rings
+    N = 10
+    num_per_ring = floor(1000/N)
+    theta_1 = theta_tol / sqrt(N)
+
+    # convert baseVector to spherical coordinates
+    x_0 = baseVector[1]
+    y_0 = baseVector[2]
+    z_0 = baseVector[3]
+    theta_0 = acos(z_0)
+    phi_0 = sign(y_0) * acos(x_0 / sqrt(x_0^2 + y_0^2))
+    
+    # store sign of phi_0 for later
+    sign_phi = sign(phi_0)
+
+    # populate "bullseye" (central circle)
+    for j in 1:num_per_ring
+        
+
+    end
+
+    # populate each ring
+    for i in 2:N
+        prev_theta = theta_1 * sqrt(i-1)
+        next_theta = theta_1 * sqrt(i)
+        rand_theta = prev_theta + rand() * (next_theta - prev_theta)
+
+
+    end
+
+end
+
+
+function generateInitVelocityHatBox(theta_tol, baseVector::RealVec)
 
     # generates initial velocity vector within theta_tol of baseVector
     # using method based on Archimedes' Hat-Box Theorem
@@ -116,10 +354,10 @@ function generateInitVelocity(theta_tol, baseVector::RealVec)
 
     # find theta min/max and phi min/max
     delta = deg2rad(theta_tol)
-    theta_min = theta_0 - delta/2
-    theta_max = theta_0 + delta/2
-    phi_min = phi_0 - delta/2
-    phi_max = phi_0 + delta/2
+    theta_min = theta_0 - delta
+    theta_max = theta_0 + delta
+    phi_min = phi_0 - delta
+    phi_max = phi_0 + delta
 
     # println("phi_min = ", phi_min, " phi_max = ", phi_max)
 
@@ -175,10 +413,13 @@ end
 
 function testInitVector(theta_tol)
 
+    
+    baseVector = Double64[-7.00365851051320E-02, -5.35052039083642E-02, -1.70575701379575E-01]
+    # normalize baseVector
+    baseVector = baseVector / norm(baseVector)
+
     # # test conversion to spherical and back
-    # baseVector = Double64[-7.00365851051320E-02, -5.35052039083642E-02, -1.70575701379575E-01]
-    # # normalize baseVector
-    # baseVector = baseVector / norm(baseVector)
+
     # println("Before = ", baseVector)
     # # convert baseVector to spherical coordinates
     # x_0 = baseVector[1]
@@ -193,8 +434,10 @@ function testInitVector(theta_tol)
     # rand_v = [x, y, z]
     # println("After =  ", rand_v)
 
-    for i in 1:20
-        generateInitVelocity(theta_tol, Double64[-7.00365851051320E-02, -5.35052039083642E-02, -1.70575701379575E-01])
+    # # test all octants
+
+    # for i in 1:20
+        # generateInitVelocity(theta_tol, Double64[-7.00365851051320E-02, -5.35052039083642E-02, -1.70575701379575E-01])
         # test all octants
         # generateInitVelocity(theta_tol, [1,1,1])
         # generateInitVelocity(theta_tol, [1,1,-1])
@@ -204,7 +447,28 @@ function testInitVector(theta_tol)
         # generateInitVelocity(theta_tol, [-1,1,-1])
         # generateInitVelocity(theta_tol, [-1,-1,1])
         # generateInitVelocity(theta_tol, [-1,-1,-1])
+    # end
+
+    # test for uniformity
+
+    N = 6
+    theta_1 = theta_tol / sqrt(N)
+    num_in_ring = zeros(N)
+    for i in 1:50
+        angle = generateInitVelocity(theta_tol,baseVector)[1]
+        if angle <= theta_1
+            num_in_ring[1] += 1
+        else
+            for j in 2:N
+                theta_next = theta_1 * sqrt(j)
+                if angle <= theta_next
+                    num_in_ring[j] += 1
+                    break
+                end
+            end
+        end
     end
+    println(num_in_ring)
 
 end
 
