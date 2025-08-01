@@ -3,7 +3,10 @@ module HamHO
 using LinearAlgebra
 using ForwardDiff
 
-include("pomin-types.jl")
+include("../../core/pomin-types.jl")
+include("HamPM.jl")
+
+Jsympl = HamPM.Jsympl
 
 function H( z::RealVec )
     tpfl=typeof(z[1])
@@ -29,6 +32,17 @@ end
 function dH( z::RealVec )
     return ForwardDiff.gradient(H,z)
 end
+
+#-----------------------------------------------------------------------
+
+# Right hand side of Hamilton's equations
+"""
+    FHE( Z::RealVec , m::RealVec , d::Int = 3 )
+
+Right hand side of Hamilton's equations.
+"""
+FHE = (Z,m,d=3)->Jsympl(dH(Z,m,d))
+#-----------------------------------------------------------------------
 
 end # end of Hamiltonian
 

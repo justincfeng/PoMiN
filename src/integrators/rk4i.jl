@@ -1,12 +1,37 @@
 #-----------------------------------------------------------------------
 #   RK4 INTEGRATOR
 #-----------------------------------------------------------------------
+#
+#   Fourth-order Runge-Kutta integrator for Hamiltonian systems in PoMiN.
+#   Uses types defined in pomin-types.jl:
+#   - RealVec{T<:Real}: Type alias for Array{T} used for state vectors
+#   - soln: Mutable structure for storing integration solutions
+#
+#   Main functions:
+#   - Jsympl: Symplectic operator for Hamiltonian systems
+#   - rk4map: Core RK4 integration step
+#   - hrkintegrator: Main RK4 integrator with adaptive time stepping
+#-----------------------------------------------------------------------
 
 """
-    Jsympl( Zarg::RealVec )
+    Jsympl(Zarg::RealVec)
 
-Symplectic operator ``\\hat{J}``.  Takes vector `z` and returns ``\\hat{J} z`` where 
-``\\hat{J} = \\begin{bmatrix} 0 & I \\\\ -I & 0 \\end{bmatrix}``
+Symplectic operator ``\\hat{J}`` for Hamiltonian systems.
+
+# Arguments
+- `Zarg::RealVec`: Phase space vector ``\\{\\vec{q}, \\vec{p}\\}``
+
+# Returns
+- `RealVec`: Result of ``\\hat{J} z`` where ``\\hat{J} = \\begin{bmatrix} 0 & I \\\\ -I & 0 \\end{bmatrix}``
+
+# Notes
+The symplectic operator transforms the gradient of the Hamiltonian into
+Hamilton's equations of motion. For a phase space vector with positions
+followed by momenta, this operator swaps and negates appropriately:
+- Position components → momentum components
+- Momentum components → negative position components
+
+This is essential for maintaining the symplectic structure of Hamiltonian dynamics.
 """
 function Jsympl(Zarg::RealVec)
     tpfl = typeof(Zarg[1])
@@ -29,8 +54,28 @@ end
 """
     rk4map(zi::RealVec, f::Function, δ::Real)
 
-Core function in RK4 method (the RK4 equivalent of TaoMap).  
-    Takes function `f` and initial phase space data `zi` and executes RK4 method with time step `δ`
+Core fourth-order Runge-Kutta integration step.
+
+# Arguments
+- `zi::RealVec`: Current phase space state vector
+- `f::Function`: Function defining the system dynamics (typically `z -> Jsympl(dH(z))`)
+- `δ::Real`: Time step size
+
+# Returns
+- `RealVec`: Updated phase space state after one RK4 step
+
+# Notes
+This function implements the classical fourth-order Runge-Kutta method:
+```
+k1 = f(zi)
+k2 = f(zi + δ*k1/2)
+k3 = f(zi + δ*k2/2)
+k4 = f(zi + δ*k3)
+zi_new = zi + δ*(k1 + 2*k2 + 2*k3 + k4)/6
+```
+
+For Hamiltonian systems, `f` is typically the composition of the symplectic
+operator and the Hamiltonian gradient: `f(z) = Jsympl(∇H(z))`.
 """
 function rk4map(zi::RealVec, f::Function, δ::Real)
     tpfl = typeof(zi[1])
@@ -50,21 +95,41 @@ function rk4map(zi::RealVec, f::Function, δ::Real)
 end
 
 """
-    hrkintegrator( z0::RealVec, dH::Function , δ::Real 
-                    , tadapt::Function , tspan::Tuple{Real,Real} , maxit::Real )
-    
-4th order Runge-Kutta integrator.
-Returns a struct of type "soln" (defined in pomin-types)
+    hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, 
+                  tadapt::Function, tspan::Tuple{Real,Real}, maxit::Real)
+
+Fourth-order Runge-Kutta integrator for Hamiltonian systems with adaptive time stepping.
 
 # Arguments
-- `d::Int` is the number of dimensions
-- `N::Int` is the number of particles
-- `z0::RealVec`: Initial values phase space vector ``\\{ \\vec{q}, \\vec{p} \\}``
-- `dH::Function`: Gradient of the Hamiltonian with respect to the phase space vector ``\\vec{z}``.  Takes a single parameter ``\\vec{zi}`` of the values of the phase space variables at the current time and returns a the gradient of H which is a vector with the same dimensionality as ``\\vec{zi}``
-- `δ::Real`: Time step to be used by the integrator
-- `f::Function`: Adaptive time-stepping function.  Takes three parameters: the timestep ``δ``, ``\\vec{zi}`` of the values of the phase space variables at the current time, and ``\\dot{\\vec{zi}}`` the time derivative of the phase space variables, then returns the time step
-- `tspan::Tuple{Real,Real}`: Tuple containing the start time and end time for the integration
-- `maxit::Real`: Maximum number of iterations.  When this number of iterations is exceeded, integration stops.
+- `d::Int`: Number of spatial dimensions (typically 3)
+- `N::Int`: Number of particles in the system
+- `z0::RealVec`: Initial phase space vector ``\\{\\vec{q}, \\vec{p}\\}``
+- `dH::Function`: Gradient of the Hamiltonian ``\\nabla H(z)``. Takes phase space vector 
+  and returns gradient vector of same dimensionality
+- `δ::Real`: Initial time step size
+- `tadapt::Function`: Adaptive time-stepping function. Takes parameters:
+  - `δ::Real`: Current time step
+  - `zi::RealVec`: Current phase space state
+  - `żi::RealVec`: Time derivative of phase space state
+  Returns adapted time step size
+- `tspan::Tuple{Real,Real}`: Integration time span (start_time, end_time)
+- `maxit::Real`: Maximum number of integration steps
+
+# Returns
+- `soln`: Solution structure containing:
+  - `d::Int`: Number of dimensions
+  - `N::Int`: Number of particles
+  - `t::RealVec`: Time points
+  - `z::Array{RealVec,1}`: Phase space trajectory
+  - `zaux::Array{RealVec,1}`: Auxiliary data
+
+# Notes
+This integrator combines the classical RK4 method with adaptive time stepping
+for efficient integration of post-Minkowskian Hamiltonian systems. The function
+automatically constructs the symplectic dynamics `f(z) = Jsympl(dH(z))` and
+integrates Hamilton's equations while adapting the time step for stability and accuracy.
+
+Progress is printed to stderr every 1000 iterations for long integrations.
 """
 function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, tadapt::Function, tspan::Tuple{Real,Real}, maxit::Real)
     tpfl = typeof(z0[1])  # tpfl = type of data stored in z0

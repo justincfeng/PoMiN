@@ -40,21 +40,42 @@ include("io/io.jl")                     # I/O routines
 
 # Export public interface
 
+"""
+    solve(system::Particles, params::Parameters)
+
+Solve the post-Minkowskian N-body problem for the given particle system and parameters.
+
+# Arguments
+- `system::Particles`: The particle system containing masses, positions, and momenta
+- `params::Parameters`: Integration parameters and settings
+
+# Returns
+- For RK4 integrator: `soln` structure containing the time evolution
+- For Julia integrators: `ODESolution` object from OrdinaryDiffEq.jl
+
+# Notes
+This is the main entry point for PoMiN simulations. The function automatically
+selects the appropriate integrator based on `params.rkl` and constructs the
+phase space vector from the particle system.
+"""
 function solve(system::Particles, params::Parameters)
     m = system.m
-    z = vcat(system.q...,system.p...)
-    
-    if params.jli[1] && params.rkl[1] == false 
-        include("integrators/intjul.jl")
-        return jlintegratorfull(z,(Z,p,t)->HamPM.FHE(Z,p),params.tspan,params=m,abstol=params.jli[2],reltol=params.jli[2],integrator=params.jli[3])
-    elseif params.rkl[1] && params.jli[1] == false
-        include("integrators/rk4i.jl")
-        include("integrators/tadap.jl")
-        return rkl_solv(z,HamPM.FHE,m,params.tspan)
-    elseif params.jli[1] == false && params.rkl[1] == false
-        error("No integrator selected")
-    elseif params.jli[1] == true && params.rkl[1] == true
-        error("Both integrators selected")
+    z = vcat(system.q..., system.p...)
+
+    if params.rkl
+        # Use RK4 integrator
+        return hrkintegrator(params.d, length(m), z, 
+                           (Z) -> HamPM.dH(Z, m, params.d),
+                           params.δ,
+                           (dt, Z, Zdot) -> tcour(dt, Z, Zdot, params.courant, params.d),
+                           params.tspan, params.iter)
+    else
+        # Use Julia OrdinaryDiffEq.jl integrator
+        return jlintegrator(z, 
+                          (du, u, p, t) -> begin
+                              du .= HamPM.FHE(u, p)
+                          end,
+                          params.tspan, m, params.atol, params.rtol)
     end
 end #-------------------------------------------------------------------
 
