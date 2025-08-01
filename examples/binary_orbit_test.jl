@@ -13,6 +13,7 @@ Pkg.activate(".")
 
 using LinearAlgebra
 using Plots
+using Printf
 
 # Include core components directly
 include("../src/core/pomin-types.jl")
@@ -99,43 +100,77 @@ println("   • Final time: $(solution_julia.t[end])")
 # Extract trajectories for plotting
 println("\n📊 Extracting trajectories...")
 
-function extract_positions(sol, n_particles)
+function extract_trajectories(sol, n_particles)
     times = sol.t
     n_dim = 3
     positions = []
+    momenta = []
     
     if typeof(sol) == soln
         # RK4 solution - stored in z field
         for i in 1:n_particles
+            # Extract positions (first half of phase space vector)
             x_traj = [z[i] for z in sol.z]
             y_traj = [z[n_particles + i] for z in sol.z]
             z_traj = [z[2*n_particles + i] for z in sol.z]
             push!(positions, (x_traj, y_traj, z_traj))
+            
+            # Extract momenta (second half of phase space vector)
+            px_traj = [z[3*n_particles + i] for z in sol.z]
+            py_traj = [z[4*n_particles + i] for z in sol.z]
+            pz_traj = [z[5*n_particles + i] for z in sol.z]
+            push!(momenta, (px_traj, py_traj, pz_traj))
         end
     else
         # Julia ODE solution - stored in u field
         for i in 1:n_particles
+            # Extract positions (first half of phase space vector)
             x_traj = [u[i] for u in sol.u]
             y_traj = [u[n_particles + i] for u in sol.u]
             z_traj = [u[2*n_particles + i] for u in sol.u]
             push!(positions, (x_traj, y_traj, z_traj))
+            
+            # Extract momenta (second half of phase space vector)
+            px_traj = [u[3*n_particles + i] for u in sol.u]
+            py_traj = [u[4*n_particles + i] for u in sol.u]
+            pz_traj = [u[5*n_particles + i] for u in sol.u]
+            push!(momenta, (px_traj, py_traj, pz_traj))
         end
     end
     
-    return times, positions
+    return times, positions, momenta
 end
 
 # Extract trajectories
-times_rk4, pos_rk4 = extract_positions(solution_rk4, 2)
-times_julia, pos_julia = extract_positions(solution_julia, 2)
+times_rk4, pos_rk4, mom_rk4 = extract_trajectories(solution_rk4, 2)
+times_julia, pos_julia, mom_julia = extract_trajectories(solution_julia, 2)
 
 println("   • RK4 trajectory points: $(length(times_rk4))")
 println("   • Julia trajectory points: $(length(times_julia))")
 
 # Calculate separations for analysis
 println("\n📈 Analyzing trajectories...")
-separation_rk4 = [norm(pos_rk4[1][1][i] .- pos_rk4[2][1][i]) for i in 1:length(times_rk4)]
-separation_julia = [norm(pos_julia[1][1][i] .- pos_julia[2][1][i]) for i in 1:length(times_julia)]
+
+# Function to calculate separation between two particles
+function calculate_separation(pos1, pos2)
+    return sqrt((pos1[1] - pos2[1])^2 + (pos1[2] - pos2[2])^2 + (pos1[3] - pos2[3])^2)
+end
+
+# Calculate separations for RK4 solution
+separation_rk4 = Float64[]
+for i in 1:length(times_rk4)
+    pos1 = [pos_rk4[1][1][i], pos_rk4[1][2][i], pos_rk4[1][3][i]]
+    pos2 = [pos_rk4[2][1][i], pos_rk4[2][2][i], pos_rk4[2][3][i]]
+    push!(separation_rk4, calculate_separation(pos1, pos2))
+end
+
+# Calculate separations for Julia solution
+separation_julia = Float64[]
+for i in 1:length(times_julia)
+    pos1 = [pos_julia[1][1][i], pos_julia[1][2][i], pos_julia[1][3][i]]
+    pos2 = [pos_julia[2][1][i], pos_julia[2][2][i], pos_julia[2][3][i]]
+    push!(separation_julia, calculate_separation(pos1, pos2))
+end
 
 # Create plots
 println("\n📈 Creating plots...")
@@ -145,14 +180,18 @@ p1 = plot(title="Binary Black Hole Orbits (x-y plane)",
           xlabel="x (GM/c²)", ylabel="y (GM/c²)",
           aspect_ratio=:equal, legend=:topright)
 
-plot!(p1, pos_rk4[1][1], pos_rk4[1][2], 
-      label="BH1 (RK4)", color=:red, linewidth=2)
-plot!(p1, pos_rk4[2][1], pos_rk4[2][2], 
-      label="BH2 (RK4)", color=:blue, linewidth=2)
-plot!(p1, pos_julia[1][1], pos_julia[1][2], 
-      label="BH1 (Julia)", color=:red, linestyle=:dash, alpha=0.7)
-plot!(p1, pos_julia[2][1], pos_julia[2][2], 
-      label="BH2 (Julia)", color=:blue, linestyle=:dash, alpha=0.7)
+# Plot RK4 trajectories
+for i in 1:2
+    plot!(p1, pos_rk4[i][1], pos_rk4[i][2], 
+          label="BH$i (RK4)", color=i == 1 ? :red : :blue, linewidth=2)
+end
+
+# Plot Julia trajectories
+for i in 1:2
+    plot!(p1, pos_julia[i][1], pos_julia[i][2], 
+          label="BH$i (Julia)", color=i == 1 ? :red : :blue, 
+          linestyle=:dash, alpha=0.7)
+end
 
 # Mark initial positions
 scatter!(p1, [pos_rk4[1][1][1]], [pos_rk4[1][2][1]], 
@@ -161,13 +200,15 @@ scatter!(p1, [pos_rk4[2][1][1]], [pos_rk4[2][2][1]],
          color=:blue, markersize=8, label="Start BH2")
 
 # Plot 2: Separation vs time
-# Note: separations already calculated above
-
 p2 = plot(title="Binary Separation vs Time", 
           xlabel="Time (GM/c³)", ylabel="Separation (GM/c²)")
-plot!(p2, times_rk4, [norm(pos_rk4[1][1][i] .- pos_rk4[2][1][i]) for i in 1:length(times_rk4)], 
+
+# Plot RK4 separation
+plot!(p2, times_rk4, separation_rk4, 
       label="RK4", color=:green, linewidth=2)
-plot!(p2, times_julia, [norm(pos_julia[1][1][i] .- pos_julia[2][1][i]) for i in 1:length(times_julia)], 
+
+# Plot Julia separation
+plot!(p2, times_julia, separation_julia, 
       label="Julia", color=:orange, linestyle=:dash, linewidth=2)
 
 # Combine plots
@@ -186,46 +227,58 @@ println("   • Integration time span: $(times_rk4[1]) to $(times_rk4[end]) GM/c
 
 # Summary statistics
 println("\n📋 Summary Statistics:")
-println("   • Initial separation: $(separation_rk4[1]:.6f) GM/c²")
-println("   • Final separation (RK4): $(separation_rk4[end]:.6f) GM/c²")
-println("   • Final separation (Julia): $(separation_julia[end]:.6f) GM/c²")
-println("   • Separation change (RK4): $((separation_rk4[end] - separation_rk4[1])/separation_rk4[1] * 100:.3f)%")
-println("   • Separation change (Julia): $((separation_julia[end] - separation_julia[1])/separation_julia[1] * 100:.3f)%")
+println("   • Initial separation: ", @sprintf("%.6f", separation_rk4[1]), " GM/c²")
+println("   • Final separation (RK4): ", @sprintf("%.6f", separation_rk4[end]), " GM/c²")
+println("   • Final separation (Julia): ", @sprintf("%.6f", separation_julia[end]), " GM/c²")
+println("   • Separation change (RK4): ", @sprintf("%.3f", (separation_rk4[end] - separation_rk4[1])/separation_rk4[1] * 100), "%")
+println("   • Separation change (Julia): ", @sprintf("%.3f", (separation_julia[end] - separation_julia[1])/separation_julia[1] * 100), "%")
 
 # Print orbital period estimate (assuming roughly circular orbit)
 velocity = 0.1  # in units of c
 initial_separation = separation_rk4[1]  # in GM/c²
 period = 2π * initial_separation / velocity  # in GM/c³
 println("\n🕰️ Orbital Period:")
-println("   • Estimated period: $(period:.2f) GM/c³")
-println("   • Integration time: $(times_rk4[end]:.2f) GM/c³ ($(times_rk4[end]/period:.1f) orbits)")
+println("   • Estimated period: ", @sprintf("%.2f", period), " GM/c³")
+println("   • Integration time: ", @sprintf("%.2f", times_rk4[end]), " GM/c³ (", @sprintf("%.1f", times_rk4[end]/period), " orbits)")
 
 # Energy conservation check using Hamiltonian
 println("\n⚡ Energy Conservation Check:")
 
 # Calculate energies for RK4 solution
-energy_rk4 = [HamPM.H(vcat(pos_rk4[1][1][i], pos_rk4[2][1][i], 
-                         pos_rk4[1][2][i], pos_rk4[2][2][i], 
-                         pos_rk4[1][3][i], pos_rk4[2][3][i]), 
-                    [1.0, 1.0]) for i in 1:length(times_rk4)]
+energy_rk4 = [HamPM.H(vcat(
+    # Positions for both particles
+    pos_rk4[1][1][i], pos_rk4[2][1][i],  # x positions
+    pos_rk4[1][2][i], pos_rk4[2][2][i],  # y positions
+    pos_rk4[1][3][i], pos_rk4[2][3][i],  # z positions
+    # Momenta for both particles
+    mom_rk4[1][1][i], mom_rk4[2][1][i],  # x momenta
+    mom_rk4[1][2][i], mom_rk4[2][2][i],  # y momenta
+    mom_rk4[1][3][i], mom_rk4[2][3][i]   # z momenta
+), [1.0, 1.0]) for i in 1:length(times_rk4)]
 
 # Calculate energies for Julia solution
-energy_julia = [HamPM.H(vcat(pos_julia[1][1][i], pos_julia[2][1][i], 
-                            pos_julia[1][2][i], pos_julia[2][2][i], 
-                            pos_julia[1][3][i], pos_julia[2][3][i]), 
-                       [1.0, 1.0]) for i in 1:length(times_julia)]
+energy_julia = [HamPM.H(vcat(
+    # Positions for both particles
+    pos_julia[1][1][i], pos_julia[2][1][i],  # x positions
+    pos_julia[1][2][i], pos_julia[2][2][i],  # y positions
+    pos_julia[1][3][i], pos_julia[2][3][i],  # z positions
+    # Momenta for both particles
+    mom_julia[1][1][i], mom_julia[2][1][i],  # x momenta
+    mom_julia[1][2][i], mom_julia[2][2][i],  # y momenta
+    mom_julia[1][3][i], mom_julia[2][3][i]   # z momenta
+), [1.0, 1.0]) for i in 1:length(times_julia)]
 
 # Calculate relative energy changes
 relative_change_rk4 = (energy_rk4[end] - energy_rk4[1]) / abs(energy_rk4[1]) * 100
 relative_change_julia = (energy_julia[end] - energy_julia[1]) / abs(energy_julia[1]) * 100
 
 # Print energy conservation statistics
-println("   • Initial energy (RK4): $(energy_rk4[1]:.6e)")
-println("   • Final energy (RK4): $(energy_rk4[end]:.6e)")
-println("   • Energy change (RK4): $(relative_change_rk4:.3f)%")
-println("   • Initial energy (Julia): $(energy_julia[1]:.6e)")
-println("   • Final energy (Julia): $(energy_julia[end]:.6e)")
-println("   • Energy change (Julia): $(relative_change_julia:.3f)%")
+println("   • Initial energy (RK4): ", @sprintf("%.6e", energy_rk4[1]))
+println("   • Final energy (RK4): ", @sprintf("%.6e", energy_rk4[end]))
+println("   • Energy change (RK4): ", @sprintf("%.3f", relative_change_rk4), "%")
+println("   • Initial energy (Julia): ", @sprintf("%.6e", energy_julia[1]))
+println("   • Final energy (Julia): ", @sprintf("%.6e", energy_julia[end]))
+println("   • Energy change (Julia): ", @sprintf("%.3f", relative_change_julia), "%")
 
 println("\n✅ Binary orbit test completed successfully!")
 println("🎉 PoMiN modernization validation: PASSED")
