@@ -4,8 +4,21 @@
 
 module tadap
 
-include("../pomin-types.jl")
-include("../utils/idxer.jl")
+using LinearAlgebra
+
+include("../core/pomin-types.jl")
+include("../physics/Hamiltonians/idxer.jl")
+
+#-----------------------------------------------------------------------
+
+"""
+    rf(qa::RealVec, qb::RealVec)
+
+Compute the relativistic distance between two position vectors in the post-Minkowskian framework.
+"""
+function rf(qa::RealVec, qb::RealVec)
+    return norm(qa - qb)
+end
 
 #-----------------------------------------------------------------------
 #   SIMPLE ADAPTIVE TIMESTEPPING

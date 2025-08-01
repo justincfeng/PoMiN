@@ -8,47 +8,69 @@
 #   - soln: Mutable structure for storing integration solutions
 #
 #   Main functions:
-#   - Jsympl: Symplectic operator for Hamiltonian systems
 #   - rk4map: Core RK4 integration step
 #   - hrkintegrator: Main RK4 integrator with adaptive time stepping
+#
+#   Uses Jsympl from HamTools.jl for symplectic operations.
 #-----------------------------------------------------------------------
 
-"""
-    Jsympl(Zarg::RealVec)
+# Import required packages and tools
+using LinearAlgebra
+include("../physics/Hamiltonians/HamTools.jl")
 
-Symplectic operator ``\\hat{J}`` for Hamiltonian systems.
+"""    
+    init(particles::Particles, params::Parameters)
+
+Initialize the RK4 integration for a particle system.
 
 # Arguments
-- `Zarg::RealVec`: Phase space vector ``\\{\\vec{q}, \\vec{p}\\}``
+- `particles::Particles`: The particle system to integrate
+- `params::Parameters`: Integration parameters
 
 # Returns
-- `RealVec`: Result of ``\\hat{J} z`` where ``\\hat{J} = \\begin{bmatrix} 0 & I \\\\ -I & 0 \\end{bmatrix}``
-
-# Notes
-The symplectic operator transforms the gradient of the Hamiltonian into
-Hamilton's equations of motion. For a phase space vector with positions
-followed by momenta, this operator swaps and negates appropriately:
-- Position components → momentum components
-- Momentum components → negative position components
-
-This is essential for maintaining the symplectic structure of Hamiltonian dynamics.
+- `Tuple`: (d, N, z0, dH, δ, tadapt, tspan, maxit)
+  All parameters needed for hrkintegrator
 """
-function Jsympl(Zarg::RealVec)
-    tpfl = typeof(Zarg[1])
-    n2 = length(Zarg)
-    Z = zeros(tpfl, n2)
+function init(particles::Particles, params::Parameters)
+    # Extract dimensions and particle count
+    d = length(particles.q[1])  # spatial dimensions
+    N = length(particles.m)      # number of particles
+    
+    # Construct initial phase space vector
+    z0 = vcat(vec(reduce(vcat, particles.q)), vec(reduce(vcat, particles.p)))
+    
+    # Create Hamiltonian gradient function
+    dH = z -> HamPM.dH(z, particles.m, d)
+    
+    # Get integration parameters
+    δ = params.δ
+    tspan = params.tspan
+    maxit = ceil(Int, (tspan[2] - tspan[1])/δ * 1.5)  # 50% buffer for adaptive steps
+    
+    # Use constant time step if no tadapt provided
+    tadapt = (δ, z, ż) -> δ
+    
+    return (d, N, z0, dH, δ, tadapt, tspan, maxit)
+end
 
-    if iseven(n2)
-        n = Int(round(n2 / 2, digits=0))
-        for i = 1:n
-            Z[i] = Zarg[n+i]
-            Z[n+i] = -Zarg[i]
-        end
+"""    
+    solve(particles::Particles, params::Parameters)
 
-        return Z
-    else
-        return Z
-    end
+Solve the equations of motion for a particle system using RK4 integration.
+
+# Arguments
+- `particles::Particles`: The particle system to integrate
+- `params::Parameters`: Integration parameters
+
+# Returns
+- `soln`: Solution structure containing the integration results
+"""
+function solve(particles::Particles, params::Parameters)
+    # Initialize integration parameters
+    d, N, z0, dH, δ, tadapt, tspan, maxit = init(particles, params)
+    
+    # Run the integrator
+    return hrkintegrator(d, N, z0, dH, δ, tadapt, tspan, maxit)
 end
 
 """

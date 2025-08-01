@@ -20,25 +20,19 @@ include("core/pomin-types.jl")                 # Type definitions
 
 # Physics modules
 include("physics/Hamiltonians/HamPM.jl")       # Post-Minkowski Hamiltonian
-include("physics/gravitational_waves/gwsc.jl")  # GW strain calculator
-include("physics/post_minkowski/HO.jl")        # Harmonic oscillator
+include("physics/gravitational_waves/gwsc.jl") # GW strain calculator
+
+# Physics utilities
+include("physics/Hamiltonians/idxer.jl")       # Phase space indexing
+include("physics/initial_data/idgen.jl")       # Initial data generation
 
 # Numerical methods
-include("integrators/epsi.jl")          # Symplectic Integrator (Tao 2016)
-include("integrators/rk4i.jl")          # 4th order Runge-Kutta
-include("integrators/intjul.jl")        # Julia integrator functions
-include("integrators/tadap.jl")         # Time adaptation functions
-
-# Utilities
-include("utils/idxer.jl")               # Index management
-include("utils/idgen.jl")               # ID generation
-include("utils/broyden.jl")             # Broyden method solver
-include("utils/misc.jl")                # Miscellaneous utilities
+include("integrators/tadap.jl")                 # Time adaptation functions
+include("integrators/rk4i.jl")                  # 4th order Runge-Kutta
+include("integrators/intjul.jl")                # Julia integrator functions
 
 # Input/Output
-include("io/io.jl")                     # I/O routines
-
-# Export public interface
+include("io/io.jl")                             # I/O routines
 
 """
     solve(system::Particles, params::Parameters)
@@ -86,12 +80,11 @@ export RealVec, Particles, Parameters, soln
 export solve
 
 # Integration methods
-export jlintegrator, jlintegratorfull
+export jlintegrator
 
 # Initial data generation
 export setup_binary_system, setup_circular_orbit
 export setup_massless_test_particle, merge_particle_systems
 export add_particle, to_com_frame, setup_scattering
-export to_phase_tuple
 
 end

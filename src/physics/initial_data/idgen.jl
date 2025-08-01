@@ -4,6 +4,8 @@
 #
 #-----------------------------------------------------------------------
 
+include("../../core/pomin-types.jl")
+
 """
     setup_binary_system(m1::Real, m2::Real, r::Real, v::Real, tpfl::Type=Float64)
 

@@ -3,7 +3,7 @@ using Test
 using CSV, LinearAlgebra
 using ForwardDiff, OrdinaryDiffEq
 
-include("../source/pomin-types.jl")
+include("../pomin-types.jl")
 include("testfunctions.jl")
 
 @testset "All tests:" begin

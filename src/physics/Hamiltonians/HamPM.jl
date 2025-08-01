@@ -4,8 +4,12 @@
 
 module HamPM
 
+using LinearAlgebra
+using ForwardDiff
+
 include("../../core/pomin-types.jl")
-include("../utils/idxer.jl")
+include("idxer.jl")
+include("HamTools.jl")
 
 # These functions compute scalar quantities that make up the Hamiltonian
 
@@ -162,31 +166,6 @@ Gradient of the Hamiltonian function.
 function dH( Z::RealVec , m::RealVec , d::Int = 3 )
     return ForwardDiff.gradient(x -> H(x, m, d), Z)
 end #-------------------------------------------------------------------
-
-"""
-    Jsympl( Zarg::RealVec )
-
-Symplectic operator. Maps output of dH to time derivative of phase space
-variables.
-"""
-function Jsympl( Zarg::RealVec )
-    tpfl=typeof(Zarg[1])
-    n2 = length(Zarg)
-    Z = zeros(tpfl,n2)
-
-    if iseven(n2)
-        n = Int(round(n2 / 2, digits=0))
-        for i=1:n
-            Z[i]    = Zarg[n+i] 
-            Z[n+i]  = - Zarg[i] 
-        end
-        return Z
-    else
-        return Z
-    end
-end #-------------------------------------------------------------------
-
-#-----------------------------------------------------------------------
 
 # Right hand side of Hamilton's equations
 """

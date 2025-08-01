@@ -4,9 +4,7 @@ using LinearAlgebra
 using ForwardDiff
 
 include("../../core/pomin-types.jl")
-include("HamPM.jl")
-
-Jsympl = HamPM.Jsympl
+include("HamTools.jl")
 
 function H( z::RealVec )
     tpfl=typeof(z[1])
