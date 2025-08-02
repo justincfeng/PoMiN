@@ -118,7 +118,7 @@ end
 
 """
     hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, 
-                  tadapt::Function, tspan::Tuple{Real,Real}, maxit::Real)
+                  tadapt::Function, tspan::Tuple{Real,Real}, maxit::Real, Nrec::Int=100)
 
 Fourth-order Runge-Kutta integrator for Hamiltonian systems with adaptive time stepping.
 
@@ -136,6 +136,7 @@ Fourth-order Runge-Kutta integrator for Hamiltonian systems with adaptive time s
   Returns adapted time step size
 - `tspan::Tuple{Real,Real}`: Integration time span (start_time, end_time)
 - `maxit::Real`: Maximum number of integration steps
+- `Nrec::Int`: Recording frequency (Nrec=-1 saves only last point, Nrec=-N saves last N points)
 
 # Returns
 - `soln`: Solution structure containing:
@@ -153,7 +154,7 @@ integrates Hamilton's equations while adapting the time step for stability and a
 
 Progress is printed to stderr every 1000 iterations for long integrations.
 """
-function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, tadapt::Function, tspan::Tuple{Real,Real}, maxit::Real)
+function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, tadapt::Function, tspan::Tuple{Real,Real}, maxit::Real, Nrec::Int=100)
     tpfl = typeof(z0[1])  # tpfl = type of data stored in z0
     zi = vec(z0)
 
@@ -161,19 +162,78 @@ function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, tada
     sol = soln(d,N,zeros(tpfl, 1), [zi], [zi])
 
     f = zx -> Jsympl(dH(zx))
-
-    for i = 1:maxit
-        if i % 1000 == 0      # print timestep number to stderr every 1000 timesteps
-            println(stderr,i)   
+    
+    # Handle different Nrec cases
+    if Nrec == -1
+        # Save only the last point - use temporary storage during integration
+        temp_t = [sol.t[1]]
+        temp_z = [zi]
+        
+        for i = 1:maxit
+            if i % 1000 == 0      # print timestep number to stderr every 1000 timesteps
+                println(stderr,i)   
+            end
+            δ = tadapt(δ,zi,f(zi))
+            new_t = temp_t[end] + δ
+            if new_t > tspan[2]
+                break
+            end
+            zi = rk4map(zi, f, δ)
+            # Only keep the latest values
+            temp_t = [new_t]
+            temp_z = [zi]
         end
-        δ = tadapt(δ,zi,f(zi))
-        new_t = sol.t[i] + δ
-        if new_t > tspan[2]
-            break
+        
+        # Set final solution with only initial and final states
+        sol.t = [sol.t[1], temp_t[1]]
+        sol.z = [sol.z[1], temp_z[1]]
+        
+    elseif Nrec < 0
+        # Save last |Nrec| points - collect all then truncate
+        all_t = [sol.t[1]]
+        all_z = [zi]
+        
+        for i = 1:maxit
+            if i % 1000 == 0      # print timestep number to stderr every 1000 timesteps
+                println(stderr,i)   
+            end
+            δ = tadapt(δ,zi,f(zi))
+            new_t = all_t[end] + δ
+            if new_t > tspan[2]
+                break
+            end
+            zi = rk4map(zi, f, δ)
+            all_t = [all_t; new_t]
+            all_z = [all_z; [zi]]
         end
-        zi = rk4map(zi, f, δ)
-        sol.t = [sol.t; new_t]     # append to t
-        sol.z = [sol.z; [zi] ]     # append to z
+        
+        # Keep only the last |Nrec| points
+        n_keep = min(abs(Nrec), length(all_t))
+        sol.t = all_t[end-n_keep+1:end]
+        sol.z = all_z[end-n_keep+1:end]
+        
+    else
+        # Default behavior: save every Nrec steps (or all if Nrec=1)
+        step_count = 0
+        
+        for i = 1:maxit
+            if i % 1000 == 0      # print timestep number to stderr every 1000 timesteps
+                println(stderr,i)   
+            end
+            δ = tadapt(δ,zi,f(zi))
+            new_t = sol.t[end] + δ
+            if new_t > tspan[2]
+                break
+            end
+            zi = rk4map(zi, f, δ)
+            step_count += 1
+            
+            # Save every Nrec steps (or every step if Nrec=1)
+            if step_count % max(Nrec, 1) == 0
+                sol.t = [sol.t; new_t]     # append to t
+                sol.z = [sol.z; [zi] ]     # append to z
+            end
+        end
     end
 
     return sol

@@ -12,7 +12,7 @@ using LinearAlgebra
 using CSV
 using ForwardDiff
 using OrdinaryDiffEq
-using Logging
+#using Logging
 using DoubleFloats
 
 # Core functionality
@@ -61,15 +61,16 @@ function solve(system::Particles, params::Parameters)
         return hrkintegrator(params.d, length(m), z, 
                            (Z) -> HamPM.dH(Z, m, params.d),
                            params.δ,
-                           (dt, Z, Zdot) -> tcour(dt, Z, Zdot, params.courant, params.d),
-                           params.tspan, params.iter)
+                           (dt, Z, Zdot) -> tadap.tcour(dt, Z, Zdot, params.courant, params.d),
+                           params.tspan, params.iter, params.Nrec)
     else
         # Use Julia OrdinaryDiffEq.jl integrator
         return jlintegrator(z, 
                           (du, u, p, t) -> begin
                               du .= HamPM.FHE(u, p)
                           end,
-                          params.tspan, m, params.atol, params.rtol)
+                          params.tspan, m, params.atol, params.rtol,
+                          eval(Symbol(params.integrator))(), params.Nrec)
     end
 end #-------------------------------------------------------------------
 
@@ -80,7 +81,7 @@ export RealVec, Particles, Parameters, soln
 export solve
 
 # Integration methods
-export jlintegrator
+export jlintegrator, tcour
 
 # Initial data generation
 export setup_binary_system, setup_circular_orbit

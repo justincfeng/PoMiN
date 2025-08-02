@@ -24,6 +24,10 @@ include("testfunctions.jl")
         include("gwsc_test.jl") 
     end
 
+    @time @testset "Momentum exchange tests:" begin 
+        include("momentum_exchange_test.jl") 
+    end
+
 end
 
 nothing

@@ -198,16 +198,15 @@ The setup places:
 
 Returns a Particles object in the COM frame.
 """
-function setup_scattering(m1::Real, m2::Real, p::Real, b::Real, d::Real; 
-                         c::Real=1, tpfl::Type=Float64)
+function setup_scattering(m1::Real, m2::Real, p::Real, b::Real, dx::Real; c::Real=1, tpfl::Type=Float64)
     # Convert all inputs to specified type
     m1, m2 = tpfl(m1), tpfl(m2)
-    p, b, d = tpfl(p), tpfl(b), tpfl(d)
+    p, b, dx = tpfl(p), tpfl(b), tpfl(dx)
     c = tpfl(c)  # Convert c to match system type
 
     # Position vectors
-    q1 = tpfl[-d, -b/2, 0]  # Left particle
-    q2 = tpfl[d, b/2, 0]    # Right particle
+    q1 = tpfl[-dx/2, -b/2, 0]  # Left particle
+    q2 = tpfl[dx/2, b/2, 0]    # Right particle
     
     # Momentum vectors (equal and opposite in x-direction)
     p1 = tpfl[p, 0, 0]      # Moving right
