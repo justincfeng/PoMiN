@@ -16,23 +16,22 @@ using OrdinaryDiffEq
 using DoubleFloats
 
 # Core functionality
-include("core/pomin-types.jl")                 # Type definitions
+include("pomin-types.jl")                 # Type definitions
 
 # Physics modules
-include("physics/Hamiltonians/HamPM.jl")       # Post-Minkowski Hamiltonian
+include("physics/Hamiltonians/HamPM.jl")    # Post-Minkowskian Hamiltonian
+include("physics/Hamiltonians/HamTools.jl") # Hamiltonian tools
 include("physics/gravitational_waves/gwsc.jl") # GW strain calculator
 
 # Physics utilities
-include("physics/Hamiltonians/idxer.jl")       # Phase space indexing
-include("physics/initial_data/idgen.jl")       # Initial data generation
+include("physics/initial_data/idgen.jl")    # Initial data generation
 
-# Numerical methods
-include("integrators/tadap.jl")                 # Time adaptation functions
-include("integrators/rk4i.jl")                  # 4th order Runge-Kutta
-include("integrators/intjul.jl")                # Julia integrator functions
+# Integrators
+include("integrators/rk4i.jl")              # RK4 integrator
+include("integrators/intjul.jl")            # Julia ODE integrators
 
 # Input/Output
-include("io/io.jl")                             # I/O routines
+include("io.jl")                             # I/O routines
 
 """
     solve(system::Particles, params::Parameters)
@@ -61,13 +60,14 @@ function solve(system::Particles, params::Parameters)
         return hrkintegrator(params.d, length(m), z, 
                            (Z) -> HamPM.dH(Z, m, params.d),
                            params.δ,
-                           (dt, Z, Zdot) -> tadap.tcour(dt, Z, Zdot, params.courant, params.d),
-                           params.tspan, params.iter, params.Nrec)
+                           params.tspan, params.iter,
+                           (dt, Z, Zdot) -> tcour(dt, Z, Zdot, params.courant, params.d),
+                           params.Nrec)
     else
         # Use Julia OrdinaryDiffEq.jl integrator
         return jlintegrator(z, 
                           (du, u, p, t) -> begin
-                              du .= HamPM.FHE(u, p)
+                              du .= HamPM.FHE(u, m, params.d)
                           end,
                           params.tspan, m, params.atol, params.rtol,
                           eval(Symbol(params.integrator))(), params.Nrec)
@@ -80,11 +80,17 @@ export RealVec, Particles, Parameters, soln
 # Core functionality
 export solve
 
+# Physics modules
+export HamPM, dp_scatter
+
 # Integration methods
-export jlintegrator, tcour
+export jlintegrator, hrkintegrator, tcour, rk4map, tnone
+
+# Parameter constructors
+export Parameters, ParametersRK4, ParametersJulia
 
 # Initial data generation
-export setup_binary_system, setup_circular_orbit
+export setup_binary_system, setup_circular_orbit, setup_elliptical_orbit
 export setup_massless_test_particle, merge_particle_systems
 export add_particle, to_com_frame, setup_scattering
 

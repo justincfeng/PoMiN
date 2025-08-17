@@ -7,8 +7,7 @@ module HamPM
 using LinearAlgebra
 using ForwardDiff
 
-include("../../core/pomin-types.jl")
-include("idxer.jl")
+include("../../pomin-types.jl")
 include("HamTools.jl")
 
 # These functions compute scalar quantities that make up the Hamiltonian
@@ -136,14 +135,16 @@ function H( Z::RealVec , m::RealVec , d::Int = 3 )
                 Θba = Θabf(qb,qa,pb)
                 Ξab = Ξabf(pa,pb)
                 
-                H1 -= Ena*Enb*( ν0 + psa/(Ena^2) + psb/(Enb^2) )/(ν2*rab)
+                H1 -= Ena*Enb*( ν1 + psa/(Ena^2) + psb/(Enb^2) )/(ν2*rab)
                 H2 += ( ν7*Ξab - Θab*Θba )/(ν4*rab)
 
-                if m[b] != ν0 && yba != ν0 && yba != ν1
-                    H3 += ( ν2*(-ν2*(Ξab*Θba)^2 - ν2*Θab*Θba*Ξab*psb - (Θab*psb)^2 + psb*Ξab^2)/Enb^2 + 
-                            ν2*(psa*Θba^2 - (Θab*Θba)^2 + ν2*Θab*Θba*Ξab - Ξab^2 + psb*Θab^2) +
-                            yba*(ν3*psa*Θba^2 - (Θab*Θba)^2 + ν8*Θab*Θba*Ξab - psa*psb + ν3*psb*Θab^2)
-                            ) / (ν4*Ena*Enb*rab*yba*(yba+ν1)^2)
+                if m[b] != ν0 && yba != ν0 && yba != -ν1
+                    # H3 massive case - corrected to match C implementation
+                    H3 -= (ν1/(ν4*rab*Ena*Enb*yba*(yba+ν1)^2)) * (
+                        ν2 * ( ν2*Ξab^2*Θba^2 + ν2*Θab*Θba*Ξab*psb + Θab^2*psb^2 - Ξab^2*psb ) /(Enb^2) +
+                        ν2 * (-psa*Θba^2 + Θab^2*Θba^2 - ν2*Θab*Θba*Ξab + Ξab^2 - Θab^2*psb) +
+                        ((-ν3*psa*Θba^2 + Θab^2*Θba^2 - ν8*Θab*Θba*Ξab + psa*psb - ν3*Θab^2*psb) * yba)
+                    )
                 else
                     H3 += (ν3*Enb*psb*Θab^2 - Enb*psa*(psb - ν3*Θba^2) + 
                            Enb*Θab*Θba*(-(Θab*Θba) + ν8*Ξab) + ν2*psa*psb*abs(Θba) - 
@@ -175,5 +176,28 @@ Right hand side of Hamilton's equations.
 """
 FHE = (Z,m,d=3)->Jsympl(dH(Z,m,d))
 #-----------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
+"""
+    dp_scatter(p, b, m1, m2; G=1, c=1)
+
+Analytical momentum exchange formula for post-Minkowskian scattering.
+Returns the change in momentum for particle 1 in the y-direction.
+"""
+function dp_scatter(p, b, m1, m2; Ga=1, ca=1)
+    tpfl = typeof(p)
+    ν0, ν1, ν2, ν3, ν4, ν5, ν6, ν7, ν8, ν9 = tpnum(tpfl)
+    c = tpfl(ca)
+    G = tpfl(Ga)
+
+    E1 = c*sqrt((c*m1)^2 + p^2)
+    E2 = c*sqrt((c*m2)^2 + p^2)
+    # Formula matches LSB_momX.txt exactly
+    dp = (ν2*G*(E1*E2)^2)/(p*(E1+E2)) *
+         (ν1 + (ν1/E1^2 + ν1/E2^2 + ν4/(E1*E2))*p^2 + p^4/(E1*E2)^2) / b
+    return dp
+end #-------------------------------------------------------------------
+
+export dp_scatter
 
 end # end of HamPM

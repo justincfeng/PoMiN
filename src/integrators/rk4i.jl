@@ -14,65 +14,9 @@
 #   Uses Jsympl from HamTools.jl for symplectic operations.
 #-----------------------------------------------------------------------
 
-# Import required packages and tools
-using LinearAlgebra
-include("../physics/Hamiltonians/HamTools.jl")
-
-"""    
-    init(particles::Particles, params::Parameters)
-
-Initialize the RK4 integration for a particle system.
-
-# Arguments
-- `particles::Particles`: The particle system to integrate
-- `params::Parameters`: Integration parameters
-
-# Returns
-- `Tuple`: (d, N, z0, dH, δ, tadapt, tspan, maxit)
-  All parameters needed for hrkintegrator
-"""
-function init(particles::Particles, params::Parameters)
-    # Extract dimensions and particle count
-    d = length(particles.q[1])  # spatial dimensions
-    N = length(particles.m)      # number of particles
-    
-    # Construct initial phase space vector
-    z0 = vcat(vec(reduce(vcat, particles.q)), vec(reduce(vcat, particles.p)))
-    
-    # Create Hamiltonian gradient function
-    dH = z -> HamPM.dH(z, particles.m, d)
-    
-    # Get integration parameters
-    δ = params.δ
-    tspan = params.tspan
-    maxit = ceil(Int, (tspan[2] - tspan[1])/δ * 1.5)  # 50% buffer for adaptive steps
-    
-    # Use constant time step if no tadapt provided
-    tadapt = (δ, z, ż) -> δ
-    
-    return (d, N, z0, dH, δ, tadapt, tspan, maxit)
-end
-
-"""    
-    solve(particles::Particles, params::Parameters)
-
-Solve the equations of motion for a particle system using RK4 integration.
-
-# Arguments
-- `particles::Particles`: The particle system to integrate
-- `params::Parameters`: Integration parameters
-
-# Returns
-- `soln`: Solution structure containing the integration results
-"""
-function solve(particles::Particles, params::Parameters)
-    # Initialize integration parameters
-    d, N, z0, dH, δ, tadapt, tspan, maxit = init(particles, params)
-    
-    # Run the integrator
-    return hrkintegrator(d, N, z0, dH, δ, tadapt, tspan, maxit)
-end
-
+#-----------------------------------------------------------------------
+#   RK4 MAP
+#-----------------------------------------------------------------------
 """
     rk4map(zi::RealVec, f::Function, δ::Real)
 
@@ -80,7 +24,7 @@ Core fourth-order Runge-Kutta integration step.
 
 # Arguments
 - `zi::RealVec`: Current phase space state vector
-- `f::Function`: Function defining the system dynamics (typically `z -> Jsympl(dH(z))`)
+- `f::Function`: Function defining the system dynamics
 - `δ::Real`: Time step size
 
 # Returns
@@ -96,8 +40,9 @@ k4 = f(zi + δ*k3)
 zi_new = zi + δ*(k1 + 2*k2 + 2*k3 + k4)/6
 ```
 
-For Hamiltonian systems, `f` is typically the composition of the symplectic
-operator and the Hamiltonian gradient: `f(z) = Jsympl(∇H(z))`.
+For Hamiltonian systems, `f` is typically the composition of the
+symplectic operator and the Hamiltonian gradient: `f(z) =
+Jsympl(∇H(z))`.
 """
 function rk4map(zi::RealVec, f::Function, δ::Real)
     tpfl = typeof(zi[1])
@@ -114,29 +59,118 @@ function rk4map(zi::RealVec, f::Function, δ::Real)
     k4 = f(zi + δ * k3)
 
     return zi + δ * (k1 + 2 * k2 + 2 * k3 + k4) / 6
-end
+end #-------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
+#   SIMPLE ADAPTIVE TIMESTEPPING
+#-----------------------------------------------------------------------
+"""
+    tcour( dt::Real , Z::RealVec , Zdot::RealVec , C = 0.001 , d=3 )
+
+This function implements a simple adaptive timestepping function 
+inspired by the Courant–Friedrichs–Lewy (CFL) Condition. 
+
+Returns a new timestep that satisfies the CFL condition. If the current
+timestep already satisfies CFL condition, the timestep is returned
+unchanged.
+
+Used with the `hrkintegrator` function.
+
+# Arguments
+- `dt::Real` is the current timestep
+- `Z::RealVec` is the current state of the system
+- `Zdot::RealVec` is the time derivative of Z
+- `C` is the Courant factor
+- `d` is the number of dimensions
 
 """
-    hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, 
-                  tadapt::Function, tspan::Tuple{Real,Real}, maxit::Real, Nrec::Int=100)
+function tcour( dt::Real , Z::RealVec , Zdot::RealVec , C = 0.001 , d=3)
+    tpfl = typeof(Z[1])
+    n2 = length(Z)
+    rs = tpfl(1)
+    vs = tpfl(1)
 
-Fourth-order Runge-Kutta integrator for Hamiltonian systems with adaptive time stepping.
+    ν0, ν1, ν2, ν3, ν4, ν5, ν6, ν7, ν8, ν9 = tpnum(tpfl)
+
+    ndof = Int(round(n2 / 2, digits=0))
+    n    = Int(round(ndof/d, digits=0))
+
+    if iseven(n2) && n*d==ndof
+        # calculate separation and relative velocity between first two
+        # particles and store these as starting minimum values
+        qa  = Z2q(n,d,1,Z)
+        qb  = Z2q(n,d,2,Z)
+        va  = Z2q(n,d,1,Zdot)
+        vb  = Z2q(n,d,2,Zdot)
+        vab = norm(va-vb)
+        rab = norm(qa - qb)
+        rs  = rab  # smallest separation among particle pairs
+        vs  = vab  # relative velocity for closest particle pair
+        for a=1:n
+            qa = Z2q(n,d,a,Z)    
+            va = Z2q(n,d,a,Zdot)
+            for b=2:n
+                if b!=a
+                    qb = Z2q(n,d,b,Z)
+                    vb = Z2q(n,d,b,Zdot)
+                    rab = norm(qa - qb)
+                    vab = norm(va-vb)
+                    if rab<=rs  
+                        vs = vab
+                        rs = rab
+                    end
+                end
+            end
+        end
+        Δt = tpfl(C) * rs/vs
+        # return \Delta t if it is smaller than the maximum timestep,
+        # otherwise return maximum timestep
+        return Δt
+    else
+        error("In tcour dt unchanged bc ( iseven(n2) && n*d==ndof ) returned false")
+        return dt
+    end
+end #-------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
+#   FIXED TIMESTEPPING
+#-----------------------------------------------------------------------
+"""
+    tnone( dt::Real , Z::RealVec , Zdot::RealVec , C = 0.001 , d=3 )
+
+This function implements a fixed timestep.
+"""
+function tnone(dt,z,zdot) 
+    return dt
+end #-------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
+#   RK4 INTEGRATOR
+#-----------------------------------------------------------------------
+"""
+    hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, 
+                       tspan::Tuple{Real,Real}, maxit::Real, 
+                       tadapt::Function=tnone, Nrec::Int=100)
+
+Fourth-order Runge-Kutta integrator for Hamiltonian systems with
+adaptive time stepping.
 
 # Arguments
 - `d::Int`: Number of spatial dimensions (typically 3)
 - `N::Int`: Number of particles in the system
 - `z0::RealVec`: Initial phase space vector ``\\{\\vec{q}, \\vec{p}\\}``
-- `dH::Function`: Gradient of the Hamiltonian ``\\nabla H(z)``. Takes phase space vector 
-  and returns gradient vector of same dimensionality
+- `dH::Function`: Gradient of the Hamiltonian ``\\nabla H(z)``. Takes
+  phase space vector and returns gradient vector of same dimensionality
 - `δ::Real`: Initial time step size
 - `tadapt::Function`: Adaptive time-stepping function. Takes parameters:
   - `δ::Real`: Current time step
   - `zi::RealVec`: Current phase space state
   - `żi::RealVec`: Time derivative of phase space state
   Returns adapted time step size
-- `tspan::Tuple{Real,Real}`: Integration time span (start_time, end_time)
+- `tspan::Tuple{Real,Real}`: Time span (start_time, end_time)
 - `maxit::Real`: Maximum number of integration steps
-- `Nrec::Int`: Recording frequency (Nrec=-1 saves only last point, Nrec=-N saves last N points)
+- `Nrec::Int`: Recording frequency (Nrec=-1 saves only last point,
+  Nrec=-N saves last N points)
 
 # Returns
 - `soln`: Solution structure containing:
@@ -147,30 +181,34 @@ Fourth-order Runge-Kutta integrator for Hamiltonian systems with adaptive time s
   - `zaux::Array{RealVec,1}`: Auxiliary data
 
 # Notes
-This integrator combines the classical RK4 method with adaptive time stepping
-for efficient integration of post-Minkowskian Hamiltonian systems. The function
-automatically constructs the symplectic dynamics `f(z) = Jsympl(dH(z))` and
-integrates Hamilton's equations while adapting the time step for stability and accuracy.
+This integrator combines the classical RK4 method with adaptive time
+stepping for efficient integration of post-Minkowskian Hamiltonian
+systems. The function automatically constructs the symplectic dynamics
+`f(z) = Jsympl(dH(z))` and integrates Hamilton's equations while
+adapting the time step for stability and accuracy.
 
-Progress is printed to stderr every 1000 iterations for long integrations.
+Progress is printed to stderr every 1000 iterations for long
+integrations.
 """
-function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, tadapt::Function, tspan::Tuple{Real,Real}, maxit::Real, Nrec::Int=100)
+function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, 
+                       tspan::Tuple{Real,Real}, maxit::Real, 
+                       tadapt::Function=tnone, Nrec::Int=100)
     tpfl = typeof(z0[1])  # tpfl = type of data stored in z0
     zi = vec(z0)
 
     # initialize soln data structure
-    sol = soln(d,N,zeros(tpfl, 1), [zi], [zi])
+    sol = soln(d,N,[tpfl(tspan[1])], [zi], [zi])
 
     f = zx -> Jsympl(dH(zx))
     
     # Handle different Nrec cases
     if Nrec == -1
-        # Save only the last point - use temporary storage during integration
+        # Save only the last point
         temp_t = [sol.t[1]]
         temp_z = [zi]
         
         for i = 1:maxit
-            if i % 1000 == 0      # print timestep number to stderr every 1000 timesteps
+            if i % 1000 == 0      # print timestep to stderr
                 println(stderr,i)   
             end
             δ = tadapt(δ,zi,f(zi))
@@ -194,7 +232,7 @@ function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, tada
         all_z = [zi]
         
         for i = 1:maxit
-            if i % 1000 == 0      # print timestep number to stderr every 1000 timesteps
+            if i % 1000 == 0      # print timestep number to stderr
                 println(stderr,i)   
             end
             δ = tadapt(δ,zi,f(zi))
@@ -215,24 +253,30 @@ function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, tada
     else
         # Default behavior: save every Nrec steps (or all if Nrec=1)
         step_count = 0
+        current_t = sol.t[end]
         
         for i = 1:maxit
-            if i % 1000 == 0      # print timestep number to stderr every 1000 timesteps
-                println(stderr,i)   
-            end
             δ = tadapt(δ,zi,f(zi))
-            new_t = sol.t[end] + δ
+            new_t = current_t + δ
             if new_t > tspan[2]
                 break
             end
             zi = rk4map(zi, f, δ)
+            current_t = new_t
             step_count += 1
             
             # Save every Nrec steps (or every step if Nrec=1)
             if step_count % max(Nrec, 1) == 0
-                sol.t = [sol.t; new_t]     # append to t
+                println(stderr,i) 
+                sol.t = [sol.t; current_t]     # append to t
                 sol.z = [sol.z; [zi] ]     # append to z
             end
+        end
+        
+        # Always save the final state if we didn't just save it
+        if step_count % max(Nrec, 1) != 0
+            sol.t = [sol.t; current_t]
+            sol.z = [sol.z; [zi]]
         end
     end
 

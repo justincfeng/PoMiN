@@ -1,20 +1,7 @@
 include("../pomin.jl")
 using LinearAlgebra
 using Plots
-
-"""
-    dpfunc_analytical(p, b, m1, m2; G=1, c=1)
-
-Analytical momentum exchange formula for post-Minkowskian scattering.
-Returns the change in momentum for particle 1 in the y-direction.
-"""
-function dpfunc_analytical(p, b, m1, m2; G=1, c=1)
-    E1 = c*√((c*m1)^2 + p^2)
-    E2 = c*√((c*m2)^2 + p^2)
-    dp = (2*G*(E1*E2)^2)/(b*p*(E1+E2)) *
-         (1 + (1/E1^2 + 1/E2^2 + 4/(E1*E2))*p^2 + p^4/(E1*E2)^2)
-    return dp
-end
+using DoubleFloats
 
 """
     momentum_exchange_sweep()
@@ -26,15 +13,15 @@ function momentum_exchange_sweep()
     println("=== PoMiN Momentum Exchange Sweep ===")
     println("Testing impact parameter scaling with Nrec=-1 (save-last-only)\n")
     
-    # Physical parameters
-    m1 = 1.0
-    m2 = 1.0  
-    p = 10.0
+    # Physical parameters (using DoubleFloats for higher precision)
+    m1 = Double64(1.0)
+    m2 = Double64(1.0)  
+    p = Double64(10.0)
     
     # Impact parameter sweep parameters
-    b_base = 10.0
-    scale_factor = 1.5  # Geometric progression factor
-    nn_values = [5, 10, 15, 20, 25]  # Range of scaling exponents
+    b_base = Double64(10.0)
+    scale_factor = Double64("1.1108305558745590335689712446765042841434478759765625")  # From alternative MXIC
+    nn_values = 50:20:350  # Range from 1 to 250 in steps of 50
     
     results = []
     
@@ -43,17 +30,24 @@ function momentum_exchange_sweep()
         
         # Generate impact parameter with wide dynamic range
         b = b_base * scale_factor^nn
-        dx = 100*b  # Initial separation
+        dx = Double64(1e9)*b  # Optimal separation (not too large, not too small)
         
         println("  Impact parameter b = $(round(b, sigdigits=6))")
         println("  Initial separation dx = $(round(dx, sigdigits=6))")
         
-        # Set up scattering system
-        system = pomin.setup_scattering(m1, m2, p, b, dx)
+        # Set up scattering system (using DoubleFloats type)
+        system = pomin.setup_scattering(m1, m2, p, b, dx, tpfl=Double64)
         
-        # Solve with Julia ODE integrator (save only last point)
-        sol = pomin.solve(system, pomin.ParametersJulia((0.0, 2*dx), 
-                         integrator="Tsit5", atol=1e-12, rtol=1e-12, Nrec=-1))
+        # Calculate duration using alternative MXIC strategy
+        # Relativistic velocity calculation
+        v1 = p / sqrt(m1^2 + p^2)  # Relativistic velocity for particle 1
+        v2 = p / sqrt(m2^2 + p^2)  # Relativistic velocity for particle 2
+        τ = dx / (v1 + v2)         # Time for particles to meet
+        t_flight = Double64(10.0) * τ         # Total scattering time
+        
+        # Solve with Julia ODE integrator (save only last point, ultra-tight tolerances)
+        sol = pomin.solve(system, pomin.ParametersJulia((Double64(0.0), t_flight), 
+                         integrator="Vern9", atol=1e-30, rtol=1e-30, Nrec=-1))
         
         # Extract momentum change (particle 1, y-component)
         # Initial momentum: sol.u[1] = [q1x, q1y, q1z, q2x, q2y, q2z, p1x, p1y, p1z, p2x, p2y, p2z]
@@ -63,10 +57,10 @@ function momentum_exchange_sweep()
         dp_numerical = p1y_final - p1y_initial
         
         # Analytical prediction
-        dp_analytical = dpfunc_analytical(p, b, m1, m2)
+        dp_analytical = pomin.HamPM.dp_scatter(p, b, m1, m2)
         
         # Calculate relative error
-        rel_error = abs(dp_numerical - dp_analytical) / abs(dp_analytical) * 100
+        rel_error = abs(abs(dp_numerical) - abs(dp_analytical)) / abs(dp_analytical) * 100
         
         println("  Analytical Δp = $(round(dp_analytical, sigdigits=8))")
         println("  Numerical  Δp = $(round(dp_numerical, sigdigits=8))")
@@ -126,7 +120,7 @@ function plot_momentum_exchange(results)
     
     # Create relative error plot
     p2 = plot(b_values, rel_errors,
-              xscale=:log10,
+              xscale=:log10, yscale=:log10,
               marker=:diamond, markersize=6, linewidth=2,
               color=:red,
               xlabel="Impact Parameter b", ylabel="Relative Error (%)",

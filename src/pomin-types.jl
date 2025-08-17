@@ -1,19 +1,59 @@
+#-----------------------------------------------------------------------
+#   TYPE ALIASES
+#-----------------------------------------------------------------------
+
 """
     RealVec{T<:Real}
 
-Type alias for a vector of real numbers. Equivalent to `Array{T}` where `T` is a subtype of `Real`.
-Used throughout PoMiN for representing position and momentum vectors in phase space.
+Type alias for a vector of real numbers. Equivalent to `Array{T}` where
+`T` is a subtype of `Real`. Used throughout PoMiN for representing
+position and momentum vectors in phase space.
 """
 const RealVec{T<:Real} = Array{T}
 
+#-----------------------------------------------------------------------
+#   TYPE-CONVERSION FUNCTION
+#-----------------------------------------------------------------------
 """
-    RealMtx{T<:Real}
+    tpnum(tpfl::Type) -> Tuple
 
-Type alias for a matrix of real numbers. Equivalent to `Array{T,2}` where `T` is a subtype of `Real`.
-Used for representing transformation matrices and other 2D arrays in PoMiN calculations.
+Generate a tuple of numeric constants (0 through 9) for a given floating point type.
+
+# Arguments
+- `tpfl::Type`: The floating point type to generate constants for
+
+# Returns
+- `Tuple`: A tuple containing constants 0-9 in the specified type
+
+# Examples
+```julia
+# Generate Float64 constants
+constants = tpnum(Float64)  # Returns (0.0, 1.0, 2.0, ..., 9.0)
+
+# Generate BigFloat constants
+constants = tpnum(BigFloat)  # Returns (0, 1, 2, ..., 9) as BigFloat
+```
+
+# Notes
+This utility function is used throughout PoMiN to generate type-consistent
+numeric constants, enabling support for different precision arithmetic
+(Float64, BigFloat, DoubleFloats, etc.) in post-Minkowskian calculations.
+If the input type is not a subtype of Real, it defaults to Float64.
 """
-const RealMtx{T<:Real} = Array{T,2}
+function tpnum(tpfl::Type)
+    if tpfl <: Real
+        return (tpfl(0),tpfl(1),tpfl(2),tpfl(3),tpfl(4),
+                tpfl(5),tpfl(6),tpfl(7),tpfl(8),tpfl(9))
+    else
+        # Use the same precision type instead of defaulting to Float64
+        return (tpfl(0),tpfl(1),tpfl(2),tpfl(3),tpfl(4),
+                tpfl(5),tpfl(6),tpfl(7),tpfl(8),tpfl(9))
+    end
+end #-------------------------------------------------------------------
 
+#-----------------------------------------------------------------------
+#   PARTICLE STRUCT
+#-----------------------------------------------------------------------
 """
     Particles
 
@@ -25,9 +65,10 @@ Datatype representing a collection of particles in the N-body system.
 - `p::Array{RealVec}`: Array of momentum vectors for each particle
 
 # Notes
-This structure is used to store the physical properties and state of all particles
-in the post-Minkowskian N-body simulation. Each particle has a mass, position vector,
-and momentum vector in the relativistic framework.
+This structure is used to store the physical properties and state of all
+particles in the post-Minkowskian N-body simulation. Each particle has a
+mass, position vector, and momentum vector in the relativistic
+framework.
 """
 struct Particles
     m::RealVec
@@ -35,40 +76,45 @@ struct Particles
     p::Array{RealVec}
 end #-------------------------------------------------------------------
 
+#-----------------------------------------------------------------------
+#   PARAMETER STRUCT
+#-----------------------------------------------------------------------
 """
     Parameters
 
-Datatype containing all simulation parameters for the post-Minkowskian N-body integration.
+Datatype containing all simulation parameters for the post-Minkowskian
+N-body integration.
 
 # Fields
-- `d::Int`: Number of spatial dimensions (typically 3 for 3D space)
-- `δ::Real`: Initial time step size for RK4 integrator
-- `rkl::Tuple{Bool}`: Use the RK4 integrator? If false, defaults to OrdinaryDiffEq.jl integrator
-- `courant::Real`: Courant number for RK4 integrator (controls timestep stability)
-- `Nrec::Int`: Number of timesteps between records (Nrec=-N records the last N timesteps)
-- `integrator::String`: Integrator method for OrdinaryDiffEq.jl (e.g., "Vern7", "Rodas5")
-- `atol::Real`: Absolute tolerance for integrators in OrdinaryDiffEq.jl (controls accuracy)
-- `rtol::Real`: Relative tolerance for integrators in OrdinaryDiffEq.jl (controls accuracy)
-- `tspan::Tuple{Real,Real}`: Time span as (initial_time, final_time)
-- `iter::Int`: Number of iterations or maximum iterations, depending on integrator
+- `d::Int`:     Number of spatial dimensions (typically 3)
+- `δ::Real`:    Initial time step size
+- `rkl::Bool`:  Use the RK4 integrator? If false, uses OrdinaryDiffEq.jl
+- `courant::Real`: Courant number for RK4 (adaptive step size)
+- `Nrec::Int`:  Skipped timesteps (Nrec=-N keeps last N steps)
+- `integrator::Any`: Integrator method for OrdinaryDiffEq.jl
+- `atol::Real`: Absolute tolerance for integrators in OrdinaryDiffEq.jl
+- `rtol::Real`: Relative tolerance for integrators in OrdinaryDiffEq.jl
+- `tspan::Any`: Time span (initial_time, final_time)
+- `iter::Int`:  Total number or maximum number of iterations
 
 # Notes
-This structure encapsulates all the numerical parameters needed to configure
-the integration of Hamilton's equations in the post-Minkowskian approximation.
-The choice between RK4 and OrdinaryDiffEq.jl integrators allows for different
-balances between speed and accuracy.
+This structure encapsulates all the numerical parameters needed to
+configure the integration of Hamilton's equations in the
+post-Minkowskian approximation. The choice between RK4 and
+OrdinaryDiffEq.jl integrators allows for different balances between
+speed and accuracy.
 """
 mutable struct Parameters
-    d::Int                         # Number of spatial dimensions (typically 3)
-    δ::Real                        # Initial time step size
-    rkl::Bool                      # Use the rk4 integrator? If false, default to OrdinaryDiffEq.jl integrator
-    courant::Real                  # Courant number for rk4 integrator
-    Nrec::Int                      # Number of timesteps between records (Nrec=-N records the last N timesteps)
-    integrator::String             # Integrator method for OrdinaryDiffEq.jl
-    atol::Real                     # Absolute tolerance for integrators in OrdinaryDiffEq.jl
-    rtol::Real                     # Relative tolerance for integrators in OrdinaryDiffEq.jl
-    tspan::Tuple{Real,Real}        # Time span (initial_time,final_time)
-    iter::Int                      # Either the number of iterations, or maximum number of iterations, depending on integrator
+    d::Int             # Number of spatial dimensions (typically 3)
+    δ::Real            # Initial time step size
+    rkl::Bool          # Use rk4? If false, default to OrdinaryDiffEq.jl
+    courant::Real      # Courant number for rk4 integrator
+    Nrec::Int          # Skipped timesteps (Nrec=-N keeps last N steps)
+    integrator::Any    # Integrator method for OrdinaryDiffEq.jl
+    atol::Real         # Absolute tolerance in OrdinaryDiffEq.jl
+    rtol::Real         # Relative tolerance in OrdinaryDiffEq.jl
+    tspan::Any         # Time span (initial_time,final_time)
+    iter::Int          # Total number or maximum number of iterations
 end #-------------------------------------------------------------------
 
 # Constructor functions for Parameters struct
@@ -140,11 +186,11 @@ Convenience constructor for RK4 integrator with sensible defaults.
 
 # Example
 ```julia
-params = ParametersRK4((0.0, 1000.0), δ=0.001, courant=0.0005)
+params = ParametersRK4((0.0, 1000.0), δ=0.001, courant=0.1)
 ```
 """
 function ParametersRK4(tspan::Tuple{Real,Real}; δ::Real=0.01, 
-                       courant::Real=0.001, kwargs...)
+                       courant::Real=0.1, kwargs...)
     return Parameters(; tspan=tspan, rkl=true, δ=δ, courant=courant, kwargs...)
 end
 
@@ -167,6 +213,9 @@ function ParametersJulia(tspan::Tuple{Real,Real}; atol::Real=1e-10, rtol::Real=1
     return Parameters(; tspan=tspan, rkl=false, atol=atol, rtol=rtol, integrator=integrator, kwargs...)
 end
 
+#-----------------------------------------------------------------------
+#   SOLUTION STRUCT
+#-----------------------------------------------------------------------
 """
     soln
 
@@ -191,41 +240,4 @@ mutable struct soln
     t::RealVec                     # Vector recording times at each timestep
     z::Array{RealVec,1}            # Vector recording phase space coordinates at each timestep
     zaux::Array{RealVec,1}
-end #-------------------------------------------------------------------
-
-"""
-    tpnum(tpfl::Type) -> Tuple
-
-Generate a tuple of numeric constants (0 through 9) for a given floating point type.
-
-# Arguments
-- `tpfl::Type`: The floating point type to generate constants for
-
-# Returns
-- `Tuple`: A tuple containing constants 0-9 in the specified type
-
-# Examples
-```julia
-# Generate Float64 constants
-constants = tpnum(Float64)  # Returns (0.0, 1.0, 2.0, ..., 9.0)
-
-# Generate BigFloat constants
-constants = tpnum(BigFloat)  # Returns (0, 1, 2, ..., 9) as BigFloat
-```
-
-# Notes
-This utility function is used throughout PoMiN to generate type-consistent
-numeric constants, enabling support for different precision arithmetic
-(Float64, BigFloat, DoubleFloats, etc.) in post-Minkowskian calculations.
-If the input type is not a subtype of Real, it defaults to Float64.
-"""
-function tpnum(tpfl::Type)
-    if tpfl <: Real
-        return (tpfl(0),tpfl(1),tpfl(2),tpfl(3),tpfl(4),
-                tpfl(5),tpfl(6),tpfl(7),tpfl(8),tpfl(9))
-    else
-        return (Float64(0.0),Float64(1.0),Float64(2.0),Float64(3.0),
-                Float64(4.0),Float64(5.0),Float64(6.0),Float64(7.0),
-                Float64(8.0),Float64(9.0))
-    end
 end #-------------------------------------------------------------------
