@@ -15,6 +15,8 @@ using OrdinaryDiffEq
 #using Logging
 using DoubleFloats
 
+∂ = (f,Z)->ForwardDiff.gradient(f,Z)
+
 # Core functionality
 include("pomin-types.jl")                 # Type definitions
 
@@ -34,31 +36,34 @@ include("integrators/intjul.jl")            # Julia ODE integrators
 include("io.jl")                             # I/O routines
 
 """
-    solve(system::Particles, params::Parameters)
+    solve(system::Particles, params::Parameters,
+          Phi::Function=z->zero(typeof(z[1])))
 
 Solve the post-Minkowskian N-body problem for the given particle system and parameters.
 
 # Arguments
-- `system::Particles`: The particle system containing masses, positions, and momenta
+- `system::Particles`: Specifies masses, positions, and momenta
 - `params::Parameters`: Integration parameters and settings
+- `Phi::Function`: Specifies an external potential function
 
 # Returns
 - For RK4 integrator: `soln` structure containing the time evolution
 - For Julia integrators: `ODESolution` object from OrdinaryDiffEq.jl
 
 # Notes
-This is the main entry point for PoMiN simulations. The function automatically
-selects the appropriate integrator based on `params.rkl` and constructs the
-phase space vector from the particle system.
+This is the main entry point for PoMiN simulations. The function
+automatically selects the appropriate integrator based on `params.rkl`
+and constructs the phase space vector from the particle system.
 """
-function solve(system::Particles, params::Parameters)
+function solve(system::Particles, params::Parameters, 
+               Phi::Function=z->zero(typeof(z[1])))
     m = system.m
     z = vcat(system.q..., system.p...)
 
     if params.rkl
         # Use RK4 integrator
         return hrkintegrator(params.d, length(m), z, 
-                           (Z) -> HamPM.dH(Z, m, params.d),
+                           (Z) -> HamPM.dH(Z, m, params.d)+∂(Phi,Z),
                            params.δ,
                            params.tspan, params.iter,
                            (dt, Z, Zdot) -> tcour(dt, Z, Zdot, params.courant, params.d),
@@ -67,7 +72,8 @@ function solve(system::Particles, params::Parameters)
         # Use Julia OrdinaryDiffEq.jl integrator
         return jlintegrator(z, 
                           (du, u, p, t) -> begin
-                              du .= HamPM.FHE(u, m, params.d)
+                              du .= HamPM.FHE(u, m, params.d) + 
+                                    HamPM.Jsympl(∂(Phi,u))
                           end,
                           params.tspan, m, params.atol, params.rtol,
                           eval(Symbol(params.integrator))(), params.Nrec)

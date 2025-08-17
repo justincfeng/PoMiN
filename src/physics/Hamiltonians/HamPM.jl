@@ -7,6 +7,9 @@ module HamPM
 using LinearAlgebra
 using ForwardDiff
 
+∂ = (f,Z)->ForwardDiff.gradient(f,Z)
+    
+# Include type definitions first
 include("../../pomin-types.jl")
 include("HamTools.jl")
 
@@ -165,7 +168,7 @@ end #-------------------------------------------------------------------
 Gradient of the Hamiltonian function.
 """
 function dH( Z::RealVec , m::RealVec , d::Int = 3 )
-    return ForwardDiff.gradient(x -> H(x, m, d), Z)
+    return ∂(x -> H(x, m, d), Z)
 end #-------------------------------------------------------------------
 
 # Right hand side of Hamilton's equations

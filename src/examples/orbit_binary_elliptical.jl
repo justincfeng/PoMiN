@@ -181,9 +181,9 @@ hline!(p3, [r_apoapsis],
     color=:blue)
 
 # Display and save
-savefig(p1, "pomin_elliptical_orbit.png")
-savefig(p2, "pomin_elliptical_energy_conservation.png")
-savefig(p3, "pomin_elliptical_separation.png")
+savefig(p1, "pomin_elliptical_orbit.pdf")
+savefig(p2, "pomin_elliptical_energy_conservation.pdf")
+savefig(p3, "pomin_elliptical_separation.pdf")
 
 # Print orbital parameters
 println("Orbital Parameters:")

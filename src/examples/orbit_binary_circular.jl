@@ -21,6 +21,7 @@ G = 1.0         # Gravitational constant
 
 # Calculate orbital period using Kepler's third law: T = 2π√(a³/GM)
 M = m1 + m2                    # Total mass
+a = r                          # For circular orbit, semi-major axis = radius
 T = 2π * sqrt(a^3 / (G * M))   # Orbital period
 n_orbits = 0.5                 # Number of orbits to simulate
 
@@ -167,8 +168,8 @@ hline!(p3, [r],
     color=:black)
 
 # Display and save
-savefig(p1, "pomin_circular_orbit.png")
-savefig(p2, "pomin_energy_conservation.png")
-savefig(p3, "pomin_separation.png")
+savefig(p1, "pomin_circular_orbit.pdf")
+savefig(p2, "pomin_energy_conservation.pdf")
+savefig(p3, "pomin_separation.pdf")
 
 nothing

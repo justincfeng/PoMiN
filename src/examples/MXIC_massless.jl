@@ -10,12 +10,10 @@ Perform momentum exchange calculations over a wide range of impact parameters.
 Uses the efficient Nrec=-1 option to save only initial and final states.
 """
 function momentum_exchange_sweep()
-    println("=== PoMiN Momentum Exchange Sweep ===")
-    println("Testing impact parameter scaling with Nrec=-1 (save-last-only)\n")
-    
+   
     # Physical parameters (using DoubleFloats for higher precision)
-    m1 = Double64(1.0)
-    m2 = Double64(1.0)  
+    m1 = Double64(0.0)  # Massless particle 1
+    m2 = Double64(0.0)  # Massless particle 2
     p = Double64(10.0)
     
     # Impact parameter sweep parameters
@@ -25,23 +23,18 @@ function momentum_exchange_sweep()
     
     results = []
     
-    for nn in nn_values
-        println("Testing with nn = $nn")
-        
+    for nn in nn_values       
         # Generate impact parameter with wide dynamic range
         b = b_base * scale_factor^nn
         dx = Double64(1e9)*b  # Optimal separation (not too large, not too small)
-        
-        println("  Impact parameter b = $(round(b, sigdigits=6))")
-        println("  Initial separation dx = $(round(dx, sigdigits=6))")
-        
+
         # Set up scattering system (using DoubleFloats type)
         system = pomin.setup_scattering(m1, m2, p, b, dx, tpfl=Double64)
         
         # Calculate duration using alternative MXIC strategy
-        # Relativistic velocity calculation
-        v1 = p / sqrt(m1^2 + p^2)  # Relativistic velocity for particle 1
-        v2 = p / sqrt(m2^2 + p^2)  # Relativistic velocity for particle 2
+        # For massless particles, velocity = c = 1 (natural units)
+        v1 = Double64(1.0)  # Speed of light for massless particle 1
+        v2 = Double64(1.0)  # Speed of light for massless particle 2
         τ = dx / (v1 + v2)         # Time for particles to meet
         t_flight = Double64(10.0) * τ         # Total scattering time
         
@@ -62,26 +55,12 @@ function momentum_exchange_sweep()
         # Calculate relative error
         rel_error = abs(abs(dp_numerical) - abs(dp_analytical)) / abs(dp_analytical) * 100
         
-        println("  Analytical Δp = $(round(dp_analytical, sigdigits=8))")
-        println("  Numerical  Δp = $(round(dp_numerical, sigdigits=8))")
-        println("  Relative error = $(round(rel_error, digits=3))%")
-        println("  Integration time = $(round(sol.t[end], sigdigits=6))")
-        println("  Saved $(length(sol.t)) time points (memory efficient!)\n")
-        
         # Store results
         push!(results, (nn=nn, b=b, dp_analytical=dp_analytical, 
                        dp_numerical=dp_numerical, rel_error=rel_error,
                        final_time=sol.t[end]))
     end
-    
-    # Summary
-    println("=== Summary ===")
-    println("nn\tb\t\tΔp_analytical\tΔp_numerical\tRel_Error(%)")
-    println("-"^70)
-    for r in results
-        println("$(r.nn)\t$(round(r.b, sigdigits=4))\t\t$(round(r.dp_analytical, sigdigits=6))\t$(round(r.dp_numerical, sigdigits=6))\t$(round(r.rel_error, digits=2))")
-    end
-    
+
     return results
 end
 
@@ -126,23 +105,14 @@ function plot_momentum_exchange(results)
               xlabel="Impact Parameter b", ylabel="Relative Error (%)",
               title="Numerical Accuracy vs Impact Parameter",
               legend=false, grid=true)
-    
-    # Combine plots
-    combined_plot = plot(p1, p2, layout=(2,1), size=(800, 600))
-    
-    # Save plot
-    savefig(combined_plot, "momentum_exchange_sweep.png")
-    println("\n=== Plot Generated ===")
-    println("Saved plot as 'momentum_exchange_sweep.png'")
-    println("- Top panel: Momentum exchange scaling (shows perfect 1/b behavior)")
-    println("- Bottom panel: Numerical accuracy across impact parameter range")
-    
-    return combined_plot
+
+    return plot(p1, p2, layout=(2,1), size=(800, 600))
 end
 
 # Run the momentum exchange sweep
 results = momentum_exchange_sweep()
 
 # Generate plots
-plot_momentum_exchange(results)
+PLTres = plot_momentum_exchange(results)
 
+savefig(PLTres, "momentum_exchange_sweep_massless.pdf")

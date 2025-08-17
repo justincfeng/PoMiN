@@ -3,7 +3,7 @@
 #-----------------------------------------------------------------------
 
 # Gradient of Milky Way potentials
-function dMilkyWay(d::Int, m::RealVec, Z::RealVec, origin_x=Double64(-1.708859462494220E+17), origin_y=Double64(0), origin_z =Double64(4.346342845091530E+14), r_sun=Double64(8.4), Mb=Double64(409), Md=Double64(2856), Mh=Double64(1018), b_b=Double64(0.23), a_d=Double64(4.22), b_d=Double64(0.292), a_h=Double64(2.562))
+function ΦMilkyWay(Z::RealVec, origin_x=Double64(-1.708859462494220E+17), origin_y=Double64(0), origin_z =Double64(4.346342845091530E+14), r_sun=Double64(8.4), Mb=Double64(409), Md=Double64(2856), Mh=Double64(1018), b_b=Double64(0.23), a_d=Double64(4.22), b_d=Double64(0.292), a_h=Double64(2.562), Λ=Double64(100), γ=Double64(2.02),d::Int=3)
     # (origin_x, origin_y, origin_z) is the location (in units of M) in the galactocentric frame where the simulation's origin is placed
     # it defaults to the location of the Sun as given by astropy and 2019 data from https://arxiv.org/abs/1904.05721
     
@@ -20,55 +20,37 @@ function dMilkyWay(d::Int, m::RealVec, Z::RealVec, origin_x=Double64(-1.70885946
     #   γ = 2                 free parameter
     
     tpfl = typeof(Z[1])
-    n = length(m)
+    n = round(Int,Float64(length(Z)/(2*d)))
 
-    # the Milky Way potentials are in 3-dimensionsal Cartesian coordinates
-    # ensure d is 3, otherwise return all zeros (effectively ignoring Milky Way potentials)
-    if d != 3 
-        return zeros(tpfl, 6*n)
+    PHI = zero(tpfl)
+
+    if d == 3 
+        for i in 1:n
+            qi = Z2q( n , d , i , Z )
+    
+            Q  = qi .+ [origin_x, origin_y, origin_z]
+    
+            R     = norm(Q)
+            r     = sqrt(Q[1]^2 + Q[2]^2)
+            z     = Q[3]
+    
+            PHI_b = -Mb/sqrt(R^2+b_b^2)
+    
+            PHI_d = -Md/sqrt(r^2 + (a_d + sqrt(z^2 + b_d^2))^2)
+    
+            PHI_h = (Mh/ah) * 
+                    ( 
+                     (1/(γ-1))*log((1 + (R/ah)^(γ-1))/(1 + (Λ/ah)^(γ-1))) - 
+                     (Λ/ah)^(γ-1) / (1 + (Λ/ah)^(γ-1)) 
+                    )
+    
+            PHI += PHI_b + PHI_d + PHI_h
+        end
+        return PHI
+    else 
+        return zero(tpfl)
     end
-
-    dΦB = zeros(tpfl, 6*n)
-    dΦD = zeros(tpfl, 6*n)
-    dΦH = zeros(tpfl, 6*n)
-
-    # Z consists of q's for all particles first, then p's for all particles
-    # dΦ vectors are gradients wrt Z, therefore derivs wrt all of the x, y, z's are first, then wrt all of the px, py, pz's
-    # Since MW Φ's contain no p's, the second half of each gradient vector will be zero (whole vector already initialized to zeros)
-    for i in 1:n
-        # index in Z for start of q's of particle i
-        part_index = 1 + 3*(i-1)  # since d == 3
-        # indices for x, y, z positions of particle i within Z, which also are indices within dΦ for x, y, z derivs for particle i
-        xind = part_index
-        yind = part_index + 1
-        zind = part_index + 2
-
-        pos = [ Z[xind] + origin_x, Z[yind] + origin_y, Z[zind] + origin_z]
-        
-        # bulge
-        bulge_denom = ( dot(pos,pos) + b_b^2)^(Double64(1.5))
-        dΦB[xind] += m[i] * Mb * pos[1] / bulge_denom
-        dΦB[yind] += m[i] * Mb * pos[2] / bulge_denom
-        dΦB[zind] += m[i] * Mb * pos[3] / bulge_denom
-
-        # disc
-        rsq = pos[1]^2 + pos[2]^2
-        disc_denom = ( rsq + (a_d + sqrt(pos[3]^2 + b_d^2))^2)^(Double64(1.5))
-        dΦD[xind] += m[i] * Md * pos[1] / disc_denom
-        dΦD[yind] += m[i] * Md * pos[2] / disc_denom
-        dΦD[zind] += m[i] * Md * pos[3] * (a_d + sqrt(pos[3]^2 + b_d^2)) / (disc_denom * sqrt(pos[3]^2 + b_d^2))
-
-        # halo
-        R = sqrt(dot(pos,pos))
-        halo_coeff = m[i] * Mh / a_h^2 * (1 + R / a_h)^(-1) / R
-        dΦH[xind] += halo_coeff * pos[1]
-        dΦH[yind] += halo_coeff * pos[2]
-        dΦH[zind] += halo_coeff * pos[3]
-    end
-
-    dΦ = dΦB + dΦD + dΦH
-    return dΦ
-end
+end #-------------------------------------------------------------------
 
 # Computes gradient of Sun's potential at position of each particle.  Assumes Sun at origin with M = 1
 function dSun(d::Int, m::RealVec, Z::RealVec)
