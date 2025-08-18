@@ -17,9 +17,9 @@ function UConstructor(PHI::Function,m::RealVec,xo::RealVec,
     n = length(m)
 
     function U(Z::RealVec)
-        V = zero(tpfl)
+        V = zero(eltype(Z))  # Use eltype(Z) for ForwardDiff compatibility
         for i in 1:n
-            x = (tpfl(sc) .* Z2q( n , d , i , Z )) + xo
+            x = (sc .* Z2q( n , d , i , Z )) + xo  # Remove type conversion for ForwardDiff compatibility
             V += m[i]*PHI(x)
         end
         return V
@@ -74,25 +74,25 @@ function ΦMilkyWay( tpfl::Type=Double64 ,
     if d == 3
         ν1 = tpfl(1)
         function Φ(x::RealVec)
-                X  = tpfl.(x) .+ [origin_x, origin_y, origin_z]
+                X  = x .+ [origin_x, origin_y, origin_z]  # Remove type conversion for ForwardDiff compatibility
                 R     = norm(X)*kpc
                 r     = sqrt(X[1]^2 + X[2]^2)*kpc
                 z     = X[3]*kpc
                 PHI_b = -Mb/sqrt(R^2+b_b^2)
                 PHI_d = -Md/sqrt(r^2 + (a_d + sqrt(z^2 + b_d^2))^2)
-                PHI_h = (Mh/ah) * 
+                PHI_h = (Mh/a_h) * 
                     ( 
                      (ν1/(γ-ν1))*
-                     log((ν1 + (R/ah)^(γ-ν1))/
-                     (ν1 + (Λ/ah)^(γ-ν1))) - 
-                     (Λ/ah)^(γ-ν1) / (ν1 + (Λ/ah)^(γ-ν1)) 
+                     log((ν1 + (R/a_h)^(γ-ν1))/
+                     (ν1 + (Λ/a_h)^(γ-ν1))) - 
+                     (Λ/a_h)^(γ-ν1) / (ν1 + (Λ/a_h)^(γ-ν1)) 
                     )
     
             return PHI_b + PHI_d + PHI_h
         end
         return Φ
     else 
-        return x->zero(tpfl)
+        return x->zero(eltype(x))  # Use eltype(x) instead of tpfl for type compatibility
     end
 end #-------------------------------------------------------------------
 
@@ -100,14 +100,14 @@ end #-------------------------------------------------------------------
 #   CENTRAL MASS POTENTIAL
 #-----------------------------------------------------------------------
 """
-    ΦCentralMass( tpfl::Type=Double64 , xo::RealVec , 
-                  M::Real=tpfl(1.0) , G::Real=tpfl(1.0) , d::Int=3 )
+    ΦCentralMass( xo::RealVec , tpfl::Type=Double64 , 
+                  M::Real=1.0 , G::Real=1.0 , d::Int=3 )
 
 This function returns a potential function for a single particle under
 the influence of the gravitational potential of a central mass.
 """
-function ΦCentralMass(tpfl::Type=Double64 , xo::RealVec , 
-                      M::Real=tpfl(1.0) , G::Real=tpfl(1.0) , d::Int=3 )
-    return x->-G*M/norm(tpfl.(x-xo))
+function ΦCentralMass(xo::RealVec , tpfl::Type=Double64 , 
+                      M::Real=1.0 , G::Real=1.0 , d::Int=3 )
+    return x->-G*M/norm(x-xo)  # Remove type conversion to allow ForwardDiff compatibility
 end #-------------------------------------------------------------------
 
