@@ -3,7 +3,7 @@ module HamHO
 using LinearAlgebra
 using ForwardDiff
 
-include("../../core/pomin-types.jl")
+include("../../pomin-types.jl")
 include("HamTools.jl")
 
 function H( z::RealVec )

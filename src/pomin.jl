@@ -18,22 +18,22 @@ using DoubleFloats
 ∂ = (f,Z)->ForwardDiff.gradient(f,Z)
 
 # Core functionality
-include("pomin-types.jl")                 # Type definitions
+include("core/pomin-types.jl")                 # Type definitions
 
 # Physics modules
-include("physics/Hamiltonians/HamPM.jl")    # Post-Minkowskian Hamiltonian
-include("physics/Hamiltonians/HamTools.jl") # Hamiltonian tools
-include("physics/gravitational_waves/gwsc.jl") # GW strain calculator
+include("core/physics/Hamiltonians/HamPM.jl")    # Post-Minkowskian Hamiltonian
+include("core/physics/Hamiltonians/HamTools.jl") # Hamiltonian tools
+include("post/gravitational_waves/gwsc.jl") # GW strain calculator
 
 # Physics utilities
-include("physics/initial_data/idgen.jl")    # Initial data generation
+include("core/initial_data/idgen.jl")    # Initial data generation
 
 # Integrators
-include("integrators/rk4i.jl")              # RK4 integrator
-include("integrators/intjul.jl")            # Julia ODE integrators
+include("core/integrators/rk4i.jl")              # RK4 integrator
+include("core/integrators/intjul.jl")            # Julia ODE integrators
 
 # Input/Output
-include("io.jl")                             # I/O routines
+include("utils/io.jl")                             # I/O routines
 
 """
     solve(system::Particles, params::Parameters,

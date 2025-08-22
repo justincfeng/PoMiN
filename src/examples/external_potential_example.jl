@@ -6,9 +6,9 @@ using Printf
 
 # Include the necessary PoMiN modules
 include("../pomin.jl")
-include("../pomin-types.jl")  # Load type definitions first
-include("../physics/Hamiltonians/HamTools.jl")  # For Z2q function
-include("../physics/external_potentials/external.jl")
+include("../core/pomin-types.jl")  # Load type definitions first
+include("../core/physics/Hamiltonians/HamTools.jl")  # For Z2q function
+include("../core/physics/external_potentials/external.jl")
 
 using Plots
 
