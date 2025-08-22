@@ -45,8 +45,8 @@ Pchip = pomin.setup_single_particle(mchip, qchip, pchip, tpfl)
 println("✓ Spacecraft particle created with mass: ", mchip)
 
 # Proxima Centauri parameters
-mProx = tpfl(0.1221)
-qProx = tpfl.([-9.90338347925777E+12, -7.58520275447461E+12, -2.41494965557852E+13])
+mProx = tpfl(0.1221*1e-14)
+qProx = tpfl.([-9.90338347925777E+12, -7.58520275447461E+12, -2.41494965557852E+13]) 
 pProx = mProx .* tpfl.([-3.34779933990201E-5, 7.24198145771899E-5, 6.82553747232694E-5])
 
 PProx = pomin.setup_single_particle(mProx, qProx, pProx, tpfl)
@@ -75,6 +75,9 @@ println("✓ Jupiter particle created with mass: ", mjup)
 P4body = pomin.merge_particle_systems(Pchip, PProx, Psol, Pjup)
 println("✓ 4-body system merged successfully (Spacecraft + Proxima + Sun + Jupiter)")
 
+P2body = pomin.merge_particle_systems(Pchip, PProx)
+println("✓ 2-body system merged successfully (Spacecraft + Proxima)")
+
 # Integration parameters
 tspan = (tpfl(0), tpfl(1.410E+14)) # 22 years
 δ = tpfl(7.31E+8) # about one hour
@@ -84,6 +87,7 @@ println("✓ Integration parameters set: ", tspan[2]/1e14, " × 10^14 time units
 
 println("\nStarting integration...")
 @time sol = pomin.solve(P4body, params)
+# @time sol = pomin.solve(P2body, params)
 println("✓ Integration completed with ", length(sol.t), " time steps")
 
 # Find closest approach
@@ -93,11 +97,14 @@ minvec = zeros(tpfl, 3)
 min_time = tpfl(0.0)
 numsteps = length(sol.t)
 
+Npar = 4
+# Npar = 2
+
 for tn in 1:numsteps  # tn is timestep number
     # get q vector for particle 1 (spacecraft) at timestep tn
-    q1 = Z2q(4, 3, 1, sol.u[tn])  # 4 particles, 3 dimensions, particle 1
+    q1 = Z2q(Npar, 3, 1, sol.u[tn])  # Npar particles, 3 dimensions, particle 1
     # get q vector for particle 2 (Proxima Centauri) at timestep tn
-    q2 = Z2q(4, 3, 2, sol.u[tn])  # 4 particles, 3 dimensions, particle 2
+    q2 = Z2q(Npar, 3, 2, sol.u[tn])  # Npar particles, 3 dimensions, particle 2
     # get distance and save it if it's the minimum distance
     dist = norm(q1-q2)
     if dist < mindist
