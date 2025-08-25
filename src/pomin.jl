@@ -29,8 +29,6 @@ include("starshot.jl")
 
 # runExperiment(250,0.001)
 
-# testInitVector(0.001)
-
 # v_init1 = Double64[-7.00365851051320E-02, -5.35052039083642E-02, -1.70575701379575E-01]  # closest approach ~= 6 AU
 # v_init2 = Double64[-0.07295215750065391, -0.05573727243527886, -0.1776832551972042] # closest approach = 4.15 AU
 # v_init3 = Double64[-0.07130599062805795, -0.05447701998124462, -0.17367024572512088] # closest approach = 4.71 AU
@@ -62,14 +60,15 @@ include("starshot.jl")
 export RealVec, Particles, soln
 export jlintegrator, jlintegratorfull
 export H, dH, Jsympl
-# testInitVector(1)
 
 # include("tests/Proxima_orbit_test.jl")
 
 # minvec = closestApproach_2plus1(Double64(1), Double64[0,0,0], Double64[0,0,0])
-minvec = closestApproach_2body_Proxima_test_particle()
-distance_in_M = norm(minvec)
-distance_in_AU = distance_in_M * 1.47669196951425 * 6.6845871226706E-09
-println(stderr,"Closest approach was ", distance_in_AU, " AU")
+# minvec = closestApproach_2body_Proxima_test_particle()
+# distance_in_M = norm(minvec)
+# distance_in_AU = distance_in_M * 1.47669196951425 * 6.6845871226706E-09
+# println(stderr,"Closest approach was ", distance_in_AU, " AU")
+
+testInitVector(0.0001)
 
 end

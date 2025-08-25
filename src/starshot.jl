@@ -1,4 +1,6 @@
 using DoubleFloats
+using Random
+using Distributions
 
 include("broyden.jl")
 
@@ -250,9 +252,265 @@ function closestApproach_2plus1(mass::Double64, q_init::RealVec, p_init::RealVec
     return minvec
 end
 
+function generateInitVelocityDiskProxima(theta_tol, baseVector::RealVec)
+    println(stderr, "Finding initial velocity vector using random points in a disk centered on Proxima")
 
-function generateInitVelocityMonteCarlo(theta_tol, baseVector::RealVec)
-    println(stderr, "Finding initial velocity vector using Monte Carlo method")
+    ProximaDistance = norm(Double64[-9.90338347925777E+12, -7.58520275447461E+12, -2.41494965557852E+13]    # Proxima pos from Kervella 2017
+                           -
+                           Double64[-1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07]                # Spacechip pos (Moon dist (semimajor axis) from Earth in +y dir)
+    )
+    diskRadius = ProximaDistance * Double64(tan(deg2rad(theta_tol)))
+    println(stderr, "proxima distance = ", ProximaDistance * 1.47669196951425 * 6.6845871226706E-09, " AU")
+    println(stderr, "disk Radius = ", diskRadius * 1.47669196951425 * 6.6845871226706E-09, " AU")
+
+    U = baseVector / norm(baseVector)
+
+    v = nothing
+    while true
+        # generate vector that is linearly independent of U
+        Y = [rand(Double64), rand(Double64), rand(Double64)]
+        # ensure Y is not collinear with U
+        while abs(dot(U,Y)/(norm(U)*norm(Y))) == 1
+            Y = [rand(Double64), rand(Double64), rand(Double64)]
+        end
+
+        # make a vector v that is orthogonal to U by subtracting the part of Y that is parallel to U
+        a = dot(Y,U)/norm(U)^2
+        v = Y - a * U
+        println(stderr,"dot(v,U) = ",dot(v,U))
+
+        # ensure v and Y are orthogonal, otherwise repeat
+        if dot(v,U) == 0
+            break
+        end
+    end
+
+    # find a vector w that's orthogonal to U and v
+    w = cross(U,v)
+
+    # scale v and w to match the disk radius
+    V = v / norm(v) * diskRadius
+    W = w / norm(w) * diskRadius
+
+    # are U, V, and W all mutually orthogonal?
+    println(stderr, "U dot V = ", dot(U, V))
+    println(stderr, "U dot W = ", dot(U, W))
+    println(stderr, "V dot W = ", dot(V, W))
+
+    # generate random point (x,y) in the unit disk
+    x = nothing
+    y = nothing
+    while true
+        x = rand(Double64)
+        y = rand(Double64)
+        if norm([x,y]) <= diskRadius
+            break
+        end
+    end
+
+    # construct vector Z in the disk centered on Proxima
+    Z = x * V + y * W
+
+    # construct init velocity vector via vector addition of U that reaches Proxima plus Z
+    init_vel = U * ProximaDistance + Z
+
+    # make init velocity a unit vector
+    init_vel = init_vel / norm(init_vel)
+
+    # find angle between baseVector and init_vel
+    cosine_theta = dot(init_vel, baseVector) / norm(baseVector)     # init_vel already unit length
+    theta_rad = acos(cosine_theta)
+    theta_deg = rad2deg(theta_rad)
+
+    println(stderr, "For initial velocity ", init_vel, " angle with base vector is ", theta_deg)
+
+    return theta_deg, init_vel
+
+end
+
+function generateInitVelocityMonteCarloDiskOrigin(theta_tol, baseVector::RealVec)
+    println(stderr, "Finding initial velocity vector using Monte Carlo method with disk centered on origin and then rotated to proper orientation and translated to Proxima")
+
+    # compute 1/2 of side length of square using theta_tol
+    ProximaDistance = norm(Double64[-9.90338347925777E+12, -7.58520275447461E+12, -2.41494965557852E+13]    # Proxima pos from Kervella 2017
+                           -
+                           Double64[-1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07]                # Spacechip pos (Moon dist (semimajor axis) from Earth in +y dir)
+    )
+    sideLength = ProximaDistance * tan(deg2rad(theta_tol))
+    println(stderr, "proxima distance = ", ProximaDistance * 1.47669196951425 * 6.6845871226706E-09, " AU")
+    println(stderr, "sidelength = ", sideLength * 1.47669196951425 * 6.6845871226706E-09, " AU")
+
+    # find random point in x-y plane that is uniformly sampled from a disk with radius sideLength
+    x = nothing
+    y = nothing
+    while true
+        x = sideLength * (rand() * 2 - 1)
+        y = sideLength * (rand() * 2 - 1)
+        if norm([x, y]) <= sideLength
+            break
+        end
+    end
+    z = 0
+    println(stderr, "x, y = ",x,", ",y," where sideLength = ",sideLength," M")
+
+    # now we need to rotate the disk to align its normal vector with baseVector
+
+    # negative of the normalized baseVector will be new normal vector
+    new_normal = -baseVector / norm(baseVector)
+
+    # current normal vector points along z-axis
+    curr_normal = [0, 0, 1]
+
+    # cos of rotation angle comes from dot product
+    cos_theta = dot(new_normal, curr_normal)        # both vectors are unit length
+    println(stderr,"cos_theta of rotation = ",cos_theta)
+
+    # axis of rotation is perpendicular to both normals
+    rotation_axis = cross(new_normal, curr_normal)
+    rotation_axis = rotation_axis / norm(rotation_axis)
+
+    # construct Rodrigues rotation matrix
+    sin_theta = sqrt(1 - cos_theta * cos_theta)
+    r = rotation_axis   # shorthand
+    c = cos_theta   # shorthand
+    s = sin_theta   # shorthand
+    R = [   r[1] * r[1] * (1-c) + c         r[1] * r[2] * (1-c) - r[3]*s     r[1] * r[3] * (1-c) + r[2]*s    ;
+            r[2] * r[1] * (1-c) + r[3]*s    r[2] * r[2] * (1-c) + c          r[2] * r[3] * (1-c) - r[1]*s    ;
+            r[3] * r[1] * (1-c) - r[2]*s    r[3] * r[2] * (1-c) + r[1]*s     r[3] * r[3] * (1-c) + c    
+    ]
+
+    # rotate x, y, z
+    X_old = Double64[x; y; z]       # put random values in a column vector
+    println(stderr,"X_old = ", X_old)
+    X_rot = R * X_old       # multiply by rotation matrix
+    println(stderr, "X_rot = ", X_rot)
+    println(stderr, "Rotated through cos_theta = ", dot(X_old,X_rot)/(norm(X_old)*norm(X_rot)))
+    # compare new vector and baseVector -- they should be parallel
+    println(stderr,"Norm of X_rot cross new_normal (should be 0): ",norm(cross(X_rot,new_normal)))
+
+    # disk will be translated so that it's centered on (x_0, y_0, z_0) which is location of Proxima
+    x_0 = -9.90338347925777E+12
+    y_0 = -7.58520275447461E+12
+    z_0 = -2.41494965557852E+13
+
+    # translate x, y, z and transpose result back to a row vector
+    X_new = [x_0 + X_rot[1], y_0 + X_rot[2], z_0 + X_rot[3]]
+
+    # construct init velocity vector via vector addition of baseVector that reaches Proxima plus new vector that lies in the rotated & translated disk
+    init_vel = baseVector / norm(baseVector) * ProximaDistance + X_new
+
+    # make init velocity a unit vector
+    init_vel = init_vel / norm(init_vel)
+
+    # find angle between baseVector and init_vel
+    cosine_theta = dot(init_vel, baseVector) / norm(baseVector)     # init_vel already unit length
+    theta_rad = acos(cosine_theta)
+    theta_deg = rad2deg(theta_rad)
+
+    println(stderr, "For initial velocity ", init_vel, " angle with base vector is ", theta_deg)
+
+    return theta_deg, init_vel
+
+end
+
+function generateInitVelocityMonteCarloDiskProxima(theta_tol, baseVector::RealVec)
+    println(stderr, "Finding initial velocity vector using Monte Carlo method with disk centered on Proxima")
+
+    # compute side length of square using theta_tol
+    ProximaDistance = norm([-9.90338347925777E+12, -7.58520275447461E+12, -2.41494965557852E+13]    # Proxima pos from Kervella 2017
+                           - [-1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07]                # Spacechip pos (Moon dist (semimajor axis) from Earth in +y dir)
+    )
+    sideLength = ProximaDistance * tan(deg2rad(theta_tol))
+    println("sidelength = ", sideLength * 1.47669196951425 * 6.6845871226706E-09, " AU")
+
+    # [A,B,C] will be the normal to the plane
+    A = baseVector[1] / norm(baseVector)
+    B = baseVector[2] / norm(baseVector)
+    C = baseVector[3] / norm(baseVector)
+
+    # square will be centered on (x_0, y_0, z_0) which is location of Proxima
+    x_0 = -9.90338347925777E+12
+    y_0 = -7.58520275447461E+12
+    z_0 = -2.41494965557852E+13
+
+    # select random point inside square and discard any that don't lie within the inscribed disk
+    x = 1
+    y = 1
+    while true
+        x = rand(Uniform(-sideLength, sideLength))
+        y = rand(Uniform(-sideLength, sideLength))
+        if norm([x, y]) <= sideLength
+            break
+        end
+    end
+    # translate random point to be inside square centered on Proxima
+    x += x_0
+    y += y_0
+
+    # find z such that (x,y,z) lies on the plane centered on Proxima and normal to baseVector
+    z = z_0 + (A * (x_0 - x) + B * (y_0 - y)) / C
+
+    # construct init velocity vector
+    init_vel = baseVector / norm(baseVector) * ProximaDistance + [x, y, z]
+
+    # make init velocity a unit vector
+    init_vel = init_vel / norm(init_vel)
+
+    # find angle between baseVector and init_vel
+    cosine_theta = dot(init_vel, baseVector) / norm(baseVector)     # init_vel already unit length
+    theta_rad = acos(cosine_theta)
+    theta_deg = rad2deg(theta_rad)
+
+    println(stderr, "For initial velocity ", init_vel, " angle with base vector is ", theta_deg)
+
+    return theta_deg, init_vel
+
+end
+
+function generateInitVelocityMonteCarloProxima(theta_tol, baseVector::RealVec)
+    println(stderr, "Finding initial velocity vector using Monte Carlo method with sphere around Proxima")
+
+    # adjust baseVector length to equal distance to Proxima in units of M (solar mass)
+    ProximaDistance = norm(   [-9.90338347925777E+12, -7.58520275447461E+12, -2.41494965557852E+13]    # Proxima pos from Kervella 2017
+                            - [-1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07]                # Spacechip pos (Moon dist (semimajor axis) from Earth in +y dir)
+                        ) 
+    baseVector = baseVector / norm(baseVector) * ProximaDistance
+
+    # compute side length of cube using theta_tol
+    sideLength = ProximaDistance * tan(deg2rad(theta_tol))
+    println("Sidelength = ", sideLength * 1.47669196951425 * 6.6845871226706E-09, " AU")
+
+    # select random point inside cube and discard any that don't lie within the inscribed sphere
+    x = 1
+    y = 1
+    z = 1
+    while true
+        x = rand(Uniform(-sideLength, sideLength))
+        y = rand(Uniform(-sideLength, sideLength))
+        z = rand(Uniform(-sideLength, sideLength))
+        if norm([x,y,z]) <= sideLength
+            break
+        end
+    end
+
+    # init velocity vector is baseVector plus random vector inside sphere
+    init_vel = baseVector + [x,y,z]
+
+    # make init velocity a unit vector
+    init_vel = init_vel / norm(init_vel)
+    
+    # find angle between baseVector and init_vel
+    cosine_theta = dot(init_vel, baseVector) / norm(baseVector)     # init_vel already unit length
+    theta_rad = acos(cosine_theta)
+    theta_deg = rad2deg(theta_rad)
+
+    println(stderr, "For initial velocity ", init_vel, " angle with base vector is ", theta_deg)
+
+    return theta_deg, init_vel
+end
+
+function generateInitVelocityMonteCarloLaunchPoint(theta_tol, baseVector::RealVec)
+    println(stderr, "Finding initial velocity vector using Monte Carlo method with sphere around launch point")
 
     # normalize baseVector
     baseVector = baseVector / norm(baseVector)
@@ -313,6 +571,7 @@ function generateInitVelocityBullseye(theta_tol, baseVector::RealVec)
     # populate "bullseye" (central circle)
     for j in 1:num_per_ring
         
+        # unfinished
 
     end
 
@@ -322,7 +581,7 @@ function generateInitVelocityBullseye(theta_tol, baseVector::RealVec)
         next_theta = theta_1 * sqrt(i)
         rand_theta = prev_theta + rand() * (next_theta - prev_theta)
 
-
+        # unfinished
     end
 
 end
@@ -414,7 +673,9 @@ end
 function testInitVector(theta_tol)
 
     
-    baseVector = Double64[-7.00365851051320E-02, -5.35052039083642E-02, -1.70575701379575E-01]
+    baseVector = Double64[-9.90338347925777E+12, -7.58520275447461E+12, -2.41494965557852E+13]    # Proxima pos from Kervella 2017
+                -Double64[-1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07]                  # Spacechip init pos (Moon dist (semimajor axis) from Earth in +y dir)
+
     # normalize baseVector
     baseVector = baseVector / norm(baseVector)
 
@@ -454,8 +715,8 @@ function testInitVector(theta_tol)
     N = 6
     theta_1 = theta_tol / sqrt(N)
     num_in_ring = zeros(N)
-    for i in 1:50
-        angle = generateInitVelocity(theta_tol,baseVector)[1]
+    for i in 1:1000
+        angle = generateInitVelocityDiskProxima(theta_tol, baseVector)[1]
         if angle <= theta_1
             num_in_ring[1] += 1
         else
