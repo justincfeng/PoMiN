@@ -95,6 +95,46 @@ function Ξabf( pa::RealVec, pb::RealVec )
 end #-------------------------------------------------------------------
 
 """
+    H3sym(ma,mb,psa,psb,Ena,Enb,rab,yba,yab,Θab,Θba,Ξab)
+
+Symmetric Hamiltonian term 3.
+"""
+function H3sym(ma,mb,psa,psb,Ena,Enb,rab,yba,yab,Θab,Θba,Ξab,νall)
+    ν0, ν1, ν2, ν3, ν4, ν5, ν6, ν7, ν8, ν9 = νall
+    if mb != ν0 && yba != ν0 && yba != -ν1
+        Hab = -(ν1/(ν4*rab*Ena*Enb*yba*(yba+ν1)^2)) * (
+                ν2 * ( ν2*Ξab^2*Θba^2 + ν2*Θab*Θba*Ξab*psb + 
+                        Θab^2*psb^2 - Ξab^2*psb ) /(Enb^2) +
+                ν2 * (-psa*Θba^2 + Θab^2*Θba^2 - ν2*Θab*Θba*Ξab + 
+                        Ξab^2 - Θab^2*psb) +
+                (   (-ν3*psa*Θba^2 + Θab^2*Θba^2 - ν8*Θab*Θba*Ξab + 
+                        psa*psb - ν3*Θab^2*psb) * yba)
+                )
+    else
+        Hab = (ν3*Enb*psb*Θab^2 - Enb*psa*(psb - ν3*Θba^2) + 
+               Enb*Θab*Θba*(-(Θab*Θba) + ν8*Ξab) + ν2*psa*psb*abs(Θba) -
+               ν2*psb*Θab^2*abs(Θba) - ν4*Ξab^2*abs(Θba)
+               ) / (ν4*Ena*rab*(Enb + abs(Θba))^2)
+    end
+    if ma != ν0 && yab != ν0 && yab != -ν1
+        Hba = -(ν1/(ν4*rab*Enb*Ena*yab*(yab+ν1)^2)) * (
+                ν2 * ( ν2*Ξab^2*Θab^2 + ν2*Θba*Θab*Ξab*psa + 
+                        Θba^2*psa^2 - Ξab^2*psa ) /(Ena^2) +
+                ν2 * (-psb*Θab^2 + Θba^2*Θab^2 - ν2*Θba*Θab*Ξab + 
+                        Ξab^2 - Θba^2*psa) +
+                (   (-ν3*psb*Θab^2 + Θba^2*Θab^2 - ν8*Θba*Θab*Ξab + 
+                        psb*psa - ν3*Θba^2*psa) * yab)
+                ) 
+    else
+        Hba = (ν3*Ena*psa*Θba^2 - Ena*psb*(psa - ν3*Θab^2) + 
+               Ena*Θba*Θab*(-(Θba*Θab) + ν8*Ξab) + ν2*psb*psa*abs(Θab) -
+               ν2*psa*Θba^2*abs(Θab) - ν4*Ξab^2*abs(Θab)
+               ) / (ν4*Enb*rab*(Ena + abs(Θab))^2)
+    end
+    return (Hab+Hba)/ν2
+end #-------------------------------------------------------------------
+
+"""
     H( Z::RealVec , m::RealVec , d::Int = 3 )
 
 Hamiltonian function. Returns the Hamiltonian for a system of particles
@@ -103,7 +143,9 @@ with masses ``m`` and positions ``Z``.
 function H( Z::RealVec , m::RealVec , d::Int = 3 )
     tpfl = typeof(Z[1])
 
-    ν0, ν1, ν2, ν3, ν4, ν5, ν6, ν7, ν8, ν9 = tpnum(tpfl)
+    νall = tpnum(tpfl)
+
+    ν0, ν1, ν2, ν3, ν4, ν5, ν6, ν7, ν8, ν9 = νall
 
     n = length(m)
 
@@ -124,42 +166,86 @@ function H( Z::RealVec , m::RealVec , d::Int = 3 )
 
         H0 += Ena
 
-        for b=1:n
-            if b!=a
-                qb = Z2q(n,d,b,Z)
-                pb = Z2p(n,d,b,Z)
+        for b=a+1:n
+            qb = Z2q(n,d,b,Z)
+            pb = Z2p(n,d,b,Z)
 
-                psb = psf(pb)
-                Enb = Enf(m[b],psb)
+            psb = psf(pb)
+            Enb = Enf(m[b],psb)
 
-                rab = rf(qa,qb)
-                yba = ybaf(m[b],qb,qa,pb)
-                Θab = Θabf(qa,qb,pa)
-                Θba = Θabf(qb,qa,pb)
-                Ξab = Ξabf(pa,pb)
+            rab = rf(qa,qb)
+            yba = ybaf(m[b],qb,qa,pb)
+            yab = ybaf(m[a],qa,qb,pa)
+            Θab = Θabf(qa,qb,pa)
+            Θba = Θabf(qb,qa,pb)
+            Ξab = Ξabf(pa,pb)
                 
-                H1 -= Ena*Enb*( ν1 + psa/(Ena^2) + psb/(Enb^2) )/(ν2*rab)
-                H2 += ( ν7*Ξab - Θab*Θba )/(ν4*rab)
+            H1 -= Ena*Enb*( ν1 + psa/(Ena^2) + psb/(Enb^2) )/(ν2*rab)
+            H2 += ( ν7*Ξab - Θab*Θba )/(ν4*rab)
 
-                if m[b] != ν0 && yba != ν0 && yba != -ν1
-                    # H3 massive case - corrected to match C implementation
-                    H3 -= (ν1/(ν4*rab*Ena*Enb*yba*(yba+ν1)^2)) * (
-                        ν2 * ( ν2*Ξab^2*Θba^2 + ν2*Θab*Θba*Ξab*psb + Θab^2*psb^2 - Ξab^2*psb ) /(Enb^2) +
-                        ν2 * (-psa*Θba^2 + Θab^2*Θba^2 - ν2*Θab*Θba*Ξab + Ξab^2 - Θab^2*psb) +
-                        ((-ν3*psa*Θba^2 + Θab^2*Θba^2 - ν8*Θab*Θba*Ξab + psa*psb - ν3*Θab^2*psb) * yba)
-                    )
-                else
-                    H3 += (ν3*Enb*psb*Θab^2 - Enb*psa*(psb - ν3*Θba^2) + 
-                           Enb*Θab*Θba*(-(Θab*Θba) + ν8*Ξab) + ν2*psa*psb*abs(Θba) - 
-                           ν2*psb*Θab^2*abs(Θba) - ν4*Ξab^2*abs(Θba)
-                           ) / (ν4*Ena*rab*(Enb + abs(Θba))^2)
-                end
-            end
+            H3 += H3sym(m[a],m[b],psa,psb,Ena,Enb,rab,yba,yab,Θab,Θba,
+                        Ξab,νall)
         end
     end
+    return H0+ν2*(H1+H2+H3)
+end #-------------------------------------------------------------------
 
-    return H0+H1+H2+H3
+"""
+    HT( ZT::RealVec , mT::RealVec , Z::RealVec , m::RealVec , 
+        d::Int = 3 )
 
+Hamiltonian function with test particles
+"""
+function HT( ZT::RealVec , mT::RealVec , Z::RealVec , m::RealVec , 
+             d::Int = 3 )
+    tpfl = typeof(Z[1])
+
+    νall = tpnum(tpfl)
+
+    ν0, ν1, ν2, ν3, ν4, ν5, ν6, ν7, ν8, ν9 = νall
+
+    nT = length(mT)
+    n = length(m)
+
+    qa, qb, pa, pb  = [zeros(tpfl,d) for _ = 1:4]
+
+    psa, psb, Ena, Enb  = [ν0 for _ = 1:4]
+
+    rab, yba, Θab, Θba, Ξab  = [ν0 for _ = 1:5]
+
+    H0, H1, H2, H3  = [ν0 for _ = 1:4]
+
+    for a=1:nT
+        qa = Z2q(nT,d,a,ZT)
+        pa = Z2p(nT,d,a,ZT)
+
+        psa = psf(pa)
+        Ena = Enf(mT[a],psa)
+
+        H0 += Ena
+
+        for b=1:n
+            qb = Z2q(n,d,b,Z)
+            pb = Z2p(n,d,b,Z)
+
+            psb = psf(pb)
+            Enb = Enf(m[b],psb)
+
+            rab = rf(qa,qb)
+            yba = ybaf(m[b],qb,qa,pb)
+            yab = ybaf(m[a],qa,qb,pa)
+            Θab = Θabf(qa,qb,pa)
+            Θba = Θabf(qb,qa,pb)
+            Ξab = Ξabf(pa,pb)
+                
+            H1 -= Ena*Enb*( ν1 + psa/(Ena^2) + psb/(Enb^2) )/(ν2*rab)
+            H2 += ( ν7*Ξab - Θab*Θba )/(ν4*rab)
+
+            H3 += H3sym(mT[a],m[b],psa,psb,Ena,Enb,rab,yba,yab,Θab,Θba,
+                        Ξab,νall)
+        end
+    end
+    return H0+ν2*(H1+H2+H3)
 end #-------------------------------------------------------------------
 
 """
