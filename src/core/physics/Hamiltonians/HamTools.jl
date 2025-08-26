@@ -76,6 +76,37 @@ function Part2Z( Part::Particles )
     end
 end #-------------------------------------------------------------------
 
+"""
+    CombineParticles2Z( Part1::Particles, Part2::Particles )
+
+This function combines two `Particles` datatypes into a single phase space vector.
+"""
+function CombineParticles2Z( Part1::Particles, Part2::Particles )
+    tpfl = typeof(Part1.q[1][1])
+    n1 = length(Part1.m)
+    n2 = length(Part2.m)
+    d = length(Part1.q[1])
+
+    if n1==length(Part1.p) && d==length(Part1.p[1]) && n2==length(Part2.p) && d==length(Part2.p[1])
+        Z = zeros(tpfl,2*(n1+n2)*d)
+            for i=1:n1
+                for j=1:d
+                    Z[d*(i-1)+j]   = Part1.q[i][j]
+                    Z[d*(i-1+n1)+j] = Part1.p[i][j]
+                end
+            end
+            for i=1:n2
+                for j=1:d
+                    Z[d*(i-1+n1)+j]   = Part2.q[i][j]
+                    Z[d*(i-1+n1+n2)+j] = Part2.p[i][j]
+                end
+            end
+        return Z
+    else
+        print("Inputs have inconsistent dimensionality \n")
+    end
+end #-------------------------------------------------------------------
+
 #-----------------------------------------------------------------------
 #   SYMPLECTIC OPERATOR
 #-----------------------------------------------------------------------
