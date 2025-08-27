@@ -10,7 +10,7 @@
 
 include("../pomin.jl")
 using .pomin
-using LinearAlgebra, Printf
+using LinearAlgebra, Printf, Plots
 
 # Precision options tested:
 # Float64    - Standard precision, works well
@@ -30,13 +30,16 @@ tpfl  = Double64
 
 # Import Z2q function from HamTools
 using .pomin: Z2q
+using .pomin: Z2Part
 
 println("=== 4-Body Closest Approach Calculation ===")
 println("Setting up particle system...")
 
+AU = tpfl(99731913.0);
+
 # Spacecraft (chip) parameters - increased from 1e-33 to 1e-8 for better numerical scaling
 # while still remaining a test particle (negligible compared to other masses)
-mchip = tpfl(1.0E-12)
+mchip = tpfl(1.0E-4)
 qchip = tpfl.([-1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07])
 # Momentum scaled by same factor as mass to preserve velocity
 pchip = mchip .* tpfl.([-7.443174824381408e-2, -5.690948861061366e-2, -1.8135019058747826e-1])
@@ -45,7 +48,7 @@ Pchip = pomin.setup_single_particle(mchip, qchip, pchip, tpfl)
 println("✓ Spacecraft particle created with mass: ", mchip)
 
 # Proxima Centauri parameters
-mProx = tpfl(0.1221*1e-14)
+mProx = tpfl(0.1221)
 qProx = tpfl.([-9.90338347925777E+12, -7.58520275447461E+12, -2.41494965557852E+13]) 
 pProx = mProx .* tpfl.([-3.34779933990201E-5, 7.24198145771899E-5, 6.82553747232694E-5])
 
@@ -71,9 +74,11 @@ pjup = tpfl.([0.0, 1.31E+4 * mjup, 0.0])  # Jupiter momentum (y-direction for ci
 Pjup = pomin.setup_single_particle(mjup, qjup, pjup, tpfl)
 println("✓ Jupiter particle created with mass: ", mjup)
 
-# Merge all particles into 4-body system
-P4body = pomin.merge_particle_systems(Pchip, PProx, Psol, Pjup)
-println("✓ 4-body system merged successfully (Spacecraft + Proxima + Sun + Jupiter)")
+# Merge heavy particles
+P3body = pomin.merge_particle_systems(PProx, Psol, Pjup)
+println("✓ 3-body system merged successfully (Proxima + Sun + Jupiter)")
+
+Ptest  = Pchip
 
 P2body = pomin.merge_particle_systems(Pchip, PProx)
 println("✓ 2-body system merged successfully (Spacecraft + Proxima)")
@@ -82,11 +87,11 @@ println("✓ 2-body system merged successfully (Spacecraft + Proxima)")
 tspan = (tpfl(0), tpfl(1.410E+14)) # 22 years
 δ = tpfl(7.31E+8) # about one hour
 
-params = pomin.ParametersJulia(tspan, integrator="Vern9", atol=tpfl(1e-22), rtol=tpfl(1e-22), Nrec=100)
+params = pomin.ParametersJulia(tspan, integrator="Vern9", atol=tpfl(1e-16), rtol=tpfl(1e-16), Nrec=100)
 println("✓ Integration parameters set: ", tspan[2]/1e14, " × 10^14 time units")
 
 println("\nStarting integration...")
-@time sol = pomin.solve(P4body, params)
+@time sol = pomin.solveT(P3body, params, Ptest)
 # @time sol = pomin.solve(P2body, params)
 println("✓ Integration completed with ", length(sol.t), " time steps")
 
@@ -97,28 +102,20 @@ minvec = zeros(tpfl, 3)
 min_time = tpfl(0.0)
 numsteps = length(sol.t)
 
-Npar = 4
-# Npar = 2
 
-for tn in 1:numsteps  # tn is timestep number
-    # get q vector for particle 1 (spacecraft) at timestep tn
-    q1 = Z2q(Npar, 3, 1, sol.u[tn])  # Npar particles, 3 dimensions, particle 1
-    # get q vector for particle 2 (Proxima Centauri) at timestep tn
-    q2 = Z2q(Npar, 3, 2, sol.u[tn])  # Npar particles, 3 dimensions, particle 2
-    # get distance and save it if it's the minimum distance
-    dist = norm(q1-q2)
-    if dist < mindist
-        global mindist = dist
-        global minvec = q1-q2
-        global min_time = sol.t[tn]
-    end
-end
+qtestFunc = t->sol(t)[19:21]
+qproxFunc = t->sol(t)[1:3]
 
-# Print results
-println("\n=== RESULTS ===")
-println("Minimum distance: ", mindist)
-println("Separation vector at closest approach: ", minvec)
-println("Time of closest approach: ", min_time)
-println("Closest approach in scientific notation: ", @sprintf("%.3e", mindist))
-println("=== END RESULTS ===")
+dq = t->norm(qtestFunc(t)-qproxFunc(t))/(AU)
 
+tend = sol.t[end]
+
+dq(0.9635391124 * tend)
+
+# dq = 1.28113381156829800727317956434636241e-01 AU @ mchip=1e-8, tol=1e-26
+# dq = 1.28113381156829809438081060116200672e-01 AU @ mchip=1e-6, tol=1e-20
+# dq = 1.28113381157121865267484762416170654e-01 AU @ mchip=1e-4, tol=1e-16
+
+# ----------------------------------------------------------------------
+
+plot(dq, zero(tpfl) , tend , label="Separation")
