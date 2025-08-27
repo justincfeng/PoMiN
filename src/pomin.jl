@@ -62,22 +62,56 @@ function solve(system::Particles, params::Parameters,
 
     if params.rkl
         # Use RK4 integrator
+        f = zx -> HamPM.Jsympl(HamPM.dH(zx,m,params.d)) + 
+                  HamPM.Jsympl(∂(Phi,zx))
         return hrkintegrator(params.d, length(m), z, 
-                           (Z) -> HamPM.dH(Z, m, params.d)+∂(Phi,Z),
+                           f,
                            params.δ,
                            params.tspan, params.iter,
-                           (dt, Z, Zdot) -> tcour(dt, Z, Zdot, params.courant, params.d),
+                           (dt, Z, Zdot) -> 
+                             tcour(dt, Z, Zdot, params.courant, params.d),
                            params.Nrec)
     else
         # Use Julia OrdinaryDiffEq.jl integrator
         return jlintegrator(z, 
                           (du, u, p, t) -> begin
-                              du .= HamPM.FHE(u, m, params.d) + 
+                              du .= HamPM.FHE_constructor(params.d)(u, m) + 
                                     HamPM.Jsympl(∂(Phi,u))
                           end,
                           params.tspan, m, params.atol, params.rtol,
                           eval(Symbol(params.integrator))(), params.Nrec)
     end
+end #-------------------------------------------------------------------
+
+function solveT(system::Particles, params::Parameters,systemT::Particles, 
+    Phi::Function=z->zero(typeof(z[1])))
+    m = system.m
+    z = vcat(system.q..., system.p...)
+    mT = systemT.m
+    zT = vcat(systemT.q..., systemT.p...)
+
+    zFull = vcat(z,zT)
+    mFull = vcat(m,mT)
+
+    if params.rkl
+        # Use RK4 integrator
+        f = HamPM.FHET_constructor( length(m), params.d )
+        return hrkintegrator(params.d, length(mFull), zFull, 
+                f,
+                params.δ,
+                params.tspan, params.iter,
+                (dt, Z, Zdot) -> 
+                  tcour(dt, Z, Zdot, params.courant, params.d),
+                params.Nrec)
+    else
+        # Use Julia OrdinaryDiffEq.jl integrator
+        return jlintegrator(zFull, 
+               (du, u, p, t) -> begin
+                   du .= HamPM.FHET_constructor(length(m),params.d)(u,p)
+               end,
+               params.tspan, mFull, params.atol, params.rtol,
+               eval(Symbol(params.integrator))(), params.Nrec)
+end
 end #-------------------------------------------------------------------
 
 # Types

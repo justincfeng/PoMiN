@@ -11,7 +11,8 @@ is the particle label.
 """
 function Z2q( n::Int , d::Int , i::Int , Z::RealVec )
     if i > n
-        error("In Z2q: particle number i=" * string(i) * " exceeds number of particles n=" * string(n))
+        error("In Z2q: particle number i=" * string(i) * 
+              " exceeds number of particles n=" * string(n))
     end
     tpfl = typeof(Z[1])
     q = zeros(tpfl,d)
@@ -31,7 +32,8 @@ is the particle label.
 """
 function Z2p( n::Int , d::Int , i::Int , Z::RealVec )
     if i > n
-        error("In Z2p: particle number i=" * string(i) * " exceeds number of particles n=" * string(n))
+        error("In Z2p: particle number i=" * string(i) * 
+              " exceeds number of particles n=" * string(n))
     end
     tpfl = typeof(Z[1])
     p = zeros(tpfl,d)
@@ -77,33 +79,49 @@ function Part2Z( Part::Particles )
 end #-------------------------------------------------------------------
 
 """
-    CombineParticles2Z( Part1::Particles, Part2::Particles )
+    Z2Part(Z::RealVec, m::RealVec, n::Int, d::Int)
 
-This function combines two `Particles` datatypes into a single phase space vector.
+This function converts a phase space vector `Z` into a `Particles` datatype
+with `n` particles and `d` dimensions. The masses are provided in `m`.
 """
-function CombineParticles2Z( Part1::Particles, Part2::Particles )
-    tpfl = typeof(Part1.q[1][1])
-    n1 = length(Part1.m)
-    n2 = length(Part2.m)
-    d = length(Part1.q[1])
-
-    if n1==length(Part1.p) && d==length(Part1.p[1]) && n2==length(Part2.p) && d==length(Part2.p[1])
-        Z = zeros(tpfl,2*(n1+n2)*d)
-            for i=1:n1
-                for j=1:d
-                    Z[d*(i-1)+j]   = Part1.q[i][j]
-                    Z[d*(i-1+n1)+j] = Part1.p[i][j]
-                end
+function Z2Part(Z::RealVec, m::RealVec, n::Int, d::Int)
+    tpfl = typeof(Z[1])
+    nF = length(m)
+    nZ = length(Z)
+    if nZ == 2*nF*d && nF == n
+        tpfl = typeof(Z[1])
+        q = [zeros(tpfl,d) for i=1:n]
+        p = [zeros(tpfl,d) for i=1:n]
+        for i=1:n
+            for j=1:d
+                q[i][j] = Z[d*(i-1)+j]
+                p[i][j] = Z[d*(i-1+n)+j]
             end
-            for i=1:n2
-                for j=1:d
-                    Z[d*(i-1+n1)+j]   = Part2.q[i][j]
-                    Z[d*(i-1+n1+n2)+j] = Part2.p[i][j]
-                end
+        end
+        return (Particles(m,q,p))
+    elseif nZ == 2*nF*d && n < nF
+        tpfl = typeof(Z[1])
+        nT   = nF-n
+        q    = [zeros(tpfl,d) for i=1:n]
+        p    = [zeros(tpfl,d) for i=1:n]
+        qT   = [zeros(tpfl,d) for i=1:nT]
+        pT   = [zeros(tpfl,d) for i=1:nT]
+        for i=1:n
+            for j=1:d
+                q[i][j] = Z[d*(i-1)+j]
+                p[i][j] = Z[d*(i-1+nF)+j]
             end
-        return Z
+        end
+        for i=1:nT
+            for j=1:d
+                qT[i][j] = Z[d*(i-1+n)+j]
+                pT[i][j] = Z[d*(i-1+n+nF)+j]
+            end
+        end
+        return (Particles(m[1:n],q,p),Particles(m[n+1:nF],qT,pT))
     else
-        print("Inputs have inconsistent dimensionality \n")
+        error("In Z2Part: invalid input dimensions")
+        return (Particles([],[],[]))
     end
 end #-------------------------------------------------------------------
 

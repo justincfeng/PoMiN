@@ -190,7 +190,7 @@ adapting the time step for stability and accuracy.
 Progress is printed to stderr every 1000 iterations for long
 integrations.
 """
-function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real, 
+function hrkintegrator(d::Int, N::Int, z0::RealVec, f::Function, δ::Real, 
                        tspan::Tuple{Real,Real}, maxit::Real, 
                        tadapt::Function=tnone, Nrec::Int=100)
     tpfl = typeof(z0[1])  # tpfl = type of data stored in z0
@@ -198,8 +198,6 @@ function hrkintegrator(d::Int, N::Int, z0::RealVec, dH::Function, δ::Real,
 
     # initialize soln data structure
     sol = soln(d,N,[tpfl(tspan[1])], [zi], [zi])
-
-    f = zx -> Jsympl(dH(zx))
     
     # Handle different Nrec cases
     if Nrec == -1

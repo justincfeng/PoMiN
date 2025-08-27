@@ -257,14 +257,54 @@ function dH( Z::RealVec , m::RealVec , d::Int = 3 )
     return ∂(x -> H(x, m, d), Z)
 end #-------------------------------------------------------------------
 
-# Right hand side of Hamilton's equations
 """
-    FHE( Z::RealVec , m::RealVec , d::Int = 3 )
+    dHT( ZT::RealVec , mT::RealVec , Z::RealVec , m::RealVec , 
+         d::Int = 3 )
 
-Right hand side of Hamilton's equations.
+Gradient of the Hamiltonian function with test particles.
 """
-FHE = (Z,m,d=3)->Jsympl(dH(Z,m,d))
-#-----------------------------------------------------------------------
+function dHT( ZT::RealVec , mT::RealVec , Z::RealVec , m::RealVec , 
+              d::Int = 3 )
+    return ∂(x -> HT(x, mT, Z, m, d), ZT)
+end #-------------------------------------------------------------------
+
+# Right hand side of Hamilton's equation constructor
+"""
+    FHE_constructor( d::Int = 3 )
+
+Right hand side of Hamilton's equation constructor.
+"""
+function FHE_constructor( d::Int = 3 )
+    return (Z,m)->Jsympl(dH(Z,m,d))
+end #-------------------------------------------------------------------
+
+# Right hand side of Hamilton's equation constructor
+"""
+    FHET_constructor( n::Int, nT::Int, d::Int = 3 )
+
+Right hand side of Hamilton's equation constructor for test particles.
+"""
+function FHET_constructor( n::Int, d::Int = 3 )
+    return function (u,p)
+            N  = length(p)
+            nZ = 2*n*d
+            nT = N - n  # Number of test particles
+            nZT = 2*nT*d  # Phase space size for test particles
+            if N == n && nZ == length(u)
+                # Only main particles, no test particles
+                return Jsympl(dH(u,p,d))
+            elseif N > n && (nZ + nZT) == length(u)
+                # Main particles + test particles
+                m=p[1:n]
+                mT=p[n+1:end]
+                Z = u[1:nZ]
+                ZT = u[nZ+1:end]
+                return vcat(Jsympl(dH(Z,m,d)),Jsympl(dHT(ZT,mT,Z,m,d)))
+            else
+                return 0 .* u
+            end
+    end
+end #-------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
 """
