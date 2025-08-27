@@ -119,3 +119,5 @@ dq(0.9635391124 * tend)
 # ----------------------------------------------------------------------
 
 plot(dq, zero(tpfl) , tend , label="Separation")
+
+plot(dq, 0.9635391122 * tend , 0.9635391126 * tend , label="Separation")
