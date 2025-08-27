@@ -79,12 +79,12 @@ function Part2Z( Part::Particles )
 end #-------------------------------------------------------------------
 
 """
-    Z2Part(Z::RealVec, m::RealVec, n::Int, d::Int)
+    Z2Part(Z::RealVec, m::RealVec, n::Int, d::Int=3)
 
 This function converts a phase space vector `Z` into a `Particles` datatype
 with `n` particles and `d` dimensions. The masses are provided in `m`.
 """
-function Z2Part(Z::RealVec, m::RealVec, n::Int, d::Int)
+function Z2Part(Z::RealVec, m::RealVec, n::Int, d::Int=3)
     tpfl = typeof(Z[1])
     nF = length(m)
     nZ = length(Z)
