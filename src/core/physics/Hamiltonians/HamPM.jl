@@ -165,7 +165,9 @@ function H( Z::RealVec , m::RealVec , d::Int = 3 )
         Ena = Enf(m[a],psa)
 
         H0 += Ena
-
+        
+        if n>1
+            
         for b=a+1:n
             qb = Z2q(n,d,b,Z)
             pb = Z2p(n,d,b,Z)
@@ -185,6 +187,12 @@ function H( Z::RealVec , m::RealVec , d::Int = 3 )
 
             H3 += H3sym(m[a],m[b],psa,psb,Ena,Enb,rab,yba,yab,Θab,Θba,
                         Ξab,νall)
+        end
+
+        else 
+           H1 = ν0
+           H2 = ν0 
+           H3 = ν0 
         end
     end
     return H0+ν2*(H1+H2+H3)
@@ -224,6 +232,7 @@ function HT( ZT::RealVec , mT::RealVec , Z::RealVec , m::RealVec ,
 
         H0 += Ena
 
+        if n>1
         for b=1:n
             qb = Z2q(n,d,b,Z)
             pb = Z2p(n,d,b,Z)
@@ -243,6 +252,11 @@ function HT( ZT::RealVec , mT::RealVec , Z::RealVec , m::RealVec ,
 
             H3 += H3sym(mT[a],m[b],psa,psb,Ena,Enb,rab,yba,yab,Θab,Θba,
                         Ξab,νall)
+        end
+        else 
+           H1 = ν0
+           H2 = ν0 
+           H3 = ν0 
         end
     end
     return H0+ν2*(H1+H2+H3)

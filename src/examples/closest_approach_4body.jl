@@ -39,7 +39,7 @@ AU = tpfl(99731913.0);
 
 # Spacecraft (chip) parameters - increased from 1e-33 to 1e-8 for better numerical scaling
 # while still remaining a test particle (negligible compared to other masses)
-mchip = tpfl(1.0E-4)
+mchip = tpfl(1.0E-30)
 qchip = tpfl.([-1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07])
 # Momentum scaled by same factor as mass to preserve velocity
 pchip = mchip .* tpfl.([-7.443174824381408e-2, -5.690948861061366e-2, -1.8135019058747826e-1])
@@ -92,6 +92,8 @@ println("✓ Integration parameters set: ", tspan[2]/1e14, " × 10^14 time units
 
 println("\nStarting integration...")
 @time sol = pomin.solveT(P3body, params, Ptest)
+
+@time sol = pomin.solveT(Psol, params, Ptest)
 # @time sol = pomin.solve(P2body, params)
 println("✓ Integration completed with ", length(sol.t), " time steps")
 
