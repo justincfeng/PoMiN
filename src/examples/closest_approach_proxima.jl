@@ -57,6 +57,25 @@ function basisconstructor(vp,vs)
 end #-------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
+function bconstructor(vecs,b,Θ)
+    Xpx0,Xst0,Vpx = vecs
+
+    tpfl = typeof(b)
+
+    ONE,TWO  = one(tpfl),tpfl(2)
+
+    ΔXp0  = Xst0 .- Xpx0
+
+    (epar,e1,e2) = basisconstructor(-ΔXp0,Vpx)
+
+    n = cos(Θ)*e1 + sin(Θ)*e2
+
+    φ = acos(b/norm(ΔXp0))
+
+    return b .* (cos(φ) .* epar + sin(φ) .* n)
+end #-------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
 function targprox(vecs,vst,bv)
     Xpx0,Xst0,Vpx = vecs
 
@@ -133,7 +152,7 @@ vst    = tpfl(0.2)*c         # Starchip velocity magnitude
 
 # Target
 b0     = 0.05*AU               # Target distance
-bv     = b0 .* vunit(rand(3))  # Target position
+bv     = bconstructor((Xpx0,Xst0,Vpx),b0,pi/3)
 
 ics    = targprox( (Xpx0,Xst0,Vpx) , vst , bv )
 pfs    = parfuncs(ics)
@@ -357,6 +376,7 @@ println("   Closest approach: ", @sprintf("%.6f", dist_SPJc), " AU")
 target_pos = XbF(tcl)
 target_dist = norm(target_pos - XpxF(tcl)) / AU
 
+
 # Extract spacecraft positions from solutions
 state_SO = solSO(tcl)
 state_SP = solSP(tcl)
@@ -368,11 +388,29 @@ q_spacecraft_SP = state_SP[13:15]
 q_spacecraft_SPJ = state_SPJ[19:21]
 q_spacecraft_SPJc = state_SPJc[19:21]
 
-# Calculate miss distances - spacecraft end position vs target position
-miss_SO = norm(q_spacecraft_SO - target_pos) / AU
-miss_SP = norm(q_spacecraft_SP - target_pos) / AU
-miss_SPJ = norm(q_spacecraft_SPJ - target_pos) / AU
-miss_SPJc = norm(q_spacecraft_SPJc - target_pos) / AU
+# Extract Proxima positions first
+q_proxima_SO = state_SO[10:12]  # Proxima as test particle in Sun-only case
+q_proxima_SP = state_SP[4:6]    # Proxima as main particle in Sun+Proxima case
+q_proxima_SPJ = state_SPJ[4:6]  # Proxima as main particle in Sun+Proxima+Jupiter case
+q_proxima_SPJc = state_SPJc[4:6]  # Proxima as main particle in Sun+Proxima+Jupiter (corrected) case
+
+# Compute actual target positions by adding bv to Proxima's end positions
+target_pos_SO = q_proxima_SO + bv
+target_pos_SP = q_proxima_SP + bv
+target_pos_SPJ = q_proxima_SPJ + bv
+target_pos_SPJc = q_proxima_SPJc + bv
+
+# Calculate miss distances - spacecraft end position vs flat-space target position
+miss_SO_flat = norm(q_spacecraft_SO - target_pos) / AU
+miss_SP_flat = norm(q_spacecraft_SP - target_pos) / AU
+miss_SPJ_flat = norm(q_spacecraft_SPJ - target_pos) / AU
+miss_SPJc_flat = norm(q_spacecraft_SPJc - target_pos) / AU
+
+# Calculate miss distances - spacecraft end position vs actual target positions (Proxima + bv)
+miss_SO_actual = norm(q_spacecraft_SO - target_pos_SO) / AU
+miss_SP_actual = norm(q_spacecraft_SP - target_pos_SP) / AU
+miss_SPJ_actual = norm(q_spacecraft_SPJ - target_pos_SPJ) / AU
+miss_SPJc_actual = norm(q_spacecraft_SPJc - target_pos_SPJc) / AU
 
 # Summary comparison
 println("\n" * "-"^50)
@@ -385,11 +423,17 @@ println("Sun + Proxima:      ", @sprintf("%.6f", dist_SP), " AU")
 println("Sun + Proxima + Jup:", @sprintf("%.6f", dist_SPJ), " AU")
 println("Sun + Prox + Jup (C):", @sprintf("%.6f", dist_SPJc), " AU")
 
-println("\nMiss distances (spacecraft position vs target):")
-println("Sun only:           ", @sprintf("%.6f", miss_SO), " AU")
-println("Sun + Proxima:      ", @sprintf("%.6f", miss_SP), " AU")
-println("Sun + Proxima + Jup:", @sprintf("%.6f", miss_SPJ), " AU")
-println("Sun + Prox + Jup (C):", @sprintf("%.6f", miss_SPJc), " AU")
+println("\nMiss distances (spacecraft vs flat-space target):")
+println("Sun only:           ", @sprintf("%.6f", miss_SO_flat), " AU")
+println("Sun + Proxima:      ", @sprintf("%.6f", miss_SP_flat), " AU")
+println("Sun + Proxima + Jup:", @sprintf("%.6f", miss_SPJ_flat), " AU")
+println("Sun + Prox + Jup (C):", @sprintf("%.6f", miss_SPJc_flat), " AU")
+
+println("\nMiss distances (spacecraft vs actual target = Proxima + bv):")
+println("Sun only:           ", @sprintf("%.6f", miss_SO_actual), " AU")
+println("Sun + Proxima:      ", @sprintf("%.6f", miss_SP_actual), " AU")
+println("Sun + Proxima + Jup:", @sprintf("%.6f", miss_SPJ_actual), " AU")
+println("Sun + Prox + Jup (C):", @sprintf("%.6f", miss_SPJc_actual), " AU")
 
 # Additional validation
 println("\nFlat-space validation:")
@@ -420,10 +464,6 @@ println("Sun + Prox + Jup (C):", @sprintf("%.6f", dev_SPJc), " AU")
 
 # Compare Proxima's final position with XpxF(tcl)
 println("\nProxima position comparison:")
-q_proxima_SO = state_SO[10:12]  # Proxima as test particle in Sun-only case
-q_proxima_SP = state_SP[4:6]    # Proxima as main particle in Sun+Proxima case
-q_proxima_SPJ = state_SPJ[4:6]  # Proxima as main particle in Sun+Proxima+Jupiter case
-q_proxima_SPJc = state_SPJc[4:6]  # Proxima as main particle in Sun+Proxima+Jupiter (corrected) case
 
 println("Flat-space prediction: ", XpxF(tcl) / AU, " AU")
 println("Sun only result:       ", q_proxima_SO / AU, " AU")
@@ -442,6 +482,26 @@ println("Sun only:           ", @sprintf("%.6f", prox_dev_SO), " AU")
 println("Sun + Proxima:      ", @sprintf("%.6f", prox_dev_SP), " AU")
 println("Sun + Proxima + Jup:", @sprintf("%.6f", prox_dev_SPJ), " AU")
 println("Sun + Prox + Jup (C):", @sprintf("%.6f", prox_dev_SPJc), " AU")
+
+# Additional analysis: Target position comparison
+println("\nTarget position comparison:")
+println("Flat-space target:      ", target_pos / AU, " AU")
+println("Sun only target:        ", target_pos_SO / AU, " AU")
+println("Sun+Proxima target:     ", target_pos_SP / AU, " AU")
+println("Sun+Proxima+Jup target: ", target_pos_SPJ / AU, " AU")
+println("Sun+Prox+Jup (C) target:", target_pos_SPJc / AU, " AU")
+
+# Target position deviations from flat-space
+target_dev_SO = norm(target_pos_SO - target_pos) / AU
+target_dev_SP = norm(target_pos_SP - target_pos) / AU
+target_dev_SPJ = norm(target_pos_SPJ - target_pos) / AU
+target_dev_SPJc = norm(target_pos_SPJc - target_pos) / AU
+
+println("\nTarget position deviation from flat-space:")
+println("Sun only:           ", @sprintf("%.6f", target_dev_SO), " AU")
+println("Sun + Proxima:      ", @sprintf("%.6f", target_dev_SP), " AU")
+println("Sun + Proxima + Jup:", @sprintf("%.6f", target_dev_SPJ), " AU")
+println("Sun + Prox + Jup (C):", @sprintf("%.6f", target_dev_SPJc), " AU")
 
 println("\n" * "="^70)
 
