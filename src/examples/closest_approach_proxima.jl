@@ -232,279 +232,150 @@ tols  = tpfl(1e-16)
 #-----------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
+# Target position
+q_target_pos_Flat = XbF(tcl)
+
+#-----------------------------------------------------------------------
 # SUN ONLY
 
-PintSO      = Psol
-PtestSO     = pomin.merge_particle_systems(Pchip,PProx)
+PintSO          = Psol
+PtestSO         = pomin.merge_particle_systems(Pchip,PProx)
 
-paramsSO    = pomin.ParametersJulia( tspan, integrator="Vern9", 
-                                     atol=tols, rtol=tols)
+paramsSO        = pomin.ParametersJulia( tspan, integrator="Vern9", 
+                                         atol=tols, rtol=tols)
 
-solSO       = pomin.solveT(PintSO, paramsSO, PtestSO)
+solSO           = pomin.solveT(PintSO, paramsSO, PtestSO)
 
-ZendSO      = solSO(tcl)
-
-# Debug Z2Part dimensions for Sun-only case
-println("=== DEBUG Z2Part for Sun-only case ===")
-println("ZendSO length: ", length(ZendSO))
-println("PintSO.m length: ", length(PintSO.m))
-println("PtestSO.m length: ", length(PtestSO.m))
-println("Expected main particle phase space: ", 2 * length(PintSO.m) * 3)
-println("Expected test particle phase space: ", 2 * length(PtestSO.m) * 3)
-println("Total expected: ", 2 * length(PintSO.m) * 3 + 2 * length(PtestSO.m) * 3)
-
-# Try to extract particles with corrected indexing
-try
-    PintendSO = Z2Part(ZendSO[1:6*length(PintSO.m)], PintSO.m, length(PintSO.m), 3)
-    PtestendSO = Z2Part(ZendSO[6*length(PintSO.m)+1:end], PtestSO.m, length(PtestSO.m), 3)
-    println("✓ Z2Part extraction successful for Sun-only case")
-catch e
-    println("✗ Z2Part extraction failed: ", e)
-end
+ZendSO          = solSO(tcl)
+q_spacecraft_SO = ZendSO[7:9]
+q_proxima_SO    = ZendSO[10:12] 
+q_target_pos_SO = q_proxima_SO + bv
+dist_prox_SO    = norm(q_spacecraft_SO - q_proxima_SO) / AU
+miss_SO         = norm(q_spacecraft_SO - q_target_pos_SO) / AU
+miss_SO_flat    = norm(q_spacecraft_SO - q_target_pos_Flat) / AU
+d_proxima_SO    = norm(q_proxima_SO - XpxF(tcl)) / AU
 
 #-----------------------------------------------------------------------
 # SUN + PROXIMA
 
-PintSP      = pomin.merge_particle_systems(Psol,PProx)
-PtestSP     = Pchip
+PintSP          = pomin.merge_particle_systems(Psol,PProx)
+PtestSP         = Pchip
 
-paramsSP    = pomin.ParametersJulia( tspan, integrator="Vern9", 
+paramsSP        = pomin.ParametersJulia( tspan, integrator="Vern9", 
                                      atol=tols, rtol=tols)
 
-solSP       = pomin.solveT(PintSP, paramsSP, PtestSP)
+solSP           = pomin.solveT(PintSP, paramsSP, PtestSP)
 
-ZendSP      = solSP(tcl)
-
-# Debug Z2Part dimensions for Sun+Proxima case
-println("\n=== DEBUG Z2Part for Sun+Proxima case ===")
-println("ZendSP length: ", length(ZendSP))
-println("PintSP.m length: ", length(PintSP.m))
-println("PtestSP.m length: ", length(PtestSP.m))
-println("Expected main particle phase space: ", 2 * length(PintSP.m) * 3)
-println("Expected test particle phase space: ", 2 * length(PtestSP.m) * 3)
-println("Total expected: ", 2 * length(PintSP.m) * 3 + 2 * length(PtestSP.m) * 3)
+ZendSP          = solSP(tcl)
+q_spacecraft_SP = ZendSP[13:15]
+q_proxima_SP    = ZendSP[4:6] 
+q_target_pos_SP = q_proxima_SP + bv
+dist_prox_SP    = norm(q_spacecraft_SP - q_proxima_SP) / AU
+miss_SP         = norm(q_spacecraft_SP - q_target_pos_SP) / AU
+miss_SP_flat    = norm(q_spacecraft_SP - q_target_pos_Flat) / AU
+d_proxima_SP    = norm(q_proxima_SP - XpxF(tcl)) / AU
 
 #-----------------------------------------------------------------------
 # SUN + PROXIMA + JUPITER
 
-PintSPJ     = pomin.merge_particle_systems(PintSP,Pjup)
-PtestSPJ    = Pchip
+PintSPJ         = pomin.merge_particle_systems(PintSP,Pjup)
+PtestSPJ        = Pchip
 
-paramsSPJ   = pomin.ParametersJulia( tspan, integrator="Vern9", 
+paramsSPJ       = pomin.ParametersJulia( tspan, integrator="Vern9", 
                                      atol=tols, rtol=tols)
 
-solSPJ      = pomin.solveT(PintSPJ, paramsSPJ, PtestSPJ)
+solSPJ          = pomin.solveT(PintSPJ, paramsSPJ, PtestSPJ)
 
-ZendSPJ     = solSPJ(tcl)
-
-# Debug Z2Part dimensions for Sun+Proxima+Jupiter case
-println("\n=== DEBUG Z2Part for Sun+Proxima+Jupiter case ===")
-println("ZendSPJ length: ", length(ZendSPJ))
-println("PintSPJ.m length: ", length(PintSPJ.m))
-println("PtestSPJ.m length: ", length(PtestSPJ.m))
-println("Expected main particle phase space: ", 2 * length(PintSPJ.m) * 3)
-println("Expected test particle phase space: ", 2 * length(PtestSPJ.m) * 3)
-println("Total expected: ", 2 * length(PintSPJ.m) * 3 + 2 * length(PtestSPJ.m) * 3)
+ZendSPJ         = solSPJ(tcl)
+q_spacecraft_SPJ = ZendSPJ[19:21]
+q_proxima_SPJ    = ZendSPJ[4:6] 
+q_target_pos_SPJ = q_proxima_SPJ + bv
+dist_prox_SPJ    = norm(q_spacecraft_SPJ - q_proxima_SPJ) / AU
+miss_SPJ         = norm(q_spacecraft_SPJ - q_target_pos_SPJ) / AU
+miss_SPJ_flat    = norm(q_spacecraft_SPJ - q_target_pos_Flat) / AU
+d_proxima_SPJ    = norm(q_proxima_SPJ - XpxF(tcl)) / AU
 
 #-----------------------------------------------------------------------
 # SUN + PROXIMA + JUPITER (CORRECTED)
 
-PintSPJc     = pomin.merge_particle_systems(PintSP,Pjup)
-PtestSPJc    = Pchipcorr
+## CORRECTION OBTAINED FROM:
+#   dxe = q_spacecraft_SPJ - target_pos
+#   δV  = (- dxe ./ tcl ) + Vst
 
-paramsSPJc   = pomin.ParametersJulia( tspan, integrator="Vern9", 
+# Momentum scaled by same factor as mass to preserve velocity
+pchipcorr = (mchip*γst) .* (Vst .+ (δV ./ γst ) )
+
+# Particle object for spacecraft
+Pchipcorr = pomin.setup_single_particle(mchip, qchip, pchipcorr, tpfl)
+
+PintSPJc        = pomin.merge_particle_systems(PintSP,Pjup)
+PtestSPJc       = Pchipcorr
+
+paramsSPJc      = pomin.ParametersJulia( tspan, integrator="Vern9", 
                                      atol=tols, rtol=tols)
 
-solSPJc      = pomin.solveT(PintSPJc, paramsSPJc, PtestSPJc)
+solSPJc         = pomin.solveT(PintSPJc, paramsSPJc, PtestSPJc)
 
-ZendSPJc     = solSPJc(tcl)
-
-# Debug Z2Part dimensions for Sun+Proxima+Jupiter case
-println("\n=== DEBUG Z2Part for Sun+Proxima+Jupiter case ===")
-println("ZendSPJc length: ", length(ZendSPJc))
-println("PintSPJc.m length: ", length(PintSPJc.m))
-println("PtestSPJc.m length: ", length(PtestSPJc.m))
-println("Expected main particle phase space: ", 2 * length(PintSPJc.m) * 3)
-println("Expected test particle phase space: ", 2 * length(PtestSPJc.m) * 3)
-println("Total expected: ", 2 * length(PintSPJc.m) * 3 + 2 * length(PtestSPJc.m) * 3)
+ZendSPJc        = solSPJc(tcl)
+q_spacecraft_SPJc = ZendSPJc[19:21]
+q_proxima_SPJc    = ZendSPJc[4:6] 
+q_target_pos_SPJc = q_proxima_SPJc + bv
+dist_prox_SPJc    = norm(q_spacecraft_SPJc - q_proxima_SPJc) / AU
+miss_SPJc         = norm(q_spacecraft_SPJc - q_target_pos_SPJc) / AU
+miss_SPJc_flat    = norm(q_spacecraft_SPJc - q_target_pos_Flat) / AU
+d_proxima_SPJc    = norm(q_proxima_SPJc - XpxF(tcl)) / AU
 
 #-----------------------------------------------------------------------
 #
 #   ANALYSIS AND RESULTS
+#
 #-----------------------------------------------------------------------
 
-println("\n" * "="^70)
-println("CLOSEST APPROACH ANALYSIS")
 println("="^70)
+println("4-BODY CLOSEST APPROACH CALCULATION RESULTS")
+println("="^70)
+println()
 
-# Function to calculate distance between spacecraft and Proxima
-function calc_distance(sol, t_eval, scenario)
-    state = sol(t_eval)
-    
-    if scenario == "SO"  # Sun only - both spacecraft and Proxima are test particles
-        q_spacecraft = state[7:9]   # First test particle (spacecraft)
-        q_proxima = state[10:12]    # Second test particle (Proxima)
-    elseif scenario == "SP"  # Sun + Proxima - spacecraft is test particle
-        q_spacecraft = state[13:15]  # Test particle (spacecraft)
-        q_proxima = state[4:6]       # Main particle (Proxima)
-    elseif scenario == "SPJ"  # Sun + Proxima + Jupiter - spacecraft is test particle
-        q_spacecraft = state[19:21]  # Test particle (spacecraft)
-        q_proxima = state[4:6]       # Main particle (Proxima)
-    end
-    
-    return norm(q_spacecraft - q_proxima) / AU
-end
+println("Target Parameters:")
+println("  Target distance from Proxima: $(b0/AU) AU")
+println("  Time to closest approach: $(tcl) (geometric units)")
+println("  Spacecraft velocity: $(vst) c")
+println()
 
-# Analyze each scenario
-println("\n1. SUN ONLY scenario:")
-dist_SO = calc_distance(solSO, tcl, "SO")
-println("   Closest approach: ", @sprintf("%.6f", dist_SO), " AU")
+println("Miss Distances (AU):")
+println("  Sun Only:")
+println("    Endpoint distance to Proxima (AU): $(dist_prox_SO)")
+println("    Miss from target (AU): $(miss_SO)")
+println("    Miss from flat space (AU): $(miss_SO_flat)")
+println("    Proxima deviation (AU): $(d_proxima_SO)")
+println()
 
-println("\n2. SUN + PROXIMA scenario:")
-dist_SP = calc_distance(solSP, tcl, "SP")
-println("   Closest approach: ", @sprintf("%.6f", dist_SP), " AU")
+println("  Sun + Proxima:")
+println("    Endpoint distance to Proxima (AU): $(dist_prox_SP)")
+println("    Miss from target (AU): $(miss_SP)")
+println("    Miss from flat space (AU): $(miss_SP_flat)")
+println("    Proxima deviation (AU): $(d_proxima_SP)")
+println()
 
-println("\n3. SUN + PROXIMA + JUPITER scenario:")
-dist_SPJ = calc_distance(solSPJ, tcl, "SPJ")
-println("   Closest approach: ", @sprintf("%.6f", dist_SPJ), " AU")
+println("  Sun + Proxima + Jupiter:")
+println("    Endpoint distance to Proxima (AU): $(dist_prox_SPJ)")
+println("    Miss from target (AU): $(miss_SPJ)")
+println("    Miss from flat space (AU): $(miss_SPJ_flat)")
+println("    Proxima deviation (AU): $(d_proxima_SPJ)")
+println()
 
-println("\n4. SUN + PROXIMA + JUPITER (CORRECTED) scenario:")
-dist_SPJc = calc_distance(solSPJc, tcl, "SPJ")  # Same indexing as SPJ
-println("   Closest approach: ", @sprintf("%.6f", dist_SPJc), " AU")
+println("  Sun + Proxima + Jupiter (Corrected):")
+println("    Endpoint distance to Proxima (AU): $(dist_prox_SPJc)")
+println("    Miss from target (AU): $(miss_SPJc)")
+println("    Miss from flat space (AU): $(miss_SPJc_flat)")
+println("    Proxima deviation (AU): $(d_proxima_SPJc)")
+println()
 
-# Compare with flat-space targeting solution
-target_pos = XbF(tcl)
-target_dist = norm(target_pos - XpxF(tcl)) / AU
+println("Gravitational Effects:")
+println("  Sun-only vs Flat space miss difference: $(abs(miss_SO_flat - miss_SO)) AU")
+println("  Sun+Proxima vs Sun-only miss difference: $(abs(miss_SP - miss_SO)) AU")
+println("  Sun+Proxima+Jupiter vs Sun+Proxima miss difference: $(abs(miss_SPJ - miss_SP)) AU")
+println("  Correction effectiveness: $(abs(miss_SPJc - miss_SPJ)) AU improvement")
+println()
 
-
-# Extract spacecraft positions from solutions
-state_SO = solSO(tcl)
-state_SP = solSP(tcl)
-state_SPJ = solSPJ(tcl)
-state_SPJc = solSPJc(tcl)
-
-q_spacecraft_SO = state_SO[7:9]
-q_spacecraft_SP = state_SP[13:15] 
-q_spacecraft_SPJ = state_SPJ[19:21]
-q_spacecraft_SPJc = state_SPJc[19:21]
-
-# Extract Proxima positions first
-q_proxima_SO = state_SO[10:12]  # Proxima as test particle in Sun-only case
-q_proxima_SP = state_SP[4:6]    # Proxima as main particle in Sun+Proxima case
-q_proxima_SPJ = state_SPJ[4:6]  # Proxima as main particle in Sun+Proxima+Jupiter case
-q_proxima_SPJc = state_SPJc[4:6]  # Proxima as main particle in Sun+Proxima+Jupiter (corrected) case
-
-# Compute actual target positions by adding bv to Proxima's end positions
-target_pos_SO = q_proxima_SO + bv
-target_pos_SP = q_proxima_SP + bv
-target_pos_SPJ = q_proxima_SPJ + bv
-target_pos_SPJc = q_proxima_SPJc + bv
-
-# Calculate miss distances - spacecraft end position vs flat-space target position
-miss_SO_flat = norm(q_spacecraft_SO - target_pos) / AU
-miss_SP_flat = norm(q_spacecraft_SP - target_pos) / AU
-miss_SPJ_flat = norm(q_spacecraft_SPJ - target_pos) / AU
-miss_SPJc_flat = norm(q_spacecraft_SPJc - target_pos) / AU
-
-# Calculate miss distances - spacecraft end position vs actual target positions (Proxima + bv)
-miss_SO_actual = norm(q_spacecraft_SO - target_pos_SO) / AU
-miss_SP_actual = norm(q_spacecraft_SP - target_pos_SP) / AU
-miss_SPJ_actual = norm(q_spacecraft_SPJ - target_pos_SPJ) / AU
-miss_SPJc_actual = norm(q_spacecraft_SPJc - target_pos_SPJc) / AU
-
-# Summary comparison
-println("\n" * "-"^50)
-println("COMPARISON SUMMARY:")
-println("-"^50)
-println("Target distance:     ", @sprintf("%.6f", b0/AU), " AU")
-println("Flat-space target:   ", @sprintf("%.6f", target_dist), " AU")
-println("Sun only:           ", @sprintf("%.6f", dist_SO), " AU")
-println("Sun + Proxima:      ", @sprintf("%.6f", dist_SP), " AU")
-println("Sun + Proxima + Jup:", @sprintf("%.6f", dist_SPJ), " AU")
-println("Sun + Prox + Jup (C):", @sprintf("%.6f", dist_SPJc), " AU")
-
-println("\nMiss distances (spacecraft vs flat-space target):")
-println("Sun only:           ", @sprintf("%.6f", miss_SO_flat), " AU")
-println("Sun + Proxima:      ", @sprintf("%.6f", miss_SP_flat), " AU")
-println("Sun + Proxima + Jup:", @sprintf("%.6f", miss_SPJ_flat), " AU")
-println("Sun + Prox + Jup (C):", @sprintf("%.6f", miss_SPJc_flat), " AU")
-
-println("\nMiss distances (spacecraft vs actual target = Proxima + bv):")
-println("Sun only:           ", @sprintf("%.6f", miss_SO_actual), " AU")
-println("Sun + Proxima:      ", @sprintf("%.6f", miss_SP_actual), " AU")
-println("Sun + Proxima + Jup:", @sprintf("%.6f", miss_SPJ_actual), " AU")
-println("Sun + Prox + Jup (C):", @sprintf("%.6f", miss_SPJc_actual), " AU")
-
-# Additional validation
-println("\nFlat-space validation:")
-println("Spacecraft at tcl:   ", XstF(tcl) / AU, " AU")
-println("Proxima at tcl:      ", XpxF(tcl) / AU, " AU") 
-println("Target point at tcl: ", target_pos / AU, " AU")
-
-# Compare actual spacecraft positions with flat-space prediction
-println("\nSpacecraft position comparison:")
-
-println("Flat-space prediction: ", XstF(tcl) / AU, " AU")
-println("Sun only result:       ", q_spacecraft_SO / AU, " AU")
-println("Sun+Proxima result:    ", q_spacecraft_SP / AU, " AU")
-println("Sun+Proxima+Jup result:", q_spacecraft_SPJ / AU, " AU")
-println("Sun+Prox+Jup (C) result:", q_spacecraft_SPJc / AU, " AU")
-
-# Distance from flat-space prediction
-dev_SO = norm(q_spacecraft_SO - XstF(tcl)) / AU
-dev_SP = norm(q_spacecraft_SP - XstF(tcl)) / AU
-dev_SPJ = norm(q_spacecraft_SPJ - XstF(tcl)) / AU
-dev_SPJc = norm(q_spacecraft_SPJc - XstF(tcl)) / AU
-
-println("\nDeviation from flat-space prediction:")
-println("Sun only:           ", @sprintf("%.6f", dev_SO), " AU")
-println("Sun + Proxima:      ", @sprintf("%.6f", dev_SP), " AU")
-println("Sun + Proxima + Jup:", @sprintf("%.6f", dev_SPJ), " AU")
-println("Sun + Prox + Jup (C):", @sprintf("%.6f", dev_SPJc), " AU")
-
-# Compare Proxima's final position with XpxF(tcl)
-println("\nProxima position comparison:")
-
-println("Flat-space prediction: ", XpxF(tcl) / AU, " AU")
-println("Sun only result:       ", q_proxima_SO / AU, " AU")
-println("Sun+Proxima result:    ", q_proxima_SP / AU, " AU")
-println("Sun+Proxima+Jup result:", q_proxima_SPJ / AU, " AU")
-println("Sun+Prox+Jup (C) result:", q_proxima_SPJc / AU, " AU")
-
-# Proxima deviation from flat-space prediction
-prox_dev_SO = norm(q_proxima_SO - XpxF(tcl)) / AU
-prox_dev_SP = norm(q_proxima_SP - XpxF(tcl)) / AU
-prox_dev_SPJ = norm(q_proxima_SPJ - XpxF(tcl)) / AU
-prox_dev_SPJc = norm(q_proxima_SPJc - XpxF(tcl)) / AU
-
-println("\nProxima deviation from flat-space prediction:")
-println("Sun only:           ", @sprintf("%.6f", prox_dev_SO), " AU")
-println("Sun + Proxima:      ", @sprintf("%.6f", prox_dev_SP), " AU")
-println("Sun + Proxima + Jup:", @sprintf("%.6f", prox_dev_SPJ), " AU")
-println("Sun + Prox + Jup (C):", @sprintf("%.6f", prox_dev_SPJc), " AU")
-
-# Additional analysis: Target position comparison
-println("\nTarget position comparison:")
-println("Flat-space target:      ", target_pos / AU, " AU")
-println("Sun only target:        ", target_pos_SO / AU, " AU")
-println("Sun+Proxima target:     ", target_pos_SP / AU, " AU")
-println("Sun+Proxima+Jup target: ", target_pos_SPJ / AU, " AU")
-println("Sun+Prox+Jup (C) target:", target_pos_SPJc / AU, " AU")
-
-# Target position deviations from flat-space
-target_dev_SO = norm(target_pos_SO - target_pos) / AU
-target_dev_SP = norm(target_pos_SP - target_pos) / AU
-target_dev_SPJ = norm(target_pos_SPJ - target_pos) / AU
-target_dev_SPJc = norm(target_pos_SPJc - target_pos) / AU
-
-println("\nTarget position deviation from flat-space:")
-println("Sun only:           ", @sprintf("%.6f", target_dev_SO), " AU")
-println("Sun + Proxima:      ", @sprintf("%.6f", target_dev_SP), " AU")
-println("Sun + Proxima + Jup:", @sprintf("%.6f", target_dev_SPJ), " AU")
-println("Sun + Prox + Jup (C):", @sprintf("%.6f", target_dev_SPJc), " AU")
-
-println("\n" * "="^70)
-
-## CORRECTION OBTAINED FROM:
-#   dxe = q_spacecraft_SPJ - target_pos
-#   δV  = (- dxe ./ tcl ) + Vst
+println("="^70)
