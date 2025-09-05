@@ -38,18 +38,18 @@ function γV2v(γV)
 end #-------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-function vunit(v)
+function vunit(v) # Returns unit vector in direction of v
     return v/norm(v)
 end #-------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-function uvproj(u,v)
+function uvproj(u,v) # Projects vector v onto vector u
     U = vunit(u)
     return v .- dot(U,v) .* U
 end #-------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-function basisconstructor(vp,vs)
+function basisconstructor(vp,vs) # Constructs basis from two vectors
     epar = vunit(vp)
     e1   = vunit(uvproj(vp,vs))
     e2   = vunit(cross(e1,epar))
@@ -57,7 +57,7 @@ function basisconstructor(vp,vs)
 end #-------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-function bconstructor(vecs,b,Θ)
+function bconstructor(vecs,b,Θ) # Returns displaced target position
     Xpx0,Xst0,Vpx = vecs
 
     tpfl = typeof(b)
@@ -76,7 +76,7 @@ function bconstructor(vecs,b,Θ)
 end #-------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-function targprox(vecs,vst,bv)
+function targprox(vecs,vst,bv) # Returns initial conditions for Starchip, Proxima, and q_target_pos_SPJc
     Xpx0,Xst0,Vpx = vecs
 
     tpfl = typeof(vst)
@@ -113,7 +113,7 @@ function targprox(vecs,vst,bv)
 end #-------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-function parfuncs(ics)
+function parfuncs(ics) # Returns functions for Starchip, Proxima, displaced Proxima, and time to closest approach
     Xpx0,Xpxb,Xst0,Vpx,Vst,tcl = ics
     return ( t->(Xst0 .+ (Vst .* t)) , t->(Xpx0 .+ (Vpx .* t)) , 
              t->(Xpxb .+ (Vpx .* t)) , tcl )
@@ -152,7 +152,7 @@ vst    = tpfl(0.2)*c         # Starchip velocity magnitude
 
 # Target
 b0     = 0.05*AU               # Target distance
-bv     = bconstructor((Xpx0,Xst0,Vpx),b0,pi/3)
+bv     = bconstructor((Xpx0,Xst0,Vpx),b0,pi/3) # Target displacement from Proxima
 
 ics    = targprox( (Xpx0,Xst0,Vpx) , vst , bv )
 pfs    = parfuncs(ics)
@@ -160,6 +160,13 @@ pfs    = parfuncs(ics)
 XstF,XpxF,XbF,tcl = pfs
 
 Xpx0,Xpxb,Xst0,Vpx,Vst,tcl = ics
+
+# Modify Vst to vary starchip velocity
+
+# pfs[1] is the Starchip position as a function of time
+# pfs[2] is the Proxima position as a function of time
+# pfs[3] is the displaced target position as a function of time
+# pfs[4] is the time to closest approach 
 
 #-----------------------------------------------------------------------
 #   INITIAL DATA SETUP FOR SPACECRAFT
@@ -269,6 +276,7 @@ solSP           = pomin.solveT(PintSP, paramsSP, PtestSP)
 ZendSP          = solSP(tcl)
 q_spacecraft_SP = ZendSP[13:15]
 q_proxima_SP    = ZendSP[4:6] 
+
 q_target_pos_SP = q_proxima_SP + bv
 dist_prox_SP    = norm(q_spacecraft_SP - q_proxima_SP) / AU
 miss_SP         = norm(q_spacecraft_SP - q_target_pos_SP) / AU
@@ -345,6 +353,7 @@ println()
 println("Miss Distances (AU):")
 println("  Sun Only:")
 println("    Endpoint distance to Proxima (AU): $(dist_prox_SO)")
+println("    Proxima position  (AU): $(dist_prox_SO)")
 println("    Miss from target (AU): $(miss_SO)")
 println("    Miss from flat space (AU): $(miss_SO_flat)")
 println("    Proxima deviation (AU): $(d_proxima_SO)")

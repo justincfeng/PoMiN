@@ -50,7 +50,7 @@ function ΦMilkyWay( tpfl::Type=Double64 ,
                 origin_z =tpfl(4.346342845091530E+14), r_sun=tpfl(8.4), 
                 Mb=tpfl(409), Md=tpfl(2856), Mh=tpfl(1018), 
                 b_b=tpfl(0.23), a_d=tpfl(4.22), b_d=tpfl(0.292), 
-                a_h=tpfl(2.562), Λ=tpfl(100), γ=tpfl(2.02),d::Int=3 )
+                a_h=tpfl(2.562), Λ=tpfl(100), γ=tpfl(2.0),d::Int=3 )
     # (origin_x, origin_y, origin_z) is the location (in units of Msol)
     # in the galactocentric frame where the simulation's origin is
     # placed it defaults to the location of the Sun as given by astropy
