@@ -65,7 +65,7 @@ function ΦMilkyWay( tpfl::Type=Double64 ,
     #   a_d = 4.22 kpc        length scale disk #1
     #   b_d = 0.292 kpc       length scale disk #2
     #   a_h = 2.562 kpc       length scale halo
-    #   Λ = 200 kpc           halo cutoff parameter
+    #   Λ = 200 kpc           halo cutoff parameterS
     #   γ = 2                 free parameter
 
     Mgal = tpfl(2.325e7)            # mass of the Milky Way in Msol
@@ -75,12 +75,12 @@ function ΦMilkyWay( tpfl::Type=Double64 ,
         ν1 = tpfl(1)
         function Φ(x::RealVec)
                 X  = x .+ [origin_x, origin_y, origin_z]  # Remove type conversion for ForwardDiff compatibility
-                R     = norm(X)*kpc
-                r     = sqrt(X[1]^2 + X[2]^2)*kpc
-                z     = X[3]*kpc
-                PHI_b = -Mb/sqrt(R^2+b_b^2)
-                PHI_d = -Md/sqrt(r^2 + (a_d + sqrt(z^2 + b_d^2))^2)
-                PHI_h = (Mh/a_h) * 
+                R     = norm(X)/kpc
+                r     = sqrt(X[1]^2 + X[2]^2)/kpc
+                z     = X[3]/kpc
+                PHI_b = -Mgal*Mb/sqrt(R^2+b_b^2)
+                PHI_d = -Mgal*Md/sqrt(r^2 + (a_d + sqrt(z^2 + b_d^2))^2)
+                PHI_h = (Mgal*Mh/a_h) * 
                     ( 
                      (ν1/(γ-ν1))*
                      log((ν1 + (R/a_h)^(γ-ν1))/
