@@ -293,3 +293,127 @@ function setup_scattering(m1::Real, m2::Real, p::Real, b::Real, dx::Real; c::Rea
     
     return system
 end #-------------------------------------------------------------------
+
+"""
+    generateUnitVectorWithinToleranceAngle(theta_tol, startPt::RealVec, target::RealVec, tpfl::Type=Float64)
+
+Generates random unit vector that points from startPt to target within a given tolerance angle
+
+Arguments:
+- theta_tol: Tolerance angle.  Generated unit vector will be within this angle of the vector pointing at target
+- startPt: Starting point for unit vector that points at target
+- target: Location of target
+- tpfl: Type for floating-point numbers (default: Float64)
+
+Returns the angle between the the unit vector and target, as well as the unit vector
+"""
+function generateUnitVectorWithinToleranceAngle(theta_tol, startPt::RealVec, target::RealVec, tpfl::Type=Float64)
+    
+    println("\nGenerating initial unit vector")
+
+    baseVector = target - startPt
+    targetDistance = norm(baseVector)
+    diskRadius = targetDistance * tpfl(tan(deg2rad(theta_tol)))
+    println("target distance = ", targetDistance * 1.47669196951425 * 6.6845871226706E-09, " AU")
+    println("disk Radius = ", diskRadius * 1.47669196951425 * 6.6845871226706E-09, " AU")
+
+    U = baseVector / norm(baseVector)
+
+    v = nothing
+    while true
+        # generate vector that is linearly independent of U
+        Y = [rand(tpfl), rand(tpfl), rand(tpfl)]
+        # ensure Y is not collinear with U
+        while abs(dot(U, Y) / (norm(U) * norm(Y))) == 1
+            Y = [rand(tpfl), rand(tpfl), rand(tpfl)]
+        end
+
+        # make a vector v that is orthogonal to U by subtracting the part of Y that is parallel to U
+        a = dot(Y, U) / norm(U)^2
+        v = Y - a * U
+        println(stderr, "dot(v,U) = ", dot(v, U))
+
+        # ensure v and U are orthogonal, otherwise repeat
+        if dot(v, U) == 0
+            break
+        end
+    end
+
+    # find a vector w that's orthogonal to U and v
+    w = cross(U, v)
+
+    # scale v and w to match the disk radius
+    V = v / norm(v) * diskRadius
+    W = w / norm(w) * diskRadius
+
+    # are U, V, and W all mutually orthogonal?
+    println(stderr, "U dot V = ", dot(U, V))
+    println(stderr, "U dot W = ", dot(U, W))
+    println(stderr, "V dot W = ", dot(V, W))
+
+    # generate random point (x,y) in the unit disk
+    x = nothing
+    y = nothing
+    while true
+        x = rand(tpfl)
+        y = rand(tpfl)
+        if norm([x, y]) <= 1
+            break
+        end
+    end
+
+    # construct vector Z in the disk centered on target
+    Z = x * V + y * W
+
+    # construct init vector via vector addition of U that reaches target plus Z
+    init_vec = U * targetDistance + Z
+
+    # make init_vec a unit vector
+    unit_vec = init_vec / norm(init_vec)
+
+    # find angle between baseVector and init_vel
+    cosine_theta = dot(unit_vec, baseVector) / norm(baseVector)     # init_vel already unit length
+    theta_rad = acos(cosine_theta)
+    theta_deg = rad2deg(theta_rad)
+
+    println(stderr, "For unit vector ", unit_vec, " angle with base vector is ", theta_deg)
+
+    return theta_deg, unit_vec
+
+end
+
+"""
+    testInitVectorsForUniformity(theta_tol, N)
+
+Tests random initial vector generation for uniformity.  It does this by taking a target disk and dividing
+    it into N rings of equal area, then counts how many initial vectors pierce each ring.  
+    The total number of vectors is 1000.
+    If it's uniform, the output should be a roughly equal number of vectors piercing each ring.
+
+"""
+function testInitVectorsForUniformity(theta_tol, N=6)
+
+    startPt = Double64[-1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07]  # Spacechip init pos (Moon dist (semimajor axis) from Earth in +y dir)
+    target = Double64[-9.90338347925777E+12, -7.58520275447461E+12, -2.41494965557852E+13] # Proxima pos from Kervella 2017
+
+    # test for uniformity
+
+    theta_1 = theta_tol / sqrt(N)
+    num_in_ring = zeros(N)
+    for i in 1:1000
+        angle = generateUnitVectorWithinToleranceAngle(theta_tol, startPt, target, Double64)[1]
+        if angle <= theta_1
+            num_in_ring[1] += 1
+        else
+            for j in 2:N
+                theta_next = theta_1 * sqrt(j)
+                if angle <= theta_next
+                    num_in_ring[j] += 1
+                    break
+                end
+            end
+        end
+    end
+    println(num_in_ring)
+
+end
