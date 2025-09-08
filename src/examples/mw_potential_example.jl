@@ -84,8 +84,8 @@ energy_variation = (total_energy .- total_energy[1]) ./
 println("Energy conservation: max variation = 
         $(round(maximum(abs.(energy_variation)) * 100, digits=6))%")
 
-println("Average speed of Sun = 
-        $(round(mean([norm(vs(t)) for t in times]) * 100, digits=6))%")
+println("Average speed of Sun in (km/s) = 
+        $(round(mean([norm(vs(t))/km_s for t in times]), digits=6))")
 
 # Plots
 p1 = plot(x_traj ./ kpc, y_traj ./ kpc, 
