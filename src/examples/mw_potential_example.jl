@@ -1,4 +1,6 @@
 
+#-----------------------------------------------------------------------
+
 
 using DoubleFloats
 using LinearAlgebra
@@ -57,7 +59,7 @@ function milky_way_orbit_parameters(V_potential)
 end
 
 # Use the corrected Milky Way potential with origin at (0,0,0)
-V = ΦMilkyWay(Double64, 0.0, 0.0, 0.0)  # Place galactic center at coordinate origin
+V = ΦMilkyWay(Double64, [0.0, 0.0, 0.0])  # Place galactic center at coordinate origin
 
 # Get solar orbital parameters using the MW potential
 r_sun, v_circ, T_orbit, kpc, km_s = milky_way_orbit_parameters(V)
@@ -135,17 +137,19 @@ scatter!(p1, [0], [0],
          color=:black, 
          markershape=:star)
 
-# 2. Orbital radius vs time
-p2 = plot(sol.t ./ T_orbit, orbital_radius ./ kpc,
-          label="Orbital Radius",
+# 2. Orbital radius vs time - relative difference from initial
+initial_radius = orbital_radius[1]
+relative_radius_diff = (orbital_radius .- initial_radius) ./ initial_radius
+p2 = plot(sol.t ./ T_orbit, relative_radius_diff,
+          label="Relative Radius Difference",
           linewidth=2,
           color=:blue,
-          title="Orbital Radius vs Time",
-          xlabel="Time (orbital periods)", ylabel="Radius (kpc)")
+          title="Orbital Radius Variation vs Time",
+          xlabel="Time (orbital periods)", ylabel="(R - R₀) / R₀")
 
-# Add expected radius line
-hline!(p2, [r_sun / kpc], 
-       label="Expected Radius (8.4 kpc)", 
+# Add zero line for reference
+hline!(p2, [0.0], 
+       label="Initial Radius", 
        linestyle=:dash, 
        color=:red, 
        linewidth=2)

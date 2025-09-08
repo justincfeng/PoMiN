@@ -151,7 +151,7 @@ params_custom = Parameters(d=2, δ=0.001, rkl=true, courant=0.0005,
 """
 function Parameters(; d::Int=3, δ::Real=0.01, rkl::Bool=false, 
                    courant::Real=0.001, Nrec::Int=100, 
-                   integrator::String="Tsit5", atol::Real=1e-10, rtol::Real=1e-10,
+                   integrator::String="Vern8", atol::Real=1e-14, rtol::Real=1e-14,
                    tspan::Tuple{Real,Real}=(0.0, 10.0), iter::Int=10000)
     
     return Parameters(d, δ, rkl, courant, Nrec, integrator, atol, rtol, tspan, iter)
@@ -208,8 +208,8 @@ Convenience constructor for Julia OrdinaryDiffEq.jl integrators with sensible de
 params = ParametersJulia((0.0, 50.0), integrator="Vern7", atol=1e-12)
 ```
 """
-function ParametersJulia(tspan::Tuple{Real,Real}; atol::Real=1e-10, rtol::Real=1e-10,
-                         integrator::String="Tsit5", kwargs...)
+function ParametersJulia(tspan::Tuple{Real,Real}; atol::Real=1e-14, rtol::Real=1e-14,
+                         integrator::String="Vern8", kwargs...)
     return Parameters(; tspan=tspan, rkl=false, atol=atol, rtol=rtol, integrator=integrator, kwargs...)
 end
 
