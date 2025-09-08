@@ -84,7 +84,7 @@ function solve(system::Particles, params::Parameters,
 end #-------------------------------------------------------------------
 
 function solveT(system::Particles, params::Parameters,systemT::Particles, 
-    Phi::Function=z->zero(typeof(z[1])))
+    U::Function=z->zero(typeof(z[1])))
     m = system.m
     z = vcat(system.q..., system.p...)
     mT = systemT.m
@@ -95,7 +95,7 @@ function solveT(system::Particles, params::Parameters,systemT::Particles,
 
     if params.rkl
         # Use RK4 integrator
-        f = HamPM.FHET_constructor( length(m), params.d )
+        f = HamPM.FHET_constructor( length(m), params.d , U )
         return hrkintegrator(params.d, length(mFull), zFull, 
                 f,
                 params.δ,
@@ -107,7 +107,7 @@ function solveT(system::Particles, params::Parameters,systemT::Particles,
         # Use Julia OrdinaryDiffEq.jl integrator
         return jlintegrator(zFull, 
                (du, u, p, t) -> begin
-                   du .= HamPM.FHET_constructor(length(m),params.d)(u,p)
+                   du .= HamPM.FHET_constructor(length(m),params.d,U)(u,p)
                end,
                params.tspan, mFull, params.atol, params.rtol,
                eval(Symbol(params.integrator))(), params.Nrec)
