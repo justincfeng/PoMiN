@@ -3,6 +3,7 @@
 using DoubleFloats
 using LinearAlgebra
 using Printf, Plots
+using Statistics
 
 # Include the necessary PoMiN modules
 include("../pomin.jl")
@@ -84,7 +85,7 @@ println("Energy conservation: max variation =
         $(round(maximum(abs.(energy_variation)) * 100, digits=6))%")
 
 println("Average speed of Sun = 
-        $(round(mean(abs.(vs(times))) * 100, digits=6))%")
+        $(round(mean([norm(vs(t)) for t in times]) * 100, digits=6))%")
 
 # Plots
 p1 = plot(x_traj ./ kpc, y_traj ./ kpc, 
