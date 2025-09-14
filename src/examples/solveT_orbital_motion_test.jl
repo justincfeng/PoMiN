@@ -22,39 +22,38 @@ include("../core/physics/external_potentials/external.jl")
 #   CONSTANTS AND PARAMETERS
 #-----------------------------------------------------------------------
 
-# Central mass (at origin)
-M_central = tpfl(1.0)  # Solar mass units
+# Massive interacting particle
+M_massive = tpfl(1.0)   # Massive particle mass
 
-# Particle masses (equal)
-m_particle = tpfl(1e-6)  # Small test masses
+# Test particle mass
+m_test = tpfl(1e-6)     # Small test mass
 
-# Initial positions (opposite sides of central mass)
-r0 = tpfl(5e8)  # Distance from center in AU
-q_main = [r0, tpfl(0.0), tpfl(0.0)]      # Main particle at +x
-q_test = [-r0, tpfl(0.0), tpfl(0.0)]     # Test particle at -x
+# Initial positions
+Rs = 2 * M_massive      # Schwarzschild radius
+r0 = tpfl(1e6) * Rs     # ~1 million Schwarzschild radii
+q_main = [tpfl(0.0), tpfl(0.0), tpfl(0.0)]  # Massive particle at origin
+q_test = [r0, tpfl(0.0), tpfl(0.0)]         # Test particle at distance r0
 
-# Circular orbital velocities
-v_circular = sqrt(M_central / r0)  # Circular velocity
-p_main = [tpfl(0.0), m_particle * v_circular, tpfl(0.0)]   # +y momentum
-p_test = [tpfl(0.0), -m_particle * v_circular, tpfl(0.0)]  # -y momentum
+# Circular orbital velocity for test particle
+v_circular = sqrt(M_massive / r0)  # Circular velocity around massive particle
+p_main = [tpfl(0.0), tpfl(0.0), tpfl(0.0)]                    # Massive particle at rest
+p_test = [tpfl(0.0), m_test * v_circular, tpfl(0.0)]          # Test particle with circular velocity
 
-# Main particle system (interacts gravitationally)
-PintMain = pomin.setup_single_particle(m_particle, q_main, p_main, tpfl)
+# Massive interacting particle system
+PintMain = pomin.setup_single_particle(M_massive, q_main, p_main, tpfl)
 
 # Test particle system (feels forces but doesn't exert them)
-PtestTest = pomin.setup_single_particle(m_particle, q_test, p_test, tpfl)
-
-# Central gravitational potential at origin
-Φ_central = ΦCentralMass([tpfl(0.0), tpfl(0.0), tpfl(0.0)], tpfl, M_central)
+PtestTest = pomin.setup_single_particle(m_test, q_test, p_test, tpfl)
 
 # One orbital period for comparison
-T_orbit = 2*π*sqrt(r0^3/M_central)
+T_orbit = 2*π*sqrt(r0^3/M_massive)
 tspan = (tpfl(0.0), T_orbit)
 tols = tpfl(1e-12)
 
-params = pomin.ParametersJulia(tspan, integrator="Vern9", atol=tols, rtol=tols)
+params = pomin.ParametersJulia(tspan, integrator="Vern9", 
+                               atol=tols, rtol=tols)
 
-sol_central = pomin.solveT(PintMain, params, PtestTest, Φ_central)
+sol_central = pomin.solveT(PintMain, params, PtestTest)
 
 # Final positions
 Z_central = sol_central(T_orbit)
@@ -90,18 +89,12 @@ plot!(p1, x_test, y_test,
       label="Test Particle", color=:red, linewidth=2)
 
 # Mark central mass and initial positions
-scatter!(p1, [0], [0], label="Central Mass", color=:black, markersize=8, markershape=:star)
-scatter!(p1, [q_main[1]], [q_main[2]], label="Initial Positions", color=:green, markersize=6)
-scatter!(p1, [q_test[1]], [q_test[2]], label="", color=:green, markersize=6)
-
-# Energy conservation check
-E_initial = 0.5 * m_particle * v_circular^2 - M_central * m_particle / r0
-v_main_final = norm(Z_central[4:6]) / m_particle
-r_main_final = norm(q_main_final)
-E_final = 0.5 * m_particle * v_main_final^2 - M_central * m_particle / r_main_final
-energy_error = abs(E_final - E_initial)/abs(E_initial) * 100
-
-println("  Energy conservation: $(energy_error)%")
+scatter!(p1, [0], [0], label="Central Mass", color=:black, 
+            markersize=8, markershape=:star)
+scatter!(p1, [q_main[1]], [q_main[2]], label="Initial Positions", 
+            color=:green, markersize=6)
+scatter!(p1, [q_test[1]], [q_test[2]], label="", color=:green, 
+            markersize=6)
 
 # Display and save plot
 display(p1)

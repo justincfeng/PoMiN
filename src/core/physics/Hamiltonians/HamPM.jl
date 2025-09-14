@@ -233,7 +233,7 @@ function HT( ZT::RealVec , mT::RealVec , Z::RealVec , m::RealVec ,
 
         H0 += Ena
 
-        if n>1
+        if n>0
         for b=1:n
             qb = Z2q(n,d,b,Z)
             pb = Z2p(n,d,b,Z)
