@@ -124,7 +124,7 @@ Xpx0 = tpfl.([-9.90338347925777E+12, -7.58520275447461E+12, -2.41494965557852E+1
 Vpx  = γV2v(γVpx)
 
 # Starchip
-Xst0   = tpfl.([-1.8667826140E+07, 8.9894055560E+07, 3.8883291714E+07])
+Xst0 = tpfl.([-2.235888445902370E+07, 8.680664864663420E+07, 2.988257878660500E+07]) # 0.1 AU from Earth, in direction of Proxima's init pos
 vst    = tpfl(0.2)*c         # Starchip velocity magnitude
 
 # Target
