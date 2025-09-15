@@ -41,6 +41,7 @@ u_total = γ .* v_total
 Φ = ΦMilkyWay(tpfl, xo)
 
 T_orbit = tpfl(2*π) * norm(xo) / norm(v_total)
+println("Sun orbital period (in units of solar masses) = ",T_orbit)
 
 # Solar mass only
 M_sun = one(tpfl)   # Solar mass in solar mass units

@@ -331,7 +331,7 @@ function generateUnitVectorWithinToleranceAngle(theta_tol, startPt::RealVec, tar
         # make a vector v that is orthogonal to U by subtracting the part of Y that is parallel to U
         a = dot(Y, U) / norm(U)^2
         v = Y - a * U
-        println(stderr, "dot(v,U) = ", dot(v, U))
+        # println(stderr, "dot(v,U) = ", dot(v, U))
 
         # ensure v and U are orthogonal, otherwise repeat
         if dot(v, U) == 0
@@ -347,9 +347,9 @@ function generateUnitVectorWithinToleranceAngle(theta_tol, startPt::RealVec, tar
     W = w / norm(w) * diskRadius
 
     # are U, V, and W all mutually orthogonal?
-    println(stderr, "U dot V = ", dot(U, V))
-    println(stderr, "U dot W = ", dot(U, W))
-    println(stderr, "V dot W = ", dot(V, W))
+    # println(stderr, "U dot V = ", dot(U, V))
+    # println(stderr, "U dot W = ", dot(U, W))
+    # println(stderr, "V dot W = ", dot(V, W))
 
     # generate random point (x,y) in the unit disk
     x = nothing
