@@ -243,7 +243,7 @@ function HT( ZT::RealVec , mT::RealVec , Z::RealVec , m::RealVec ,
 
             rab = rf(qa,qb)
             yba = ybaf(m[b],qb,qa,pb)
-            yab = ybaf(m[a],qa,qb,pa)
+            yab = ybaf(mT[a],qa,qb,pa)
             Θab = Θabf(qa,qb,pa)
             Θba = Θabf(qb,qa,pb)
             Ξab = Ξabf(pa,pb)
