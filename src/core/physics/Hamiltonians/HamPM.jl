@@ -11,6 +11,7 @@ using ForwardDiff
     
 # Include type definitions first
 include("../../pomin-types.jl")
+include("../external_potentials/external.jl")
 include("HamTools.jl")
 
 # These functions compute scalar quantities that make up the Hamiltonian
@@ -232,7 +233,7 @@ function HT( ZT::RealVec , mT::RealVec , Z::RealVec , m::RealVec ,
 
         H0 += Ena
 
-        if n>1
+        if n>0
         for b=1:n
             qb = Z2q(n,d,b,Z)
             pb = Z2p(n,d,b,Z)
@@ -298,22 +299,27 @@ end #-------------------------------------------------------------------
 
 Right hand side of Hamilton's equation constructor for test particles.
 """
-function FHET_constructor( n::Int, d::Int = 3 )
+function FHET_constructor( n::Int, d::Int = 3 , U::Function=z->zero(typeof(z[1])) )
     return function (u,p)
             N  = length(p)
             nZ = 2*n*d
             nT = N - n  # Number of test particles
             nZT = 2*nT*d  # Phase space size for test particles
+            xo = zeros(eltype(u),d)
             if N == n && nZ == length(u)
                 # Only main particles, no test particles
-                return Jsympl(dH(u,p,d))
+                dU_u = ∂(UConstructor(U,p,xo,1.0,d),u)
+                return Jsympl(dH(u,p,d)+ dU_u) 
             elseif N > n && (nZ + nZT) == length(u)
                 # Main particles + test particles
                 m=p[1:n]
                 mT=p[n+1:end]
                 Z = u[1:nZ]
                 ZT = u[nZ+1:end]
-                return vcat(Jsympl(dH(Z,m,d)),Jsympl(dHT(ZT,mT,Z,m,d)))
+                # Calculate gradients for main and test particles separately
+                dU_Z = ∂(UConstructor(U,m,xo,1.0,d),Z)     # Gradient for main particles
+                dU_ZT = ∂(UConstructor(U,mT,xo,1.0,d),ZT)  # Gradient for test particles
+                return vcat(Jsympl(dH(Z,m,d)+ dU_Z) , Jsympl(dHT(ZT,mT,Z,m,d) + dU_ZT))
             else
                 return 0 .* u
             end

@@ -190,6 +190,52 @@ miss_SPJc_flat    = norm(q_spacecraft_SPJc - q_target_pos_Flat) / AU
 d_proxima_SPJc    = norm(q_proxima_SPJc - XpxF(tcl)) / AU
 
 #-----------------------------------------------------------------------
+# SUN + PROXIMA + JUPITER + MILKY WAY (Sun's Rest Frame)
+
+# Include external potential functionality
+include("../core/physics/external_potentials/external.jl")
+
+# Solar offset values in the Milky Way (in solar mass units)
+origin_x = tpfl(-1.708859462494220e17)  # Solar x-offset
+origin_z = tpfl(4.346342845091530e14)   # Solar z-offset  
+origin_y = tpfl(0.0)                    # Solar y-offset
+xo_MW = [origin_x, origin_y, origin_z]
+
+km_s = tpfl(1000.0 / 299792458.0)
+
+vpec    = km_s .* tpfl.([11.1, 12.24, 7.25])  # Solar peculiar motion
+v_LSR   = tpfl.([0.0, 220.0 * km_s, 0.0])     # LSR circular motion
+v_total = v_LSR + vpec                         # Total velocity
+
+xo_MWSRF = xo_MW .- v_total * tcl
+
+# Milky Way potential in the sun's rest frame
+Φ_MW = ΦMilkyWay(tpfl, xo_MWSRF)
+
+# Mass array for external potential (includes all massive bodies)
+m_ext = [msol, mProx, mjup]  # Sun, Proxima, Jupiter masses
+
+# Construct the external potential energy function
+V_MW = UConstructor(Φ_MW, m_ext, xo_MWSRF)
+
+PintSPJMW       = pomin.merge_particle_systems(PintSP, Pjup)
+PtestSPJMW      = Pchipcorr  # Use corrected spacecraft
+
+paramsSPJMW     = pomin.ParametersJulia( tspan, integrator="Vern9", 
+                                     atol=tols, rtol=tols)
+
+solSPJMW        = pomin.solveT(PintSPJMW, paramsSPJMW, PtestSPJMW, Φ_MW)
+
+ZendSPJMW       = solSPJMW(tcl)
+q_spacecraft_SPJMW = ZendSPJMW[19:21]
+q_proxima_SPJMW    = ZendSPJMW[4:6] 
+q_target_pos_SPJMW = q_proxima_SPJMW + bv
+dist_prox_SPJMW    = norm(q_spacecraft_SPJMW - q_proxima_SPJMW) / AU
+miss_SPJMW         = norm(q_spacecraft_SPJMW - q_target_pos_SPJMW) / AU
+miss_SPJMW_flat    = norm(q_spacecraft_SPJMW - q_target_pos_Flat) / AU
+d_proxima_SPJMW    = norm(q_proxima_SPJMW - XpxF(tcl)) / AU
+
+#-----------------------------------------------------------------------
 #
 #   ANALYSIS AND RESULTS
 #
@@ -236,11 +282,19 @@ println("    Miss from flat space (AU): $(miss_SPJc_flat)")
 println("    Proxima deviation (AU): $(d_proxima_SPJc)")
 println()
 
+println("  Sun + Proxima + Jupiter + Milky Way (Sun's Rest Frame):")
+println("    Endpoint distance to Proxima (AU): $(dist_prox_SPJMW)")
+println("    Miss from target (AU): $(miss_SPJMW)")
+println("    Miss from flat space (AU): $(miss_SPJMW_flat)")
+println("    Proxima deviation (AU): $(d_proxima_SPJMW)")
+println()
+
 println("Gravitational Effects:")
 println("  Sun-only vs Flat space miss difference: $(abs(miss_SO_flat - miss_SO)) AU")
 println("  Sun+Proxima vs Sun-only miss difference: $(abs(miss_SP - miss_SO)) AU")
 println("  Sun+Proxima+Jupiter vs Sun+Proxima miss difference: $(abs(miss_SPJ - miss_SP)) AU")
 println("  Correction effectiveness: $(abs(miss_SPJc - miss_SPJ)) AU improvement")
+println("  Milky Way vs Sun+Proxima+Jupiter(Corrected) difference: $(abs(miss_SPJMW - miss_SPJc)) AU")
 println()
 
 println("="^70)
