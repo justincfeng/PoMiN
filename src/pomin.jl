@@ -39,7 +39,8 @@ include("utils/io.jl")                             # I/O routines
     solve(system::Particles, params::Parameters,
           Phi::Function=z->zero(typeof(z[1])))
 
-Solve the post-Minkowskian N-body problem for the given particle system and parameters.
+Solve the post-Minkowskian N-body problem for the given particle system 
+and parameters.
 
 # Arguments
 - `system::Particles`: Specifies masses, positions, and momenta
@@ -56,16 +57,16 @@ automatically selects the appropriate integrator based on `params.rkl`
 and constructs the phase space vector from the particle system.
 """
 function solve(system::Particles, params::Parameters, 
-               Phi::Function=z->zero(typeof(z[1])))
+               Φ::Function=z->zero(typeof(z[1])))
     m = system.m
     z = vcat(system.q..., system.p...)
 
+    f = HamPM.FHE_constructor(params.d , Φ )
+    # Wrap function to match RK4 integrator signature (single argument)
     if params.rkl
         # Use RK4 integrator
-        f = zx -> HamPM.Jsympl(HamPM.dH(zx,m,params.d)) + 
-                  HamPM.Jsympl(∂(Phi,zx))
         return hrkintegrator(params.d, length(m), z, 
-                           f,
+                           z -> f(z, m),
                            params.δ,
                            params.tspan, params.iter,
                            (dt, Z, Zdot) -> 
@@ -75,16 +76,61 @@ function solve(system::Particles, params::Parameters,
         # Use Julia OrdinaryDiffEq.jl integrator
         return jlintegrator(z, 
                           (du, u, p, t) -> begin
-                              du .= HamPM.FHE_constructor(params.d)(u, m) + 
-                                    HamPM.Jsympl(∂(Phi,u))
+                              du .= f(u, p)
                           end,
                           params.tspan, m, params.atol, params.rtol,
                           eval(Symbol(params.integrator))(), params.Nrec)
     end
 end #-------------------------------------------------------------------
 
-function solveT(system::Particles, params::Parameters,systemT::Particles, 
-    U::Function=z->zero(typeof(z[1])))
+"""
+    solveN(system::Particles, params::Parameters,
+           Phi::Function=z->zero(typeof(z[1])))
+
+Solve the Newtonian N-body problem for the given particle system and parameters.
+
+# Arguments
+- `system::Particles`: Specifies masses, positions, and momenta
+- `params::Parameters`: Integration parameters and settings
+- `Phi::Function`: Specifies an external potential function
+
+# Returns
+- For RK4 integrator: `soln` structure containing the time evolution
+- For Julia integrators: `ODESolution` object from OrdinaryDiffEq.jl
+
+# Notes
+This function uses the Newtonian Hamiltonian (HN) instead of the post-Minkowskian
+Hamiltonian. It's useful for classical mechanics simulations and as a comparison
+baseline for relativistic calculations.
+"""
+function solveN(system::Particles, params::Parameters, 
+                Φ::Function=z->zero(typeof(z[1])))
+    m = system.m
+    z = vcat(system.q..., system.p...)
+
+    f = HamPM.FHEN_constructor(params.d , Φ )
+    if params.rkl
+        # Use RK4 integrator
+        return hrkintegrator(params.d, length(m), z, 
+                           z -> f(z, m),
+                           params.δ,
+                           params.tspan, params.iter,
+                           (dt, Z, Zdot) -> 
+                             tcour(dt, Z, Zdot, params.courant, params.d),
+                           params.Nrec)
+    else
+        # Use Julia OrdinaryDiffEq.jl integrator
+        return jlintegrator(z, 
+                          (du, u, p, t) -> begin
+                              du .= f(u, p)
+                          end,
+                          params.tspan, m, params.atol, params.rtol,
+                          eval(Symbol(params.integrator))(), params.Nrec)
+    end
+end #-------------------------------------------------------------------
+
+function solveT(system::Particles, params::Parameters,
+                systemT::Particles, Φ::Function=z->zero(typeof(z[1])))
     m = system.m
     z = vcat(system.q..., system.p...)
     mT = systemT.m
@@ -93,11 +139,11 @@ function solveT(system::Particles, params::Parameters,systemT::Particles,
     zFull = vcat(z,zT)
     mFull = vcat(m,mT)
 
+    f = HamPM.FHET_constructor( length(m), params.d , Φ )
     if params.rkl
         # Use RK4 integrator
-        f = HamPM.FHET_constructor( length(m), params.d , U )
         return hrkintegrator(params.d, length(mFull), zFull, 
-                f,
+                z->f(z, mFull),
                 params.δ,
                 params.tspan, params.iter,
                 (dt, Z, Zdot) -> 
@@ -107,7 +153,7 @@ function solveT(system::Particles, params::Parameters,systemT::Particles,
         # Use Julia OrdinaryDiffEq.jl integrator
         return jlintegrator(zFull, 
                (du, u, p, t) -> begin
-                   du .= HamPM.FHET_constructor(length(m),params.d,U)(u,p)
+                   du .= f(u, p)
                end,
                params.tspan, mFull, params.atol, params.rtol,
                eval(Symbol(params.integrator))(), params.Nrec)
@@ -118,7 +164,7 @@ end #-------------------------------------------------------------------
 export RealVec, Particles, Parameters, soln
 
 # Core functionality
-export solve
+export solve, solveN
 
 # Physics modules
 export HamPM, dp_scatter

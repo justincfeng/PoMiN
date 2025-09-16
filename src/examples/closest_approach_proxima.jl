@@ -215,9 +215,6 @@ xo_MWSRF = xo_MW .- v_total * tcl
 # Mass array for external potential (includes all massive bodies)
 m_ext = [msol, mProx, mjup]  # Sun, Proxima, Jupiter masses
 
-# Construct the external potential energy function
-V_MW = UConstructor(Φ_MW, m_ext, xo_MWSRF)
-
 PintSPJMW       = pomin.merge_particle_systems(PintSP, Pjup)
 PtestSPJMW      = Pchipcorr  # Use corrected spacecraft
 

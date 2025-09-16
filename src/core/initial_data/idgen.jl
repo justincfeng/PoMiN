@@ -5,6 +5,34 @@
 #-----------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
+#   KEPLERIAN ORBIT FUNCTIONS
+#-----------------------------------------------------------------------
+"""
+    keplerian_orbit(a,M,e,periapsis=false)
+
+Returns the initial conditions for a Keplerian orbit at apoapsis 
+(maximum separation).
+
+Arguments:
+- a: Semi-major axis of the orbit
+- M: Total mass of the system
+- e: Eccentricity (0 = circular, 0 < e < 1 = elliptical)
+- periapsis: Boolean indicating whether to use periapsis (default: false)
+"""
+function keplerian_orbit(a,M,e,periapsis=false)
+    if periapsis
+        r0 = a*(1-e)  # Periapsis
+    else
+        r0 = a*(1+e)  # Apoapsis
+    end
+    ve = sqrt(abs( M*(2.0/r0-1.0/a) ))
+    l  = ve*r0            # Angular momentum
+    ϵ = ve^2/2 - M/r0     # Total energy
+    Te = 2*π*sqrt(a^3/M)
+    return (r0,ve,l,ϵ,Te)
+end #-------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
 #   ELEMENTARY CONSTRUCTOR FUNCTIONS
 #-----------------------------------------------------------------------
 
