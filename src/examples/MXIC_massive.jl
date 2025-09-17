@@ -9,16 +9,16 @@ using DoubleFloats
 Perform momentum exchange calculations over a wide range of impact parameters.
 Uses the efficient Nrec=-1 option to save only initial and final states.
 """
-function momentum_exchange_sweep()
+function momentum_exchange_sweep(tpflt::Type=Double64)
    
     # Physical parameters (using DoubleFloats for higher precision)
-    m1 = Double64(1.0)
-    m2 = Double64(1.0)  
-    p = Double64(10.0)
+    m1 = one(tpflt)
+    m2 = one(tpflt)  
+    p = tpflt(10.0)
     
     # Impact parameter sweep parameters
-    b_base = Double64(10.0)
-    scale_factor = Double64("1.1108305558745590335689712446765042841434478759765625")  # From alternative MXIC
+    b_base = one(tpflt)*10.0
+    scale_factor = tpflt("1.1108305558745590335689712446765042841434478759765625")  # From alternative MXIC
     nn_values = 50:20:350  # Range from 1 to 250 in steps of 50
     
     results = []
@@ -26,21 +26,21 @@ function momentum_exchange_sweep()
     for nn in nn_values       
         # Generate impact parameter with wide dynamic range
         b = b_base * scale_factor^nn
-        dx = Double64(1e9)*b  # Optimal separation (not too large, not too small)
+        dx = one(tpflt)*1e9*b  # Optimal separation (not too large, not too small)
 
         # Set up scattering system (using DoubleFloats type)
-        system = pomin.setup_scattering(m1, m2, p, b, dx, tpfl=Double64)
+        system = pomin.setup_scattering(m1, m2, p, b, dx, tpfl=tpflt)
         
         # Calculate duration using alternative MXIC strategy
         # Relativistic velocity calculation
         v1 = p / sqrt(m1^2 + p^2)  # Relativistic velocity for particle 1
         v2 = p / sqrt(m2^2 + p^2)  # Relativistic velocity for particle 2
         τ = dx / (v1 + v2)         # Time for particles to meet
-        t_flight = Double64(10.0) * τ         # Total scattering time
+        t_flight = tpflt(10.0) * τ         # Total scattering time
         
         # Solve with Julia ODE integrator (save only last point, ultra-tight tolerances)
-        sol = pomin.solve(system, pomin.ParametersJulia((Double64(0.0), t_flight), 
-                         integrator="Vern9", atol=1e-30, rtol=1e-30, Nrec=-1))
+        sol = pomin.solve(system, pomin.ParametersJulia((zero(tpflt), t_flight), 
+                         integrator="Vern9", atol=tpflt(1e-30), rtol=tpflt(1e-30), Nrec=-1))
         
         # Extract momentum change (particle 1, y-component)
         # Initial momentum: sol.u[1] = [q1x, q1y, q1z, q2x, q2y, q2z, p1x, p1y, p1z, p2x, p2y, p2z]
