@@ -66,7 +66,7 @@ params = pomin.ParametersJulia(tspan, integrator="Vern9",
 #-----------------------------------------------------------------------
 
 println("Running solver...")
-sol = pomin.solveT(main_particle_system, params, test_particle_system)
+sol = pomin.solve(main_particle_system, params; testparticles=test_particle_system)
 
 println("Time of closest approach = ",time_closest_approach)
 

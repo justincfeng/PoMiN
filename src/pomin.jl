@@ -36,10 +36,13 @@ include("core/integrators/intjul.jl")            # Julia ODE integrators
 include("utils/io.jl")                             # I/O routines
 
 """
-    solve(system::Particles, params::Parameters,
-          Phi::Function=z->zero(typeof(z[1])))
+    solve( system::Particles, params::Parameters; 
+                testparticles::Union{Particles, Nothing} = nothing,
+                Φ::Function=z->zero(typeof(z[1])), 
+                Newtonian::Bool=false)
 
-Solve the post-Minkowskian N-body problem for the given particle system and parameters.
+Solve the post-Minkowskian N-body problem for the given particle system 
+and parameters.
 
 # Arguments
 - `system::Particles`: Specifies masses, positions, and momenta
@@ -55,63 +58,50 @@ This is the main entry point for PoMiN simulations. The function
 automatically selects the appropriate integrator based on `params.rkl`
 and constructs the phase space vector from the particle system.
 """
-function solve(system::Particles, params::Parameters, 
-               Phi::Function=z->zero(typeof(z[1])))
+function solve( system::Particles, params::Parameters; 
+                testparticles::Union{Particles, Nothing} = nothing,
+                Φ::Function=z->zero(typeof(z[1])), 
+                Newtonian::Bool=false)
     m = system.m
     z = vcat(system.q..., system.p...)
-
-    if params.rkl
-        # Use RK4 integrator
-        f = zx -> HamPM.Jsympl(HamPM.dH(zx,m,params.d)) + 
-                  HamPM.Jsympl(∂(Phi,zx))
-        return hrkintegrator(params.d, length(m), z, 
-                           f,
-                           params.δ,
-                           params.tspan, params.iter,
-                           (dt, Z, Zdot) -> 
-                             tcour(dt, Z, Zdot, params.courant, params.d),
-                           params.Nrec)
+    
+    if testparticles === nothing
+        mT = eltype(m)[]
+        zT = eltype(z)[]
     else
-        # Use Julia OrdinaryDiffEq.jl integrator
-        return jlintegrator(z, 
-                          (du, u, p, t) -> begin
-                              du .= HamPM.FHE_constructor(params.d)(u, m) + 
-                                    HamPM.Jsympl(∂(Phi,u))
-                          end,
-                          params.tspan, m, params.atol, params.rtol,
-                          eval(Symbol(params.integrator))(), params.Nrec)
+        mT = testparticles.m
+        zT = vcat(testparticles.q..., testparticles.p...)
     end
-end #-------------------------------------------------------------------
-
-function solveT(system::Particles, params::Parameters,systemT::Particles, 
-    U::Function=z->zero(typeof(z[1])))
-    m = system.m
-    z = vcat(system.q..., system.p...)
-    mT = systemT.m
-    zT = vcat(systemT.q..., systemT.p...)
 
     zFull = vcat(z,zT)
     mFull = vcat(m,mT)
 
+    if Newtonian
+        f = HamPM.FHEN_constructor( length(m), params.d , Φ )
+    else
+        f = HamPM.FHE_constructor( length(m), params.d , Φ )
+    end
+
     if params.rkl
         # Use RK4 integrator
-        f = HamPM.FHET_constructor( length(m), params.d , U )
         return hrkintegrator(params.d, length(mFull), zFull, 
-                f,
-                params.δ,
-                params.tspan, params.iter,
-                (dt, Z, Zdot) -> 
-                  tcour(dt, Z, Zdot, params.courant, params.d),
-                params.Nrec)
+            z->f(z, mFull),
+            params.δ,
+            params.tspan, params.iter,
+            (dt, Z, Zdot) -> 
+                tcour(dt, Z, Zdot, params.courant, params.d),
+            params.Nrec)
     else
         # Use Julia OrdinaryDiffEq.jl integrator
         return jlintegrator(zFull, 
-               (du, u, p, t) -> begin
-                   du .= HamPM.FHET_constructor(length(m),params.d,U)(u,p)
-               end,
-               params.tspan, mFull, params.atol, params.rtol,
-               eval(Symbol(params.integrator))(), params.Nrec)
-end
+                            (du, u, p, t) -> begin
+                                du .= f(u, p)
+                            end,
+                            params.tspan, mFull, params.atol, 
+                            params.rtol,
+                            eval(Symbol(params.integrator))(), 
+                            params.Nrec)
+    end
 end #-------------------------------------------------------------------
 
 # Types

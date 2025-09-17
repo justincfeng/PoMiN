@@ -3,70 +3,63 @@ using LinearAlgebra
 using Plots
 using DoubleFloats
 
+#-----------------------------------------------------------------------
 """
     momentum_exchange_sweep()
 
-Perform momentum exchange calculations over a wide range of impact parameters.
-Uses the efficient Nrec=-1 option to save only initial and final states.
+Perform momentum exchange calculations over a wide range of impact
+parameters. Uses the efficient Nrec=-1 option to save only initial and
+final states.
 """
-function momentum_exchange_sweep(tpflt::Type=Double64)
-
+function momentum_exchange_sweep()
+   
     # Physical parameters (using DoubleFloats for higher precision)
-    m1 = one(tpflt)
-    m2 = one(tpflt)  
-    p = tpflt(10.0)
+    m1 = Double64(1.0)  # Massless particle 1
+    m2 = Double64(0.0)  # Massless particle 2
+    p = Double64(10.0)
     
     # Impact parameter sweep parameters
-    b_base = one(tpflt)*10.0
-    scale_factor = tpflt("1.1108305558745590335689712446765042841434478759765625")  # From alternative MXIC
+    b_base = Double64(10.0)
+    scale_factor = Double64("1.1108305558745590335689712446765042841434478759765625")
     nn_values = 50:20:350  # Range from 1 to 250 in steps of 50
     
     results = []
     
-    for nn in nn_values
-        
+    for nn in nn_values       
         # Generate impact parameter with wide dynamic range
         b = b_base * scale_factor^nn
-        dx = one(tpflt)*1e14*b  # Optimal separation (not too large, not too small)
+        dx = Double64(1e9)*b
 
         # Set up scattering system (using DoubleFloats type)
-        system = pomin.setup_scattering(m1, m2, p, b, dx, tpfl=tpflt)
+        system = pomin.to_com_frame(pomin.setup_scattering(m1, m2, p, b, 
+                                                     dx, tpfl=Double64))
         
         # Calculate duration using alternative MXIC strategy
-        # Relativistic velocity calculation
-        v1 = p / sqrt(m1^2 + p^2)  # Relativistic velocity for particle 1
-        v2 = p / sqrt(m2^2 + p^2)  # Relativistic velocity for particle 2
+        # For massless particles, velocity = c = 1 (natural units)
+        v1 = p / sqrt(m1^2 + p^2)  # Speed for massive particle
+        v2 = Double64(1.0)         # Speed of light, massless particle
         τ = dx / (v1 + v2)         # Time for particles to meet
-        t_flight = tpflt(10.0) * τ         # Total scattering time
-        
-        # RK4 integrator parameters from ApJ paper (all BigFloat for precision)
-        # δ = initial timestep, courant = Courant number for CFL condition
-        δ_initial = tpflt(1000.0)          # Initial timestep (reduced for higher accuracy)
-        courant = tpflt(0.005)          # Courant number (reduced further for maximum accuracy)
-        
-        # Solve with RK4 integrator using adaptive timestepping (BigFloat precision)
-        sol = pomin.solve(system, pomin.ParametersRK4((zero(tpflt), t_flight), 
-                         δ=δ_initial, courant=courant, Nrec=-1))
-               
-        # Extract positions and momenta for analysis
-        q1_initial = [sol.z[1][1], sol.z[1][2], sol.z[1][3]]   # Initial position particle 1
-        q2_initial = [sol.z[1][4], sol.z[1][5], sol.z[1][6]]   # Initial position particle 2
-        q1_final = [sol.z[end][1], sol.z[end][2], sol.z[end][3]]   # Final position particle 1
-        q2_final = [sol.z[end][4], sol.z[end][5], sol.z[end][6]]   # Final position particle 2
-        
-        # Calculate initial and final separations
-        r_initial = sqrt(sum((q1_initial - q2_initial).^2))
-        r_final = sqrt(sum((q1_final - q2_final).^2))
-        
-        p1y_initial = sol.z[1][8]   # p1y component (8th element)
-        p1y_final = sol.z[end][8]   # p1y component at end
-        dp_numerical = p1y_final - p1y_initial  # Y-component only, not magnitude
+        t_flight = Double64(10.0) * τ         # Total scattering time
+        # Solve with Julia ODE integrator (save only last point)
+        sol = pomin.solve(system, 
+                          pomin.ParametersJulia(
+                            (Double64(0.0),t_flight), 
+                            integrator="Vern9", 
+                            atol=1e-18, rtol=1e-18, Nrec=-1))
+        # Extract momentum change (particle 1, y-component)
+        # Initial momentum: sol.u[1] = [q1x,q1y,q1z,q2x,q2y,q2z,
+        #                               p1x,p1y,p1z,p2x,p2y,p2z]
+        # Final momentum:   sol.u[end]
+        p1y_initial = sol.u[1][8]   # p1y component (8th element)
+        p1y_final = sol.u[end][8]   # p1y component at end
+        dp_numerical = p1y_final - p1y_initial
         
         # Analytical prediction
         dp_analytical = pomin.HamPM.dp_scatter(p, b, m1, m2)
         
         # Calculate relative error
-        rel_error = abs(abs(dp_numerical) - abs(dp_analytical)) / abs(dp_analytical) * 100
+        rel_error = abs(abs(dp_numerical) - abs(dp_analytical)) 
+                    / abs(dp_analytical) * 100
         
         # Store results
         push!(results, (nn=nn, b=b, dp_analytical=dp_analytical, 
@@ -75,8 +68,9 @@ function momentum_exchange_sweep(tpflt::Type=Double64)
     end
 
     return results
-end
+end #-------------------------------------------------------------------
 
+#-----------------------------------------------------------------------
 """
     plot_momentum_exchange(results)
 
@@ -105,7 +99,7 @@ function plot_momentum_exchange(results)
     
     # Add 1/b reference line
     b_ref = [minimum(b_values), maximum(b_values)]
-    dp_ref = dp_analytical[1] * b_values[1] ./ b_ref  # Scale to match first point
+    dp_ref = dp_analytical[1] * b_values[1] ./ b_ref  # Rescale
     plot!(p1, b_ref, dp_ref,
           linewidth=1, linestyle=:dot, color=:gray,
           label="1/b scaling")
@@ -128,4 +122,4 @@ results = momentum_exchange_sweep()
 # Generate plots
 PLTres = plot_momentum_exchange(results)
 
-savefig(PLTres, "momentum_exchange_sweep_RK4.pdf")
+savefig(PLTres, "momentum_exchange_sweep_mixed.pdf")

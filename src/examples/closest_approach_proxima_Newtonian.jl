@@ -107,7 +107,8 @@ PtestSO         = pomin.merge_particle_systems(Pchip,PProx)
 paramsSO        = pomin.ParametersJulia( tspan, integrator="Vern9", 
                                          atol=tols, rtol=tols)
 
-solSO           = pomin.solve(PintSO, paramsSO; testparticles=PtestSO)
+solSO           = pomin.solve(PintSO, paramsSO; testparticles=PtestSO , 
+                              Newtonian = true)
 
 ZendSO          = solSO(tcl)
 q_spacecraft_SO = ZendSO[7:9]
@@ -127,7 +128,8 @@ PtestSP         = Pchip
 paramsSP        = pomin.ParametersJulia( tspan, integrator="Vern9", 
                                      atol=tols, rtol=tols)
 
-solSP           = pomin.solve(PintSP, paramsSP; testparticles=PtestSP)
+solSP           = pomin.solve(PintSP, paramsSP; testparticles=PtestSP , 
+                              Newtonian = true)
 
 ZendSP          = solSP(tcl)
 q_spacecraft_SP = ZendSP[13:15]
@@ -148,7 +150,9 @@ PtestSPJ        = Pchip
 paramsSPJ       = pomin.ParametersJulia( tspan, integrator="Vern9", 
                                      atol=tols, rtol=tols)
 
-solSPJ          = pomin.solve(PintSPJ, paramsSPJ; testparticles=PtestSPJ)
+solSPJ          = pomin.solve(PintSPJ, paramsSPJ; 
+                              testparticles=PtestSPJ, 
+                              Newtonian = true)
 
 ZendSPJ         = solSPJ(tcl)
 q_spacecraft_SPJ = ZendSPJ[19:21]
@@ -178,7 +182,9 @@ PtestSPJc       = Pchipcorr
 paramsSPJc      = pomin.ParametersJulia( tspan, integrator="Vern9", 
                                      atol=tols, rtol=tols)
 
-solSPJc         = pomin.solve(PintSPJc, paramsSPJc; testparticles=PtestSPJc)
+solSPJc         = pomin.solve(PintSPJc, paramsSPJc; 
+                              testparticles=PtestSPJc ,
+                              Newtonian = true)
 
 ZendSPJc        = solSPJc(tcl)
 q_spacecraft_SPJc = ZendSPJc[19:21]
@@ -221,7 +227,9 @@ PtestSPJMW      = Pchipcorr  # Use corrected spacecraft
 paramsSPJMW     = pomin.ParametersJulia( tspan, integrator="Vern9", 
                                      atol=tols, rtol=tols)
 
-solSPJMW        = pomin.solve(PintSPJMW, paramsSPJMW; testparticles=PtestSPJMW, Φ=Φ_MW)
+solSPJMW        = pomin.solve(PintSPJMW, paramsSPJMW; 
+                              testparticles=PtestSPJMW, Φ=Φ_MW, 
+                              Newtonian = true)
 
 ZendSPJMW       = solSPJMW(tcl)
 q_spacecraft_SPJMW = ZendSPJMW[19:21]

@@ -11,7 +11,7 @@ using ForwardDiff
     
 # Include type definitions first
 include("../../pomin-types.jl")
-include("../external_potentials/external.jl")
+include("../external_potentials/external_tools.jl")
 include("HamTools.jl")
 
 # These functions compute scalar quantities that make up the Hamiltonian
@@ -264,6 +264,105 @@ function HT( ZT::RealVec , mT::RealVec , Z::RealVec , m::RealVec ,
 end #-------------------------------------------------------------------
 
 """
+    HN( Z::RealVec , m::RealVec , d::Int = 3 )
+
+Hamiltonian function. Returns the Hamiltonian for a system of particles
+with masses ``m`` and positions ``Z``.
+"""
+function HN( Z::RealVec , m::RealVec , d::Int = 3 )
+    tpfl = typeof(Z[1])
+
+    νall = tpnum(tpfl)
+
+    ν0, ν1, ν2, ν3, ν4, ν5, ν6, ν7, ν8, ν9 = νall
+
+    n = length(m)
+
+    qa, qb, pa, pb  = [zeros(tpfl,d) for _ = 1:4]
+
+    psa, psb, Ena, Enb  = [ν0 for _ = 1:4]
+
+    rab, yba, Θab, Θba, Ξab  = [ν0 for _ = 1:5]
+
+    H0, H1  = [ν0 for _ = 1:2]
+
+    for a=1:n
+        qa = Z2q(n,d,a,Z)
+        pa = Z2p(n,d,a,Z)
+
+        psa = psf(pa)
+
+        H0 += psa / (ν2 * m[a])
+        
+        if n>1
+            
+        for b=a+1:n
+            qb = Z2q(n,d,b,Z)
+
+            rab = rf(qa,qb)
+                
+            H1 -= m[a]*m[b]/rab
+        end
+
+        else 
+           H1 = ν0
+        end
+    end
+    return H0+H1
+end #-------------------------------------------------------------------
+
+"""
+    HNT( ZT::RealVec , mT::RealVec , Z::RealVec , m::RealVec , d::Int = 3 )
+
+Newtonian Hamiltonian function for test particles. Returns the Hamiltonian for 
+test particles with masses ``mT`` and phase space ``ZT``, interacting with 
+main particles with masses ``m`` and phase space ``Z``.
+"""
+function HNT( ZT::RealVec , mT::RealVec , Z::RealVec , m::RealVec , d::Int = 3 )
+    tpfl = typeof(ZT[1])
+
+    νall = tpnum(tpfl)
+
+    ν0, ν1, ν2, ν3, ν4, ν5, ν6, ν7, ν8, ν9 = νall
+
+    nT = length(mT)  # Number of test particles
+    n = length(m)    # Number of main particles
+
+    qaT, qa, paT  = [zeros(tpfl,d) for _ = 1:3]
+
+    psaT  = ν0
+
+    rab  = ν0
+
+    H0, H1  = [ν0 for _ = 1:2]
+
+    # Kinetic energy of test particles
+    for a=1:nT
+        qaT = Z2q(nT,d,a,ZT)
+        paT = Z2p(nT,d,a,ZT)
+
+        psaT = psf(paT)
+
+        H0 += psaT / (ν2 * mT[a])
+    end
+    
+    # Interaction between test particles and main particles
+    for a=1:nT
+        qaT = Z2q(nT,d,a,ZT)
+        
+        for b=1:n
+            qa = Z2q(n,d,b,Z)
+
+            rab = rf(qaT,qa)
+                
+            H1 -= mT[a]*m[b]/rab
+        end
+    end
+    
+    return H0+H1
+end #-------------------------------------------------------------------
+
+"""
     dH( Z::RealVec , m::RealVec , d::Int = 3 )
 
 Gradient of the Hamiltonian function.
@@ -283,23 +382,34 @@ function dHT( ZT::RealVec , mT::RealVec , Z::RealVec , m::RealVec ,
     return ∂(x -> HT(x, mT, Z, m, d), ZT)
 end #-------------------------------------------------------------------
 
-# Right hand side of Hamilton's equation constructor
 """
-    FHE_constructor( d::Int = 3 )
+    dHN( Z::RealVec , m::RealVec , d::Int = 3 )
 
-Right hand side of Hamilton's equation constructor.
+Gradient of the Hamiltonian function for the Newtonian Hamiltonian.
 """
-function FHE_constructor( d::Int = 3 )
-    return (Z,m)->Jsympl(dH(Z,m,d))
+function dHN( Z::RealVec , m::RealVec , d::Int = 3 )
+    return ∂(x -> HN(x, m, d), Z)
+end #-------------------------------------------------------------------
+
+"""
+    dHNT( ZT::RealVec , mT::RealVec , Z::RealVec , m::RealVec , d::Int = 3 )
+
+Gradient of the Newtonian Hamiltonian function for test particles.
+"""
+function dHNT( ZT::RealVec , mT::RealVec , Z::RealVec , m::RealVec , d::Int = 3 )
+    return ∂(x -> HNT(x, mT, Z, m, d), ZT)
 end #-------------------------------------------------------------------
 
 # Right hand side of Hamilton's equation constructor
 """
-    FHET_constructor( n::Int, nT::Int, d::Int = 3 )
+    FHE_constructor( n::Int, d::Int = 3 , 
+                     Φ::Function=z->zero(typeof(z[1])) )
 
-Right hand side of Hamilton's equation constructor for test particles.
+Right hand side of Hamilton's equation constructor for the 
+post-Minkowskian Hamiltonian.
 """
-function FHET_constructor( n::Int, d::Int = 3 , U::Function=z->zero(typeof(z[1])) )
+function FHE_constructor( n::Int, d::Int = 3 , 
+                          Φ::Function=z->zero(typeof(z[1])) )
     return function (u,p)
             N  = length(p)
             nZ = 2*n*d
@@ -308,7 +418,7 @@ function FHET_constructor( n::Int, d::Int = 3 , U::Function=z->zero(typeof(z[1])
             xo = zeros(eltype(u),d)
             if N == n && nZ == length(u)
                 # Only main particles, no test particles
-                dU_u = ∂(UConstructor(U,p,xo,1.0,d),u)
+                dU_u = ∂(UConstructor(Φ,p,xo,one(eltype(u)),d),u)
                 return Jsympl(dH(u,p,d)+ dU_u) 
             elseif N > n && (nZ + nZT) == length(u)
                 # Main particles + test particles
@@ -316,13 +426,49 @@ function FHET_constructor( n::Int, d::Int = 3 , U::Function=z->zero(typeof(z[1])
                 mT=p[n+1:end]
                 Z = u[1:nZ]
                 ZT = u[nZ+1:end]
-                # Calculate gradients for main and test particles separately
-                dU_Z = ∂(UConstructor(U,m,xo,1.0,d),Z)     # Gradient for main particles
-                dU_ZT = ∂(UConstructor(U,mT,xo,1.0,d),ZT)  # Gradient for test particles
-                return vcat(Jsympl(dH(Z,m,d)+ dU_Z) , Jsympl(dHT(ZT,mT,Z,m,d) + dU_ZT))
+                # Calc. gradients for main and test particles separately
+                dU_Z = ∂(UConstructor(Φ,m,xo,one(eltype(u)),d),Z)
+                dU_ZT = ∂(UConstructor(Φ,mT,xo,one(eltype(u)),d),ZT)
+                return vcat(Jsympl(dH(Z,m,d)+ dU_Z) , 
+                            Jsympl(dHT(ZT,mT,Z,m,d) + dU_ZT))
             else
                 return 0 .* u
             end
+    end
+end #-------------------------------------------------------------------
+
+# Right hand side of Hamilton's equation constructor
+"""
+    FHEN_constructor( d::Int = 3 , Φ::Function=z->zero(typeof(z[1])))
+
+Right hand side of Hamilton's equation constructor for the Newtonian
+Hamiltonian.
+"""
+function FHEN_constructor( n::Int, d::Int = 3 , 
+                           Φ::Function=z->zero(typeof(z[1])) )
+    return function (u,p)
+        N  = length(p)
+        nZ = 2*n*d
+        nT = N - n  # Number of test particles
+        nZT = 2*nT*d  # Phase space size for test particles
+        xo = zeros(eltype(u),d)
+        if N == n && nZ == length(u)
+            dU_u = ∂(UConstructorN(Φ,p,xo,one(eltype(u)),d),u)
+            return Jsympl(dHN(u,p,d) + dU_u)
+        elseif N > n && (nZ + nZT) == length(u)
+            # Main particles + test particles
+            m=p[1:n]
+            mT=p[n+1:end]
+            Z = u[1:nZ]
+            ZT = u[nZ+1:end]
+            # Calc. gradients for main and test particles separately
+            dU_Z = ∂(UConstructorN(Φ,m,xo,one(eltype(u)),d),Z)
+            dU_ZT = ∂(UConstructorN(Φ,mT,xo,one(eltype(u)),d),ZT)
+            return vcat(Jsympl(dHN(Z,m,d)+ dU_Z) , 
+                        Jsympl(dHNT(ZT,mT,Z,m,d) + dU_ZT))
+        else
+            return 0 .* u
+        end
     end
 end #-------------------------------------------------------------------
 

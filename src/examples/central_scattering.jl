@@ -74,7 +74,7 @@ Ptest = Pchip
 params       = pomin.ParametersJulia( tspan, integrator="Vern9", 
                                      atol=tols, rtol=tols)
 
-sol          = pomin.solveT(Pint, params, Ptest)
+sol          = pomin.solve(Pint, params; testparticles=Ptest)
 
 sol.u[end]-sol.u[1]
 

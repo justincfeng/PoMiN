@@ -47,9 +47,6 @@ println("Sun orbital period (in units of solar masses) = ",T_orbit)
 M_sun = one(tpfl)   # Solar mass in solar mass units
 m     = [M_sun]     # Just the Sun
 
-# Construct the potential energy function
-V     = UConstructor(Φ, m, zeros(tpfl,3))
-
 # Construct initial data
 q0    = [zeros(tpfl,3)]
 p0    = [m[1] .* u_total] 
@@ -60,7 +57,7 @@ system = pomin.Particles(m, q0, p0)
 tspan = (0.0, T_orbit * 2.0)  # Simulate for 2 complete orbits
 params = pomin.ParametersJulia(tspan)
 
-sol = pomin.solve(system, params, V)
+sol = pomin.solve(system, params, Φ)
 
 #-----------------------------------------------------------------------
 
