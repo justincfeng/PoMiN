@@ -342,42 +342,14 @@ end #-------------------------------------------------------------------
 
 # Right hand side of Hamilton's equation constructor
 """
-    FHE_constructor( d::Int = 3 , Φ::Function=z->zero(typeof(z[1])) )
+    FHE_constructor( n::Int, d::Int = 3 , 
+                     Φ::Function=z->zero(typeof(z[1])) )
 
-Right hand side of Hamilton's equation constructor.
+Right hand side of Hamilton's equation constructor for the 
+post-Minkowskian Hamiltonian.
 """
-function FHE_constructor( d::Int = 3 , 
+function FHE_constructor( n::Int, d::Int = 3 , 
                           Φ::Function=z->zero(typeof(z[1])) )
-    return function (u,p)
-        xo = zeros(eltype(u),d)
-        dU_u = ∂(UConstructor(Φ,p,xo,one(eltype(u)),d),u)
-        return Jsympl(dH(u,p,d) + dU_u)
-    end
-end #-------------------------------------------------------------------
-
-# Right hand side of Hamilton's equation constructor
-"""
-    FHEN_constructor( d::Int = 3 , Φ::Function=z->zero(typeof(z[1])))
-
-Right hand side of Hamilton's equation constructor for the Newtonian
-Hamiltonian.
-"""
-function FHEN_constructor( d::Int = 3 , 
-                           Φ::Function=z->zero(typeof(z[1])) )
-    return function (u,p)
-        xo = zeros(eltype(u),d)
-        dU_u = ∂(UConstructorN(Φ,p,xo,one(eltype(u)),d),u)
-        return Jsympl(dHN(u,p,d) + dU_u)
-    end
-end #-------------------------------------------------------------------
-
-# Right hand side of Hamilton's equation constructor
-"""
-    FHET_constructor( n::Int, nT::Int, d::Int = 3 )
-
-Right hand side of Hamilton's equation constructor for test particles.
-"""
-function FHET_constructor( n::Int, d::Int = 3 , Φ::Function=z->zero(typeof(z[1])) )
     return function (u,p)
             N  = length(p)
             nZ = 2*n*d
@@ -394,13 +366,49 @@ function FHET_constructor( n::Int, d::Int = 3 , Φ::Function=z->zero(typeof(z[1]
                 mT=p[n+1:end]
                 Z = u[1:nZ]
                 ZT = u[nZ+1:end]
-                # Calculate gradients for main and test particles separately
-                dU_Z = ∂(UConstructor(Φ,m,xo,one(eltype(u)),d),Z)     # Gradient for main particles
-                dU_ZT = ∂(UConstructor(Φ,mT,xo,one(eltype(u)),d),ZT)  # Gradient for test particles
-                return vcat(Jsympl(dH(Z,m,d)+ dU_Z) , Jsympl(dHT(ZT,mT,Z,m,d) + dU_ZT))
+                # Calc. gradients for main and test particles separately
+                dU_Z = ∂(UConstructor(Φ,m,xo,one(eltype(u)),d),Z)
+                dU_ZT = ∂(UConstructor(Φ,mT,xo,one(eltype(u)),d),ZT)
+                return vcat(Jsympl(dH(Z,m,d)+ dU_Z) , 
+                            Jsympl(dHT(ZT,mT,Z,m,d) + dU_ZT))
             else
                 return 0 .* u
             end
+    end
+end #-------------------------------------------------------------------
+
+# Right hand side of Hamilton's equation constructor
+"""
+    FHEN_constructor( d::Int = 3 , Φ::Function=z->zero(typeof(z[1])))
+
+Right hand side of Hamilton's equation constructor for the Newtonian
+Hamiltonian.
+"""
+function FHEN_constructor( n::Int, d::Int = 3 , 
+                           Φ::Function=z->zero(typeof(z[1])) )
+    return function (u,p)
+        N  = length(p)
+        nZ = 2*n*d
+        nT = N - n  # Number of test particles
+        nZT = 2*nT*d  # Phase space size for test particles
+        if N == n && nZ == length(u)
+            xo = zeros(eltype(u),d)
+            dU_u = ∂(UConstructorN(Φ,p,xo,one(eltype(u)),d),u)
+            return Jsympl(dHN(u,p,d) + dU_u)
+        elseif N > n && (nZ + nZT) == length(u)
+            # Main particles + test particles
+            m=p[1:n]
+            mT=p[n+1:end]
+            Z = u[1:nZ]
+            ZT = u[nZ+1:end]
+            # Calc. gradients for main and test particles separately
+            dU_Z = ∂(UConstructorN(Φ,m,xo,one(eltype(u)),d),Z)
+            dU_ZT = ∂(UConstructorN(Φ,mT,xo,one(eltype(u)),d),ZT)
+            return vcat(Jsympl(dHN(Z,m,d)+ dU_Z) , 
+                        Jsympl(dHT(ZT,mT,Z,m,d) + dU_ZT))
+        else
+            return 0 .* u
+        end
     end
 end #-------------------------------------------------------------------
 

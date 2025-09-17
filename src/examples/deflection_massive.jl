@@ -70,8 +70,8 @@ tols  = tpfl(1e-16)
 params       = pomin.ParametersJulia( tspan, integrator="Vern9", 
                                      atol=tols, rtol=tols)                                
 
-sol          = pomin.solveT(PC, params, PM)
-solN         = pomin.solveN(PCombined, params)
+sol          = pomin.solve(PC, params; testparticles=PM)
+solN         = pomin.solve(PCombined, params; Newtonian=true)
 
 # Extract momentum components for the massive particle (Test Particle approach)
 Pi = sol.u[1][10:12]    # Initial momentum

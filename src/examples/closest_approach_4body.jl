@@ -91,9 +91,9 @@ params = pomin.ParametersJulia(tspan, integrator="Vern9", atol=tpfl(1e-16), rtol
 println("✓ Integration parameters set: ", tspan[2]/1e14, " × 10^14 time units")
 
 println("\nStarting integration...")
-@time sol = pomin.solveT(P3body, params, Ptest)
+@time sol = pomin.solve(P3body, params; testparticles=Ptest)
 
-#@time sol = pomin.solveT(Psol, params, Ptest)
+#@time sol = pomin.solve(Psol, params; testparticles=Ptest)
 
 # @time sol = pomin.solve(P2body, params)
 println("✓ Integration completed with ", length(sol.t), " time steps")

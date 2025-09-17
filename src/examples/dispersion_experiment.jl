@@ -132,7 +132,7 @@ for i = 1:N
 
     # run solver
     println("Running solver...")
-    sol = pomin.solveT(main_particle_system, params, test_particle_system)
+    sol = pomin.solve(main_particle_system, params; testparticles=test_particle_system)
 
     Zend = sol(time_closest_approach)
     # q_starchip = Zend[13:15]                    # Sun and Proxima

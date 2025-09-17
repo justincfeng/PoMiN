@@ -57,7 +57,7 @@ tols  = tpfl(1e-16)
 params       = pomin.ParametersJulia( tspan, integrator="Vern9", 
                                      atol=tols, rtol=tols)                                
 
-sol          = pomin.solveT(PC, params, PL)
+sol          = pomin.solve(PC, params; testparticles=PL)
 
 ΔZ = sol.u[end]-sol.u[1]
 

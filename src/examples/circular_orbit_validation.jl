@@ -87,9 +87,9 @@ params       = pomin.ParametersJulia( tspan, integrator="Vern9",
 #   SOLVE
 #-----------------------------------------------------------------------
 
-solN         = pomin.solveN(PCombined, params)
+solN         = pomin.solve(PCombined, params; Newtonian=true)
 sol          = pomin.solve(PCombined, params)
-solT         = pomin.solveT(PC,params,PL)
+solT         = pomin.solve(PC, params; testparticles=PL)
 
 #-----------------------------------------------------------------------
 #   PLOTTING

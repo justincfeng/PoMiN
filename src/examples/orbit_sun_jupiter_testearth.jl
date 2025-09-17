@@ -103,7 +103,7 @@ println("  Earth momentum: $(testparticles.p[1])")
 
 
 
-@time solution = pomin.solveT(particles, params, testparticles)
+@time solution = pomin.solve(particles, params; testparticles=testparticles)
 
 n_steps        = length(solution.t)
 times          = solution.t
