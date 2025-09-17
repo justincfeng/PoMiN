@@ -45,21 +45,24 @@ psol = tpfl.([0.0, 0.0, 0.0])
 Psol = pomin.setup_single_particle(msol, qsol, psol, tpfl)
 
 #-----------------------------------------------------------------------
-#   INITIAL DATA SETUP FOR JUPITER
+#   INITIAL DATA SETUP FOR JUPITER (astropy)
 #-----------------------------------------------------------------------
 
-# Jupiter parameters (realistic orbital position)
-# Jupiter mass relative to Sun: ~0.000954
-# Average distance from Sun: ~5.2 AU in geometric units
-# Orbital velocity: ~13.1 km/s converted to geometric units
 mjup = tpfl(0.000954)  # Jupiter mass in solar masses
-qjup = tpfl.([5.2 * AU, 0.0, 0.0])  # Jupiter position in geometric units
-# Convert orbital velocity to geometric units: v = 13.1 km/s / c
-vorb = tpfl(13.1E+3) / cMKS  # Orbital velocity in units of c
-γjup = one(tpfl) / sqrt(one(tpfl) - vorb^2)  # Lorentz factor
-pjup = tpfl.([0.0, mjup * γjup * vorb, 0.0])  # Jupiter momentum (y-direction)
+qjup = tpfl.([3.99442362 * AU, 2.73345644 * AU, 1.07451704 * AU])  # Jupiter position in geometric units (from astropy, J2000)
+
+vjup = tpfl.([-7.8875477321829800, 1.0175858402135900E+01, 4.5538873116399600])  # in km/s, from astropy, J2000
+
+vjup *= 1000 / cMKS  # convert from km/s to units of c
+
+γjup = one(tpfl) / sqrt(one(tpfl) - norm(vjup)^2)  # Lorentz factor
+pjup = tpfl.(mjup * γjup * vjup)  # Jupiter momentum 
 
 Pjup = pomin.setup_single_particle(mjup, qjup, pjup, tpfl)
+
+
+Jupiter_Spacecraft_angle = rad2deg(acos(dot(qjup, qchip) / (norm(qjup) * norm(qchip))))
+println("Angle between Sun-Jup and Sun-spacecraft = ", Jupiter_Spacecraft_angle, " degs")
 
 
 #-----------------------------------------------------------------------
@@ -90,7 +93,7 @@ PEarth = pomin.setup_single_particle(mEarth, qEarth, pEarth, tpfl)
 #   SETUP MAIN PARTICLE SYSTEM
 #-----------------------------------------------------------------------
 
-main_particle_system = pomin.merge_particle_systems(Psol, PProx, Palpha, PEarth)
+main_particle_system = pomin.merge_particle_systems(Psol, PProx, Palpha, PEarth, Pjup)
 
 
 #-----------------------------------------------------------------------
@@ -108,8 +111,8 @@ params = pomin.ParametersJulia(tspan, integrator="Vern9",
 #-----------------------------------------------------------------------
 #   EXPERIMENT INPUT PARAMETERS
 #-----------------------------------------------------------------------
-theta_tol = 0.001
-N = 10
+theta_tol = 0.00001
+N = 2
 
 #-----------------------------------------------------------------------
 #   RUN EXPERIMENT
@@ -135,22 +138,24 @@ for i = 1:N
     sol = pomin.solveT(main_particle_system, params, test_particle_system)
 
     Zend = sol(time_closest_approach)
-    # q_starchip = Zend[13:15]                    # Sun and Proxima
-    # q_starchip = Zend[19:21]                    # Sun, Proxima, and Alpha
-    q_starchip = Zend[25:27]                    # Sun, Proxima, Alpha, and Earth
+    q_starchip = Zend[31:33]
     q_proxima = Zend[4:6]
     q_target = q_proxima + bv
     miss_dist = norm(q_starchip - q_target) / AU
 
     println("Miss distance: ",miss_dist," AU")
 
+    expected_geometric_miss_dist = deg2rad(theta_deg) * 268210   # expected miss distance in AU
+
+    println("Expected miss distance based on geometry: ",expected_geometric_miss_dist)
+
     if i == 1
         open("miss_distances.csv", "w") do io
-            writedlm(io, [theta_deg miss_dist], ',')
+            writedlm(io, [theta_deg miss_dist expected_geometric_miss_dist], ',')
         end
     else
         open("miss_distances.csv", "a") do io
-            writedlm(io, [ theta_deg miss_dist], ',')
+            writedlm(io, [ theta_deg miss_dist expected_geometric_miss_dist], ',')
         end
     end
 
