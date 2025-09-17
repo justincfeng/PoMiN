@@ -391,8 +391,8 @@ function FHEN_constructor( n::Int, d::Int = 3 ,
         nZ = 2*n*d
         nT = N - n  # Number of test particles
         nZT = 2*nT*d  # Phase space size for test particles
+        xo = zeros(eltype(u),d)
         if N == n && nZ == length(u)
-            xo = zeros(eltype(u),d)
             dU_u = ∂(UConstructorN(Φ,p,xo,one(eltype(u)),d),u)
             return Jsympl(dHN(u,p,d) + dU_u)
         elseif N > n && (nZ + nZT) == length(u)
