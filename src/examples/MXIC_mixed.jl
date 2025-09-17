@@ -40,11 +40,12 @@ function momentum_exchange_sweep()
         v2 = Double64(1.0)         # Speed of light, massless particle
         τ = dx / (v1 + v2)         # Time for particles to meet
         t_flight = Double64(10.0) * τ         # Total scattering time
-        
         # Solve with Julia ODE integrator (save only last point)
-        sol = pomin.solve(system, pomin.ParametersJulia((Double64(0.0), t_flight), 
-                         integrator="Vern9", atol=1e-18, rtol=1e-18, Nrec=-1))
-        
+        sol = pomin.solve(system, 
+                          pomin.ParametersJulia(
+                            (Double64(0.0),t_flight), 
+                            integrator="Vern9", 
+                            atol=1e-18, rtol=1e-18, Nrec=-1))
         # Extract momentum change (particle 1, y-component)
         # Initial momentum: sol.u[1] = [q1x,q1y,q1z,q2x,q2y,q2z,
         #                               p1x,p1y,p1z,p2x,p2y,p2z]
@@ -58,8 +59,7 @@ function momentum_exchange_sweep()
         
         # Calculate relative error
         rel_error = abs(abs(dp_numerical) - abs(dp_analytical)) 
-                    / 
-                    abs(dp_analytical) * 100
+                    / abs(dp_analytical) * 100
         
         # Store results
         push!(results, (nn=nn, b=b, dp_analytical=dp_analytical, 
