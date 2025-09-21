@@ -33,7 +33,8 @@ mchip = tpfl(1.0E-30)
 qchip = Xst0
 
 vst = norm(Vst)
-γst = one(tpfl)/sqrt(one(tpfl)-(vst/c)^2)
+# γst = one(tpfl)/sqrt(one(tpfl)-(vst/c)^2)
+γst = one(tpfl)
 
 δV =  tpfl.([-6.04280291023418732263714890692229831e-08,
              6.96240251604129644625817536477811962e-08,

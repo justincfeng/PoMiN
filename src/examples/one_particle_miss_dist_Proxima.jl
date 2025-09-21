@@ -80,4 +80,9 @@ q_proxima = Zend[1:3]
 q_target = q_proxima + bv
 miss_dist = norm(q_starchip - q_target) / AU
 
+println("Final Positions:")
+println("  Spacecraft: [$(q_starchip[1]/AU), $(q_starchip[2]/AU), $(q_starchip[3]/AU)] AU")
+println("  Proxima: [$(q_proxima[1]/AU), $(q_proxima[2]/AU), $(q_proxima[3]/AU)] AU")
+println("  Target: [$(q_target[1]/AU), $(q_target[2]/AU), $(q_target[3]/AU)] AU")
+println("  Distance spacecraft-Proxima: $(norm(q_starchip - q_proxima)/AU) AU")
 println("Miss distance: ",miss_dist," AU")
