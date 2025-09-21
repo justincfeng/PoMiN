@@ -35,17 +35,11 @@ qchip = Xst0
 vst = norm(Vst)
 γst = one(tpfl)/sqrt(one(tpfl)-(vst/c)^2)
 
-δV =  tpfl.([-6.04280291023418732263714890692229831e-08,
-             6.96240251604129644625817536477811962e-08,
-             -5.34085226136474509045517326371492461e-08])
-
 # Momentum scaled by same factor as mass to preserve velocity
 pchip = (mchip*γst) .* (Vst)
-pchipcorr = (mchip*γst) .* (Vst .+ (δV ./ γst ) )
 
 # Particle object for spacecraft
 Pchip = pomin.setup_single_particle(mchip, qchip, pchip, tpfl)
-Pchipcorr = pomin.setup_single_particle(mchip, qchip, pchipcorr, tpfl)
 
 #-----------------------------------------------------------------------
 #   INITIAL DATA SETUP FOR PROXIMA CENTAURI
@@ -163,8 +157,8 @@ d_proxima_SPJ    = norm(q_proxima_SPJ - XpxF(tcl)) / AU
 # SUN + PROXIMA + JUPITER (CORRECTED)
 
 ## CORRECTION OBTAINED FROM:
-#   dxe = q_spacecraft_SPJ - target_pos
-#   δV  = (- dxe ./ tcl ) + Vst
+dxe = q_spacecraft_SPJ - q_target_pos_SPJ
+δV  = - dxe ./ tcl
 
 # Momentum scaled by same factor as mass to preserve velocity
 pchipcorr = (mchip*γst) .* (Vst .+ (δV ./ γst ) )
