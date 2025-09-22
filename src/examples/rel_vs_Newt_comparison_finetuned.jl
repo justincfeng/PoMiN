@@ -184,8 +184,12 @@ params = pomin.ParametersJulia(tspan, integrator="Vern7",
 Ptest = Pchip_rel
 PtestN = Pchip_newt
 
-Pint = pomin.merge_particle_systems(PProx, Psol, Palpha, Pjup)
-PintN = pomin.merge_particle_systems(PProxN, Psol, PalphaN, PjupN)
+#Pint = pomin.merge_particle_systems(PProx, Psol)
+#PintN = pomin.merge_particle_systems(PProxN, Psol)
+#Pint = pomin.merge_particle_systems(PProx, Psol, Palpha, Pjup)
+#PintN = pomin.merge_particle_systems(PProxN, Psol, PalphaN, PjupN)
+Pint = pomin.merge_particle_systems(PProx, Psol, Palpha, Pjup, PEarth)
+PintN = pomin.merge_particle_systems(PProxN, Psol, PalphaN, PjupN, PEarthN)
 #Pint = pomin.merge_particle_systems(PProx, Psol, Pjup, Palpha, PEarth, PMoon, PMars)
 #PintN = pomin.merge_particle_systems(PProxN, Psol, PjupN, PalphaN, PEarthN, PMoonN, PMarsN)
 
@@ -475,9 +479,9 @@ println("\nVerification: √(∥² + ⊥²) = $(Printf.@sprintf("%.6e", sqrt((Δ
 #   SAVE RESULTS TO TEXT FILE
 #-----------------------------------------------------------------------
 
-println("\nSaving results to test_particle_data.txt...")
+println("\nSaving results to test_particle_results.txt...")
 
-open("test_particle_data.txt", "w") do file
+open("test_particle_results.txt", "w") do file
     println(file, "="^70)
     println(file, "TEST PARTICLE INITIAL DATA AND OPTIMIZATION RESULTS")
     println(file, "Generated: $(now())")
@@ -527,12 +531,12 @@ open("test_particle_data.txt", "w") do file
     println(file, "\n" * "="^70)
 end
 
-println("Results saved to test_particle_data.txt")
+println("Results saved to test_particle_results.txt")
 
 # Save corrected initial data for the chip
-println("Saving corrected chip initial data to chip_corrected_data.txt...")
+println("Saving corrected chip initial data to chip_corrected_results.txt...")
 
-open("chip_corrected_data.txt", "w") do file
+open("chip_corrected_results.txt", "w") do file
     println(file, "="^70)
     println(file, "CORRECTED TEST PARTICLE (CHIP) INITIAL DATA")
     println(file, "Generated: $(now())")
@@ -578,4 +582,4 @@ open("chip_corrected_data.txt", "w") do file
     println(file, "\n" * "="^70)
 end
 
-println("Corrected chip data saved to chip_corrected_data.txt")
+println("Corrected chip data saved to chip_corrected_results.txt")

@@ -11,7 +11,7 @@
 include("../pomin.jl")
 using .pomin
 using LinearAlgebra, Printf, Plots
-using DoubleFloats, ForwardDiff
+using DoubleFloats, ForwardDiff, Dates
 tpfl  = Double64
 
 include("target_proxima.jl")
@@ -176,7 +176,7 @@ PMarsN = pomin.setup_single_particle(mMars, qMars, pMarsN, tpfl)
 
 # Integration parameters
 tspan = (tpfl(0), tcl*tpfl(1.1))
-tols  = tpfl(1e-18)
+tols  = tpfl(1e-17)
 
 params = pomin.ParametersJulia(tspan, integrator="Vern7", 
                                      atol=tols, rtol=tols)
@@ -184,10 +184,14 @@ params = pomin.ParametersJulia(tspan, integrator="Vern7",
 Ptest = Pchip_rel
 PtestN = Pchip_newt
 
-#Pint = pomin.merge_particle_systems(PProx, Psol, Pjup, PMoon, PMars)
-#PintN = pomin.merge_particle_systems(PProxN, Psol, PjupN, PMoonN, PMarsN)
-Pint = pomin.merge_particle_systems(PProx, Psol, Palpha)
-PintN = pomin.merge_particle_systems(PProxN, Psol, PalphaN)
+#Pint = pomin.merge_particle_systems(PProx, Psol)
+#PintN = pomin.merge_particle_systems(PProxN, Psol)
+Pint = pomin.merge_particle_systems(PProx, Psol, Palpha, Pjup)
+PintN = pomin.merge_particle_systems(PProxN, Psol, PalphaN, PjupN)
+#Pint = pomin.merge_particle_systems(PProx, Psol, Palpha, Pjup, PEarth)
+#PintN = pomin.merge_particle_systems(PProxN, Psol, PalphaN, PjupN, PEarthN)
+#Pint = pomin.merge_particle_systems(PProx, Psol, Pjup, Palpha, PEarth, PMoon, PMars)
+#PintN = pomin.merge_particle_systems(PProxN, Psol, PjupN, PalphaN, PEarthN, PMoonN, PMarsN)
 
 nInt = length(Pint.m)
 
@@ -334,7 +338,6 @@ println("fmR(Vst) - qmissR = ", fmRcheck)
 println("fmR(Vst) = ", fmRVst)
 println("qmissR = ", qmissR)
 
-
 #-----------------------------------------------------------------------
 #
 #   FINE TUNING
@@ -471,3 +474,112 @@ println("  Angle diff:  $(Printf.@sprintf("%.6e", angle_diff_ft_deg))° ($(Print
 
 # Verification
 println("\nVerification: √(∥² + ⊥²) = $(Printf.@sprintf("%.6e", sqrt((Δq_parallel_mag/AU)^2 + (Δq_transverse_mag/AU)^2))) AU")
+
+#-----------------------------------------------------------------------
+#   SAVE RESULTS TO TEXT FILE
+#-----------------------------------------------------------------------
+
+println("\nSaving results to test_particle_resultsnoearth.txt...")
+
+open("test_particle_resultsnoearth.txt", "w") do file
+    println(file, "="^70)
+    println(file, "TEST PARTICLE INITIAL DATA AND OPTIMIZATION RESULTS")
+    println(file, "Generated: $(now())")
+    println(file, "="^70)
+    
+    println(file, "\nINITIAL TEST PARTICLE DATA:")
+    println(file, "Mass (solar masses): $(mchip)")
+    println(file, "Initial position (geometric units): $(qchip)")
+    println(file, "Initial velocity magnitude: $(vst) c")
+    println(file, "Initial velocity vector: $(Vst)")
+    println(file, "Lorentz factor: $(γst)")
+    
+    println(file, "\nINITIAL MOMENTA:")
+    println(file, "Relativistic momentum: $(pchip_rel)")
+    println(file, "Newtonian momentum: $(pchip_newt)")
+    
+    println(file, "\nINITIAL MISS DISTANCES:")
+    println(file, "Newtonian miss distance: $(dmissN/AU) AU")
+    println(file, "Relativistic miss distance: $(dmissR/AU) AU")
+    println(file, "Difference: $((dmissR-dmissN)/AU) AU")
+    
+    println(file, "\nFINE-TUNED VELOCITIES:")
+    println(file, "Newtonian optimized velocity: $(v_finetuned_N)")
+    println(file, "Relativistic optimized velocity: $(v_finetuned_R)")
+    println(file, "Newtonian speed: $(Printf.@sprintf("%.10f", norm(v_finetuned_N))) c")
+    println(file, "Relativistic speed: $(Printf.@sprintf("%.10f", norm(v_finetuned_R))) c")
+    
+    println(file, "\nOPTIMIZATION RESULTS:")
+    println(file, "Newtonian final miss distance: $(miss_final_N) AU")
+    println(file, "Relativistic final miss distance: $(miss_final_R) AU")
+    println(file, "Newtonian improvement factor: $(dmissN / norm(f_final_N))")
+    println(file, "Relativistic improvement factor: $(dmissR / norm(f_final_R))")
+    
+    println(file, "\nFINAL TRAJECTORY DIFFERENCES:")
+    println(file, "Total position difference: $(Printf.@sprintf("%.6e", Δq_total_mag/AU)) AU")
+    println(file, "Parallel component: $(Printf.@sprintf("%.6e", Δq_parallel_mag/AU)) AU")
+    println(file, "Transverse component: $(Printf.@sprintf("%.6e", Δq_transverse_mag/AU)) AU")
+    println(file, "Velocity difference: $(Printf.@sprintf("%.6e", norm(Δv_ft))) c")
+    println(file, "Angular difference: $(Printf.@sprintf("%.6e", angle_diff_ft_deg))° ($(Printf.@sprintf("%.6e", angle_diff_ft_arcsec))\")")
+    
+    println(file, "\nSYSTEM PARAMETERS:")
+    println(file, "Integration time: $(tcl) (geometric units)")
+    println(file, "Integration tolerances: $(tols)")
+    println(file, "Target offset: $(bv)")
+    println(file, "Number of main particles: $(nInt)")
+    
+    println(file, "\n" * "="^70)
+end
+
+println("Results saved to test_particle_resultsnoearth.txt")
+
+# Save corrected initial data for the chip
+println("Saving corrected chip initial data to chip_corrected_resultsnoearth.txt...")
+
+open("chip_corrected_resultsnoearth.txt", "w") do file
+    println(file, "="^70)
+    println(file, "CORRECTED TEST PARTICLE (CHIP) INITIAL DATA")
+    println(file, "Generated: $(now())")
+    println(file, "="^70)
+    
+    println(file, "\nORIGINAL INITIAL DATA:")
+    println(file, "Mass (solar masses): $(mchip)")
+    println(file, "Position (geometric units): $(qchip)")
+    println(file, "Original velocity: $(Vst)")
+    println(file, "Original speed: $(norm(Vst)) c")
+    
+    println(file, "\nCORRECTED NEWTONIAN DATA:")
+    println(file, "Mass (solar masses): $(mchip)")
+    println(file, "Position (geometric units): $(qchip)")
+    println(file, "Corrected velocity: $(v_finetuned_N)")
+    println(file, "Corrected speed: $(Printf.@sprintf("%.15f", norm(v_finetuned_N))) c")
+    println(file, "Corrected momentum: $(mchip .* v_finetuned_N)")
+    
+    println(file, "\nCORRECTED RELATIVISTIC DATA:")
+    println(file, "Mass (solar masses): $(mchip)")
+    println(file, "Position (geometric units): $(qchip)")
+    println(file, "Corrected velocity: $(v_finetuned_R)")
+    println(file, "Corrected speed: $(Printf.@sprintf("%.15f", norm(v_finetuned_R))) c")
+    v_magft_R = norm(v_finetuned_R)
+    γft_R = one(tpfl)/sqrt(one(tpfl)-(v_magft_R/c)^2)
+    println(file, "Lorentz factor: $(Printf.@sprintf("%.15f", γft_R))")
+    println(file, "Corrected momentum: $((mchip*γft_R) .* v_finetuned_R)")
+    
+    println(file, "\nVELOCITY CORRECTIONS:")
+    δv_N = v_finetuned_N - Vst
+    δv_R = v_finetuned_R - Vst
+    println(file, "Newtonian velocity correction: $(δv_N)")
+    println(file, "Relativistic velocity correction: $(δv_R)")
+    println(file, "Newtonian correction magnitude: $(Printf.@sprintf("%.6e", norm(δv_N))) c")
+    println(file, "Relativistic correction magnitude: $(Printf.@sprintf("%.6e", norm(δv_R))) c")
+    
+    println(file, "\nPERFORMANCE METRICS:")
+    println(file, "Newtonian final miss: $(Printf.@sprintf("%.6e", miss_final_N)) AU")
+    println(file, "Relativistic final miss: $(Printf.@sprintf("%.6e", miss_final_R)) AU")
+    println(file, "Newtonian improvement: $(Printf.@sprintf("%.6e", dmissN / norm(f_final_N)))")
+    println(file, "Relativistic improvement: $(Printf.@sprintf("%.6e", dmissR / norm(f_final_R)))")
+    
+    println(file, "\n" * "="^70)
+end
+
+println("Corrected chip data saved to chip_corrected_resultsnoearth.txt")
