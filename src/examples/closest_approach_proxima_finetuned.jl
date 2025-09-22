@@ -11,7 +11,7 @@
 include("../pomin.jl")
 using .pomin
 using LinearAlgebra, Printf, Plots
-using DoubleFloats
+using DoubleFloats, ForwardDiff
 tpfl  = Double64
 
 # using ArbNumerics
@@ -217,143 +217,53 @@ end
 
 FSPJc = targetrootconstructor(PintSPJc,PtestSPJc,paramsSPJc,bv,tcl)
 
-Fcheck = FSPJc_result - (q_spacecraft_SPJc - q_target_pos_SPJc)
+Fcheck = FSPJc(vcorr) - (q_spacecraft_SPJc - q_target_pos_SPJc)
 println("Fcheck = $Fcheck")
 println("Check miss distance: $(norm(Fcheck))")
 
-# Verify momentum calculation equivalence
-println("=== MOMENTUM CALCULATION VERIFICATION ===")
-println("Original pchipcorr = $pchipcorr")
-
-# Calculate momentum using the function's method for vcorr
-v_test = vcorr
-v_test_mag = norm(v_test)
-γ_test = one(eltype(v_test)) / sqrt(one(eltype(v_test)) - (v_test_mag/c)^2)
-pv_test = (mchip * γ_test) .* v_test
-
-println("Function method momentum = $pv_test")
-println("Momentum difference = $(norm(pchipcorr - pv_test))")
-println("Relative momentum error = $(norm(pchipcorr - pv_test) / norm(pchipcorr))")
-
-println("\nOriginal γst = $γst")
-println("New γ for vcorr = $γ_test")
-println("Corrected γstcorr = $γstcorr")
-println("γ difference = $(abs(γstcorr - γ_test))")
-println("=== END VERIFICATION ===\n")
-
-println("vcorr = $vcorr")
-println("q_spacecraft_SPJc = $q_spacecraft_SPJc")
-println("q_target_pos_SPJc = $q_target_pos_SPJc")
-println("Expected miss vector = $(q_spacecraft_SPJc - q_target_pos_SPJc)")
-
-FSPJc_result = FSPJc(vcorr)
-println("FSPJc(vcorr) = $FSPJc_result")
-
-
-
 #-----------------------------------------------------------------------
-# SUN + PROXIMA + JUPITER + MILKY WAY (Sun's Rest Frame)
-
-# Include external potential functionality
-include("../core/physics/external_potentials/external.jl")
-
-# Solar offset values in the Milky Way (in solar mass units)
-origin_x = tpfl(-1.708859462494220e17)  # Solar x-offset
-origin_z = tpfl(4.346342845091530e14)   # Solar z-offset  
-origin_y = tpfl(0.0)                    # Solar y-offset
-xo_MW = [origin_x, origin_y, origin_z]
-
-km_s = tpfl(1000.0 / 299792458.0)
-
-vpec    = km_s .* tpfl.([11.1, 12.24, 7.25])  # Solar peculiar motion
-v_LSR   = tpfl.([0.0, 220.0 * km_s, 0.0])     # LSR circular motion
-v_total = v_LSR + vpec                         # Total velocity
-
-xo_MWSRF = xo_MW .- v_total * tcl
-
-# Milky Way potential in the sun's rest frame
-Φ_MW = ΦMilkyWay(tpfl, xo_MWSRF)
-
-# Mass array for external potential (includes all massive bodies)
-m_ext = [msol, mProx, mjup]  # Sun, Proxima, Jupiter masses
-
-PintSPJMW       = pomin.merge_particle_systems(PintSP, Pjup)
-PtestSPJMW      = Pchipcorr  # Use corrected spacecraft
-
-paramsSPJMW     = pomin.ParametersJulia( tspan, integrator="Vern9", 
-                                     atol=tols, rtol=tols)
-
-solSPJMW        = pomin.solve(PintSPJMW, paramsSPJMW; testparticles=PtestSPJMW, Φ=Φ_MW)
-
-ZendSPJMW       = solSPJMW(tcl)
-q_spacecraft_SPJMW = ZendSPJMW[19:21]
-q_proxima_SPJMW    = ZendSPJMW[4:6] 
-q_target_pos_SPJMW = q_proxima_SPJMW + bv
-dist_prox_SPJMW    = norm(q_spacecraft_SPJMW - q_proxima_SPJMW) / AU
-miss_SPJMW         = norm(q_spacecraft_SPJMW - q_target_pos_SPJMW) / AU
-miss_SPJMW_flat    = norm(q_spacecraft_SPJMW - q_target_pos_Flat) / AU
-d_proxima_SPJMW    = norm(q_proxima_SPJMW - XpxF(tcl)) / AU
-
-#-----------------------------------------------------------------------
-#
-#   ANALYSIS AND RESULTS
-#
+# BROYDEN OPTIMIZATION
 #-----------------------------------------------------------------------
 
-println("="^70)
-println("4-BODY CLOSEST APPROACH CALCULATION RESULTS")
-println("="^70)
-println()
+# Include Broyden algorithm
+include("../utils/broyden.jl")
 
-println("Target Parameters:")
-println("  Target distance from Proxima: $(b0/AU) AU")
-println("  Time to closest approach: $(tcl) (geometric units)")
-println("  Spacecraft velocity: $(vst) c")
-println()
+println("\n=== BROYDEN OPTIMIZATION ===")
 
-println("Miss Distances (AU):")
-println("  Sun Only:")
-println("    Endpoint distance to Proxima (AU): $(dist_prox_SO)")
-println("    Proxima position  (AU): $(dist_prox_SO)")
-println("    Miss from target (AU): $(miss_SO)")
-println("    Miss from flat space (AU): $(miss_SO_flat)")
-println("    Proxima deviation (AU): $(d_proxima_SO)")
-println()
+println("Computing Jacobian")
+J_init = ForwardDiff.jacobian(FSPJc, vcorr)
 
-println("  Sun + Proxima:")
-println("    Endpoint distance to Proxima (AU): $(dist_prox_SP)")
-println("    Miss from target (AU): $(miss_SP)")
-println("    Miss from flat space (AU): $(miss_SP_flat)")
-println("    Proxima deviation (AU): $(d_proxima_SP)")
-println()
+println("Broyden iterations")
+v_finetuned = bsolve(FSPJc, J_init, FSPJc(vcorr), vcorr, 10)  # Maximum 10 iterations
 
-println("  Sun + Proxima + Jupiter:")
-println("    Endpoint distance to Proxima (AU): $(dist_prox_SPJ)")
-println("    Miss from target (AU): $(miss_SPJ)")
-println("    Miss from flat space (AU): $(miss_SPJ_flat)")
-println("    Proxima deviation (AU): $(d_proxima_SPJ)")
-println()
+# Check final result
+f_final = FSPJc(v_finetuned)
+println("\n=== BROYDEN RESULTS ===")
+println("Optimized velocity = $v_finetuned")
+println("Final function value = $f_final")
+println("Final norm |f| = $(norm(f_final))")
+println("Velocity correction = $(v_finetuned - vcorr)")
+println("Improvement factor = $(norm(FSPJc(vcorr)) / norm(f_final))")
+println("=== END BROYDEN ===\n")
 
-println("  Sun + Proxima + Jupiter (Corrected):")
-println("    Endpoint distance to Proxima (AU): $(dist_prox_SPJc)")
-println("    Miss from target (AU): $(miss_SPJc)")
-println("    Miss from flat space (AU): $(miss_SPJc_flat)")
-println("    Proxima deviation (AU): $(d_proxima_SPJc)")
-println()
+v_magft = norm(v_finetuned)
+γft = one(eltype(v_finetuned)) / sqrt(one(eltype(v_finetuned)) - (v_magft/c)^2)
+pvft = (PtestSPJc.m[1] * γft) .* v_finetuned
 
-println("  Sun + Proxima + Jupiter + Milky Way (Sun's Rest Frame):")
-println("    Endpoint distance to Proxima (AU): $(dist_prox_SPJMW)")
-println("    Miss from target (AU): $(miss_SPJMW)")
-println("    Miss from flat space (AU): $(miss_SPJMW_flat)")
-println("    Proxima deviation (AU): $(d_proxima_SPJMW)")
-println()
+# Create new particle with modified momentum
+Ptestft = pomin.setup_single_particle(PtestSPJc.m[1], PtestSPJc.q[1], pvft, eltype(PtestSPJc.m))
 
-println("Gravitational Effects:")
-println("  Sun-only vs Flat space miss difference: $(abs(miss_SO_flat - miss_SO)) AU")
-println("  Sun+Proxima vs Sun-only miss difference: $(abs(miss_SP - miss_SO)) AU")
-println("  Sun+Proxima+Jupiter vs Sun+Proxima miss difference: $(abs(miss_SPJ - miss_SP)) AU")
-println("  Correction effectiveness: $(abs(miss_SPJc - miss_SPJ)) AU improvement")
-println("  Milky Way vs Sun+Proxima+Jupiter(Corrected) difference: $(abs(miss_SPJMW - miss_SPJc)) AU")
-println()
+# Solve the system
+sol_ft = pomin.solve(PintSPJc, paramsSPJc; testparticles=Ptestft)
 
-println("="^70)
+# Calculate miss distance at final time
+Zend_ft = sol_ft(tcl)
+# Extract spacecraft and target positions (indices depend on system configuration)
+# For SPJc: PintSPJc has Sun(1-6) + Proxima(7-12) + Jupiter(13-18), testparticle is at (19-24)
+q_spacecraft_ft = Zend_ft[19:21]
+q_proxima_ft = Zend_ft[4:6]  # Proxima position (same as original)
+q_target_ft = q_proxima_ft + bv  # Target position
+
+println("Fine tuned speed = $(v_magft)")
+println("Fine tuned final spacecraft position = $(q_spacecraft_ft)")
+println("Fine tuned final target position = $(q_target_ft)")

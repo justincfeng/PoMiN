@@ -48,11 +48,21 @@ Arguments:
 - tpfl: Type for floating-point numbers (default: Float64)
 """
 function setup_single_particle(m::Real, q::Vector, p::Vector, tpfl::Type=Float64)
-    m = tpfl(m)
-    q = convert(Vector{tpfl}, q)
-    p = convert(Vector{tpfl}, p)
-    
-    return Particles([m], [q], [p])
+    # Check if we're dealing with ForwardDiff dual numbers
+    if eltype(p) <: Real && !(eltype(p) <: AbstractFloat && eltype(p) == tpfl)
+        # For ForwardDiff compatibility: preserve the dual number type in momentum
+        # but convert mass and position to target type
+        m_converted = tpfl(m)
+        q_converted = convert(Vector{tpfl}, q)
+        # Don't convert p if it contains dual numbers - preserve for differentiation
+        return Particles([m_converted], [q_converted], [p])
+    else
+        # Normal case: convert everything to target type
+        m_converted = tpfl(m)
+        q_converted = convert(Vector{tpfl}, q)
+        p_converted = convert(Vector{tpfl}, p)
+        return Particles([m_converted], [q_converted], [p_converted])
+    end
 end #-------------------------------------------------------------------
 
 """
@@ -73,10 +83,19 @@ function add_particle(system::Particles, m::Real, q::Vector, p::Vector)
     # Determine system's type from existing particles
     tpfl = eltype(system.m)
     
-    # Convert inputs to match system type
-    m_new = convert(tpfl, m)
-    q_new = convert(Vector{tpfl}, q)
-    p_new = convert(Vector{tpfl}, p)
+    # Check if we're dealing with ForwardDiff dual numbers in momentum
+    if eltype(p) <: Real && !(eltype(p) <: AbstractFloat && eltype(p) == tpfl)
+        # For ForwardDiff compatibility: preserve dual number type in momentum
+        m_new = convert(tpfl, m)
+        q_new = convert(Vector{tpfl}, q)
+        # Don't convert p if it contains dual numbers
+        p_new = p
+    else
+        # Normal case: convert everything to system type
+        m_new = convert(tpfl, m)
+        q_new = convert(Vector{tpfl}, q)
+        p_new = convert(Vector{tpfl}, p)
+    end
     
     # Create new arrays with additional particle
     masses = vcat(system.m, m_new)

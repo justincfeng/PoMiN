@@ -1,8 +1,8 @@
 #-----------------------------------------------------------------------
 #
-#   4-BODY CLOSEST APPROACH CALCULATION
+#   4-BODY CLOSEST APPROACH CALCULATION (NEWTONIAN FINE-TUNED)
 #   Spacecraft, Proxima Centauri, Sun, and Jupiter
-#   Modernized version compatible with current PoMiN framework
+#   With Broyden optimization for fine-tuning
 #
 #-----------------------------------------------------------------------
 
@@ -11,15 +11,8 @@
 include("../pomin.jl")
 using .pomin
 using LinearAlgebra, Printf, Plots
-using DoubleFloats
+using DoubleFloats, ForwardDiff
 tpfl  = Double64
-
-# using ArbNumerics
-# setprecision(ArbFloat, 256)
-# tpfl  = ArbFloat
-
-#setprecision(BigFloat, 256)  # Set precision to 256 bits
-#tpfl  = BigFloat
 
 include("target_proxima.jl")
 
@@ -32,9 +25,9 @@ mchip = tpfl(1.0E-30)
 qchip = Xst0
 
 vst = norm(Vst)
-γst = one(tpfl)/sqrt(one(tpfl)-(vst/c)^2)
+γst = one(tpfl)  # Newtonian case: no Lorentz factor
 
-# Momentum scaled by same factor as mass to preserve velocity
+# Momentum (Newtonian: p = mv)
 pchip = (mchip*γst) .* (Vst)
 
 # Particle object for spacecraft
@@ -63,15 +56,11 @@ psol = tpfl.([0.0, 0.0, 0.0])
 
 Psol = pomin.setup_single_particle(msol, qsol, psol, tpfl)
 
-# Jupiter parameters (realistic orbital position)
-# Jupiter mass relative to Sun: ~0.000954
-# Average distance from Sun: ~5.2 AU in geometric units
-# Orbital velocity: ~13.1 km/s converted to geometric units
+# Jupiter parameters
 mjup = tpfl(0.000954)  # Jupiter mass in solar masses
 qjup = tpfl.([5.2*AU, 0.0, 0.0])  # Jupiter position in geometric units
-# Convert orbital velocity to geometric units: v = 13.1 km/s / c
 vorb = tpfl(13.1E+3) / cMKS  # Orbital velocity in units of c
-γjup = one(tpfl)/sqrt(one(tpfl)-vorb^2)  # Lorentz factor
+γjup = one(tpfl)  # Newtonian case: no Lorentz factor
 pjup = tpfl.([0.0, mjup * γjup * vorb, 0.0])  # Jupiter momentum (y-direction)
 
 Pjup = pomin.setup_single_particle(mjup, qjup, pjup, tpfl)
@@ -87,7 +76,6 @@ tols  = tpfl(1e-16)
 #   TEST CASES
 #-----------------------------------------------------------------------
 
-#-----------------------------------------------------------------------
 # Target position
 q_target_pos_Flat = XbF(tcl)
 
@@ -100,13 +88,13 @@ PtestSO         = pomin.merge_particle_systems(Pchip,PProx)
 paramsSO        = pomin.ParametersJulia( tspan, integrator="Vern9", 
                                          atol=tols, rtol=tols)
 
-solSO           = pomin.solve(PintSO, paramsSO; testparticles=PtestSO)
+solSO           = pomin.solve(PintSO, paramsSO; testparticles=PtestSO , 
+                              Newtonian = true)
 
 ZendSO          = solSO(tcl)
 q_spacecraft_SO = ZendSO[7:9]
 q_proxima_SO    = ZendSO[10:12] 
 q_target_pos_SO = q_proxima_SO + bv
-dist_prox_SO    = norm(q_spacecraft_SO - q_proxima_SO) / AU
 miss_SO         = norm(q_spacecraft_SO - q_target_pos_SO) / AU
 miss_SO_flat    = norm(q_spacecraft_SO - q_target_pos_Flat) / AU
 d_proxima_SO    = norm(q_proxima_SO - XpxF(tcl)) / AU
@@ -120,14 +108,13 @@ PtestSP         = Pchip
 paramsSP        = pomin.ParametersJulia( tspan, integrator="Vern9", 
                                      atol=tols, rtol=tols)
 
-solSP           = pomin.solve(PintSP, paramsSP; testparticles=PtestSP)
+solSP           = pomin.solve(PintSP, paramsSP; testparticles=PtestSP , 
+                              Newtonian = true)
 
 ZendSP          = solSP(tcl)
 q_spacecraft_SP = ZendSP[13:15]
 q_proxima_SP    = ZendSP[4:6] 
-
 q_target_pos_SP = q_proxima_SP + bv
-dist_prox_SP    = norm(q_spacecraft_SP - q_proxima_SP) / AU
 miss_SP         = norm(q_spacecraft_SP - q_target_pos_SP) / AU
 miss_SP_flat    = norm(q_spacecraft_SP - q_target_pos_Flat) / AU
 d_proxima_SP    = norm(q_proxima_SP - XpxF(tcl)) / AU
@@ -141,13 +128,14 @@ PtestSPJ        = Pchip
 paramsSPJ       = pomin.ParametersJulia( tspan, integrator="Vern9", 
                                      atol=tols, rtol=tols)
 
-solSPJ          = pomin.solve(PintSPJ, paramsSPJ; testparticles=PtestSPJ)
+solSPJ          = pomin.solve(PintSPJ, paramsSPJ; 
+                              testparticles=PtestSPJ, 
+                              Newtonian = true)
 
 ZendSPJ         = solSPJ(tcl)
 q_spacecraft_SPJ = ZendSPJ[19:21]
 q_proxima_SPJ    = ZendSPJ[4:6] 
 q_target_pos_SPJ = q_proxima_SPJ + bv
-dist_prox_SPJ    = norm(q_spacecraft_SPJ - q_proxima_SPJ) / AU
 miss_SPJ         = norm(q_spacecraft_SPJ - q_target_pos_SPJ) / AU
 miss_SPJ_flat    = norm(q_spacecraft_SPJ - q_target_pos_Flat) / AU
 d_proxima_SPJ    = norm(q_proxima_SPJ - XpxF(tcl)) / AU
@@ -158,11 +146,10 @@ d_proxima_SPJ    = norm(q_proxima_SPJ - XpxF(tcl)) / AU
 ## Corrected velocity
 dxe     = q_spacecraft_SPJ - q_target_pos_SPJ
 δV      = - dxe ./ tcl
-vcorr   = (Vst .+ (δV ./ γst ) )
-γstcorr = one(tpfl)/sqrt(one(tpfl)-(norm(vcorr)/c)^2)
+vcorr   = (Vst .+ (δV ./ γst ) )  # Newtonian case: γst = 1
 
-# Corrected momentum
-pchipcorr = (mchip*γstcorr) .* (vcorr )
+# Corrected momentum (Newtonian: p = mv)
+pchipcorr = (mchip*γst) .* vcorr
 
 # Particle object for spacecraft
 Pchipcorr = pomin.setup_single_particle(mchip, qchip, pchipcorr, tpfl)
@@ -171,85 +158,95 @@ PintSPJc        = pomin.merge_particle_systems(PintSP,Pjup)
 PtestSPJc       = Pchipcorr
 
 paramsSPJc      = pomin.ParametersJulia( tspan, integrator="Vern9", 
-                                    atol=tpfl(1e-24), rtol=tpfl(1e-24))
+                                     atol=tols, rtol=tols)
 
-solSPJc         = pomin.solve(PintSPJc, paramsSPJc; testparticles=PtestSPJc)
+solSPJc         = pomin.solve(PintSPJc, paramsSPJc; 
+                              testparticles=PtestSPJc ,
+                              Newtonian = true)
 
 ZendSPJc        = solSPJc(tcl)
 q_spacecraft_SPJc = ZendSPJc[19:21]
 q_proxima_SPJc    = ZendSPJc[4:6] 
 q_target_pos_SPJc = q_proxima_SPJc + bv
-dist_prox_SPJc    = norm(q_spacecraft_SPJc - q_proxima_SPJc) / AU
 miss_SPJc         = norm(q_spacecraft_SPJc - q_target_pos_SPJc) / AU
 miss_SPJc_flat    = norm(q_spacecraft_SPJc - q_target_pos_Flat) / AU
 d_proxima_SPJc    = norm(q_proxima_SPJc - XpxF(tcl)) / AU
 
 #-----------------------------------------------------------------------
-# SUN + PROXIMA + JUPITER (AUTODIFF CORRECTED)
+# NEWTONIAN TARGET ROOT CONSTRUCTOR
 
-function targetrootconstructor(Pint,Ptest0,params,bv,tcl)
+function targetrootconstructor_newtonian(Pint,Ptest0,params,bv,tcl)
     return function f(v)
-        # Create a modified particle with new velocity
-        # Calculate Lorentz factor for the new velocity
-        v_mag = norm(v)
-        γ = one(eltype(v)) / sqrt(one(eltype(v)) - (v_mag/c)^2)
-        
-        # Calculate new momentum: p = γmv
-        pv = (Ptest0.m[1] * γ) .* v
+        # Create a modified particle with new velocity (Newtonian)
+        # Calculate new momentum: p = mv (no Lorentz factor)
+        pv = Ptest0.m[1] .* v
         
         # Create new particle with modified momentum
         Ptest = pomin.setup_single_particle(Ptest0.m[1], Ptest0.q[1], pv, eltype(Ptest0.m))
 
-        # Solve the system
-        sol_modified = pomin.solve(Pint, params; testparticles=Ptest)
+        # Solve the system (Newtonian)
+        sol_modified = pomin.solve(Pint, params; testparticles=Ptest, Newtonian=true)
         
         # Calculate miss distance at final time
         Zend_modified = sol_modified(tcl)
-        # Extract spacecraft and target positions (indices depend on system configuration)
-        # For SPJc: PintSPJc has Sun(1-6) + Proxima(7-12) + Jupiter(13-18), testparticle is at (19-24)
+        # Extract spacecraft and target positions
         q_spacecraft = Zend_modified[19:21]
-        q_proxima = Zend_modified[4:6]  # Proxima position (same as original)
-        q_target = q_proxima + bv  # Target position
+        q_proxima = Zend_modified[4:6]
+        q_target = q_proxima + bv
         
         return q_spacecraft - q_target
     end
 end
 
-FSPJc = targetrootconstructor(PintSPJc,PtestSPJc,paramsSPJc,bv,tcl)
+FSPJc_newt = targetrootconstructor_newtonian(PintSPJc,PtestSPJc,paramsSPJc,bv,tcl)
 
-Fcheck = FSPJc_result - (q_spacecraft_SPJc - q_target_pos_SPJc)
+Fcheck = FSPJc_newt(vcorr) - (q_spacecraft_SPJc - q_target_pos_SPJc)
 println("Fcheck = $Fcheck")
 println("Check miss distance: $(norm(Fcheck))")
 
-# Verify momentum calculation equivalence
-println("=== MOMENTUM CALCULATION VERIFICATION ===")
-println("Original pchipcorr = $pchipcorr")
+#-----------------------------------------------------------------------
+# BROYDEN OPTIMIZATION (NEWTONIAN)
 
-# Calculate momentum using the function's method for vcorr
-v_test = vcorr
-v_test_mag = norm(v_test)
-γ_test = one(eltype(v_test)) / sqrt(one(eltype(v_test)) - (v_test_mag/c)^2)
-pv_test = (mchip * γ_test) .* v_test
+# Include Broyden algorithm
+include("../utils/broyden.jl")
 
-println("Function method momentum = $pv_test")
-println("Momentum difference = $(norm(pchipcorr - pv_test))")
-println("Relative momentum error = $(norm(pchipcorr - pv_test) / norm(pchipcorr))")
+println("\n=== NEWTONIAN BROYDEN OPTIMIZATION ===")
 
-println("\nOriginal γst = $γst")
-println("New γ for vcorr = $γ_test")
-println("Corrected γstcorr = $γstcorr")
-println("γ difference = $(abs(γstcorr - γ_test))")
-println("=== END VERIFICATION ===\n")
+println("Computing Jacobian")
+J_init = ForwardDiff.jacobian(FSPJc_newt, vcorr)
 
-println("vcorr = $vcorr")
-println("q_spacecraft_SPJc = $q_spacecraft_SPJc")
-println("q_target_pos_SPJc = $q_target_pos_SPJc")
-println("Expected miss vector = $(q_spacecraft_SPJc - q_target_pos_SPJc)")
+println("Broyden iterations")
+v_finetuned = bsolve(FSPJc_newt, J_init, FSPJc_newt(vcorr), vcorr, 10)
 
-FSPJc_result = FSPJc(vcorr)
-println("FSPJc(vcorr) = $FSPJc_result")
+# Check final result
+f_final = FSPJc_newt(v_finetuned)
+println("\n=== BROYDEN RESULTS ===")
+println("Optimized velocity = $v_finetuned")
+println("Final function value = $f_final")
+println("Final norm |f| = $(norm(f_final))")
+println("Velocity correction = $(v_finetuned - vcorr)")
+println("Improvement factor = $(norm(FSPJc_newt(vcorr)) / norm(f_final))")
+println("=== END BROYDEN ===\n")
 
+# Create fine-tuned trajectory
+v_magft = norm(v_finetuned)
+pvft = PtestSPJc.m[1] .* v_finetuned  # Newtonian momentum
 
+# Create new particle with modified momentum
+Ptestft = pomin.setup_single_particle(PtestSPJc.m[1], PtestSPJc.q[1], pvft, eltype(PtestSPJc.m))
+
+# Solve the system
+sol_ft = pomin.solve(PintSPJc, paramsSPJc; testparticles=Ptestft, Newtonian=true)
+
+# Calculate miss distance at final time
+Zend_ft = sol_ft(tcl)
+q_spacecraft_ft = Zend_ft[19:21]
+q_proxima_ft = Zend_ft[4:6]
+q_target_ft = q_proxima_ft + bv
+
+println("Fine tuned speed = $(v_magft)")
+println("Fine tuned final spacecraft position = $(q_spacecraft_ft)")
+println("Fine tuned final target position = $(q_target_ft)")
 
 #-----------------------------------------------------------------------
 # SUN + PROXIMA + JUPITER + MILKY WAY (Sun's Rest Frame)
@@ -274,22 +271,20 @@ xo_MWSRF = xo_MW .- v_total * tcl
 # Milky Way potential in the sun's rest frame
 Φ_MW = ΦMilkyWay(tpfl, xo_MWSRF)
 
-# Mass array for external potential (includes all massive bodies)
-m_ext = [msol, mProx, mjup]  # Sun, Proxima, Jupiter masses
-
 PintSPJMW       = pomin.merge_particle_systems(PintSP, Pjup)
-PtestSPJMW      = Pchipcorr  # Use corrected spacecraft
+PtestSPJMW      = Ptestft  # Use fine-tuned spacecraft
 
 paramsSPJMW     = pomin.ParametersJulia( tspan, integrator="Vern9", 
                                      atol=tols, rtol=tols)
 
-solSPJMW        = pomin.solve(PintSPJMW, paramsSPJMW; testparticles=PtestSPJMW, Φ=Φ_MW)
+solSPJMW        = pomin.solve(PintSPJMW, paramsSPJMW; 
+                              testparticles=PtestSPJMW, Φ=Φ_MW, 
+                              Newtonian = true)
 
 ZendSPJMW       = solSPJMW(tcl)
 q_spacecraft_SPJMW = ZendSPJMW[19:21]
 q_proxima_SPJMW    = ZendSPJMW[4:6] 
 q_target_pos_SPJMW = q_proxima_SPJMW + bv
-dist_prox_SPJMW    = norm(q_spacecraft_SPJMW - q_proxima_SPJMW) / AU
 miss_SPJMW         = norm(q_spacecraft_SPJMW - q_target_pos_SPJMW) / AU
 miss_SPJMW_flat    = norm(q_spacecraft_SPJMW - q_target_pos_Flat) / AU
 d_proxima_SPJMW    = norm(q_proxima_SPJMW - XpxF(tcl)) / AU
@@ -301,7 +296,7 @@ d_proxima_SPJMW    = norm(q_proxima_SPJMW - XpxF(tcl)) / AU
 #-----------------------------------------------------------------------
 
 println("="^70)
-println("4-BODY CLOSEST APPROACH CALCULATION RESULTS")
+println("4-BODY CLOSEST APPROACH CALCULATION RESULTS (NEWTONIAN)")
 println("="^70)
 println()
 
@@ -313,36 +308,35 @@ println()
 
 println("Miss Distances (AU):")
 println("  Sun Only:")
-println("    Endpoint distance to Proxima (AU): $(dist_prox_SO)")
-println("    Proxima position  (AU): $(dist_prox_SO)")
 println("    Miss from target (AU): $(miss_SO)")
 println("    Miss from flat space (AU): $(miss_SO_flat)")
 println("    Proxima deviation (AU): $(d_proxima_SO)")
 println()
 
 println("  Sun + Proxima:")
-println("    Endpoint distance to Proxima (AU): $(dist_prox_SP)")
 println("    Miss from target (AU): $(miss_SP)")
 println("    Miss from flat space (AU): $(miss_SP_flat)")
 println("    Proxima deviation (AU): $(d_proxima_SP)")
 println()
 
 println("  Sun + Proxima + Jupiter:")
-println("    Endpoint distance to Proxima (AU): $(dist_prox_SPJ)")
 println("    Miss from target (AU): $(miss_SPJ)")
 println("    Miss from flat space (AU): $(miss_SPJ_flat)")
 println("    Proxima deviation (AU): $(d_proxima_SPJ)")
 println()
 
 println("  Sun + Proxima + Jupiter (Corrected):")
-println("    Endpoint distance to Proxima (AU): $(dist_prox_SPJc)")
 println("    Miss from target (AU): $(miss_SPJc)")
 println("    Miss from flat space (AU): $(miss_SPJc_flat)")
 println("    Proxima deviation (AU): $(d_proxima_SPJc)")
 println()
 
+println("  Sun + Proxima + Jupiter (Fine-tuned):")
+println("    Miss from target (AU): $(norm(q_spacecraft_ft - q_target_ft) / AU)")
+println("    Miss from flat space (AU): $(norm(q_spacecraft_ft - q_target_pos_Flat) / AU)")
+println()
+
 println("  Sun + Proxima + Jupiter + Milky Way (Sun's Rest Frame):")
-println("    Endpoint distance to Proxima (AU): $(dist_prox_SPJMW)")
 println("    Miss from target (AU): $(miss_SPJMW)")
 println("    Miss from flat space (AU): $(miss_SPJMW_flat)")
 println("    Proxima deviation (AU): $(d_proxima_SPJMW)")
@@ -353,7 +347,8 @@ println("  Sun-only vs Flat space miss difference: $(abs(miss_SO_flat - miss_SO)
 println("  Sun+Proxima vs Sun-only miss difference: $(abs(miss_SP - miss_SO)) AU")
 println("  Sun+Proxima+Jupiter vs Sun+Proxima miss difference: $(abs(miss_SPJ - miss_SP)) AU")
 println("  Correction effectiveness: $(abs(miss_SPJc - miss_SPJ)) AU improvement")
-println("  Milky Way vs Sun+Proxima+Jupiter(Corrected) difference: $(abs(miss_SPJMW - miss_SPJc)) AU")
+println("  Fine-tuning effectiveness: $(abs(norm(q_spacecraft_ft - q_target_ft) / AU - miss_SPJc)) AU improvement")
+println("  Milky Way vs Fine-tuned difference: $(abs(miss_SPJMW - norm(q_spacecraft_ft - q_target_ft) / AU)) AU")
 println()
 
 println("="^70)
