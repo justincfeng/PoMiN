@@ -46,8 +46,13 @@ PProx = pomin.setup_single_particle(mProx, qProx, pProx, tpfl)
 mEarth = tpfl(3.0033693739E-06)
 
 # Earth coordinates generated using astropy with epoch J2000
-qEarth = tpfl.([-1.8667826140E+07, 8.9633743993E+07, 3.8883291714E+07])         # geometric units
-pEarth = tpfl.([-2.9839042080E-10, -5.0388889700E-11, -2.1846049145E-11])       # geometric units
+qEarth = tpfl.([-1.866782584728260E+07, 8.963374397323200E+07, 3.888329146643650E+07])      # geometric units
+vEarth = tpfl.([-9.935188906586840E-05, -1.677745335408000E-05, -7.273846929131220E-06])    # units of c
+γEarth = one(tpfl) / sqrt(one(tpfl) - norm(vEarth)^2)
+pEarth = mEarth * γEarth * vEarth
+
+# pEarth = tpfl.([-2.9839042080E-10, -5.0388889700E-11, -2.1846049145E-11])       # geometric units
+# println((pEarth - [-2.9839042080E-10, -5.0388889700E-11, -2.1846049145E-11]))
 
 PEarth = pomin.setup_single_particle(mEarth, qEarth, pEarth, tpfl)
 

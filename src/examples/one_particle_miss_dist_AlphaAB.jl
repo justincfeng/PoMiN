@@ -48,7 +48,11 @@ malpha = tpfl(2.0429)
 
 # Alpha A+B barycenter position and velocity given by Kervella et al 2017
 qalpha = tpfl.([-1.045245216607860E+13, -8.74487747435090E+12, -2.442178248634550E+13])         # in geometric units
-palpha = tpfl.([-6.363558578130740E-05, 1.508126516235040E-04, 1.475021586009610E-04])          # in geometric units
+valpha = tpfl.([-3.11496332572849E-05, 7.38228261899771E-05, 7.22023391262231E-05])             # in units of c
+γalpha = one(tpfl) / sqrt(one(tpfl) - norm(valpha)^2)
+
+# palpha = tpfl.([-6.363558578130740E-05, 1.508126516235040E-04, 1.475021586009610E-04])          # in geometric units
+palpha = malpha * γalpha * valpha
 
 Palpha = pomin.setup_single_particle(malpha, qalpha, palpha, tpfl)
 
