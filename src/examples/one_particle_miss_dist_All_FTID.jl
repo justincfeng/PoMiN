@@ -308,8 +308,8 @@ dmissN  = norm(qmissN)
 qmissFlat = flat_space_spacecraft_final - zend0[7:9]
 dmissFlat = norm(qmissFlat)
 
-dmissFlatComp = rcbSol[2]
-dmissFlatGrav = rcbSol[3]
+dmissFlatComp = rcbSol[2]*bSol
+dmissFlatGrav = rcbSol[3]*bSol
 
 println("SUN RESULTS:")
 println("Flat space miss: ", dmissFlat, " (", dmissFlat/AU, " AU)")
@@ -368,8 +368,8 @@ dmissN  = norm(qmissN)
 qmissFlat = flat_space_spacecraft_final - zend0[7:9]
 dmissFlat = norm(qmissFlat)
 
-dmissFlatComp = rcbAlpha[2]
-dmissFlatGrav = rcbAlpha[3]
+dmissFlatComp = rcbAlpha[2]*bAlpha
+dmissFlatGrav = rcbAlpha[3]*bAlpha
 
 println("ALPHA CENTAURI RESULTS:")
 println("Flat space miss: ", dmissFlat, " (", dmissFlat/AU, " AU)")
@@ -428,8 +428,8 @@ dmissN  = norm(qmissN)
 qmissFlat = flat_space_spacecraft_final - zend0[7:9]
 dmissFlat = norm(qmissFlat)
 
-dmissFlatComp = rcbJup[2]
-dmissFlatGrav = rcbJup[3]
+dmissFlatComp = rcbJup[2]*bJup
+dmissFlatGrav = rcbJup[3]*bJup
 
 println("JUPITER RESULTS:")
 println("Flat space miss: ", dmissFlat, " (", dmissFlat/AU, " AU)")
@@ -488,8 +488,8 @@ dmissN  = norm(qmissN)
 qmissFlat = flat_space_spacecraft_final - zend0[7:9]
 dmissFlat = norm(qmissFlat)
 
-dmissFlatComp = rcbEarth[2]
-dmissFlatGrav = rcbEarth[3]
+dmissFlatComp = rcbEarth[2]*bEarth
+dmissFlatGrav = rcbEarth[3]*bEarth
 
 println("EARTH RESULTS:")
 println("Flat space miss: ", dmissFlat, " (", dmissFlat/AU, " AU)")
@@ -548,8 +548,8 @@ dmissN  = norm(qmissN)
 qmissFlat = flat_space_spacecraft_final - zend0[7:9]
 dmissFlat = norm(qmissFlat)
 
-dmissFlatComp = rcbProx[2]
-dmissFlatGrav = rcbProx[3]
+dmissFlatComp = rcbProx[2]*bProx
+dmissFlatGrav = rcbProx[3]*bProx
 
 println("PROXIMA RESULTS:")
 println("Flat space miss: ", dmissFlat, " (", dmissFlat/AU, " AU)")
@@ -608,8 +608,8 @@ dmissN  = norm(qmissN)
 qmissFlat = flat_space_spacecraft_final - zend0[7:9]
 dmissFlat = norm(qmissFlat)
 
-dmissFlatComp = rcbMoon[2]
-dmissFlatGrav = rcbMoon[3]
+dmissFlatComp = rcbMoon[2]*bMoon
+dmissFlatGrav = rcbMoon[3]*bMoon
 
 println("MOON RESULTS:")
 println("Flat space miss: ", dmissFlat, " (", dmissFlat/AU, " AU)")
@@ -668,8 +668,8 @@ dmissN  = norm(qmissN)
 qmissFlat = flat_space_spacecraft_final - zend0[7:9]
 dmissFlat = norm(qmissFlat)
 
-dmissFlatComp = rcbMars[2]
-dmissFlatGrav = rcbMars[3]
+dmissFlatComp = rcbMars[2]*bMars
+dmissFlatGrav = rcbMars[3]*bMars
 
 println("MARS RESULTS:")
 println("Flat space miss: ", dmissFlat, " (", dmissFlat/AU, " AU)")
