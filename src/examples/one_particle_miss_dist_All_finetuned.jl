@@ -184,6 +184,97 @@ PMars = pomin.setup_single_particle(mMars, qMars, pMars, tpfl)
 PMarsN = pomin.setup_single_particle(mMars, qMars, pMarsN, tpfl)
 
 #-----------------------------------------------------------------------
+#   HIGHER-ORDER GR EFFECTS ANALYSIS
+#-----------------------------------------------------------------------
+
+# Function to calculate higher-order GR correction parameter
+# Formula: -G²M²(1-4v²)/(2L²v⁴) + GM/(Lv²) + 1
+# This estimates the ratio b/rc or more generally evaluates the expression for length scale L
+function gr_correction_parameter(M, v, L; G_units=tpfl(1.0))
+    """
+    Calculate higher-order GR correction parameter
+    
+    Parameters:
+    - M: Mass of the gravitating body (in solar masses)
+    - v: Velocity of the test particle (in units of c)
+    - L: Characteristic length scale (e.g., impact parameter or closest approach)
+    - G_units: Gravitational constant in geometric units (default = 1)
+    
+    Returns:
+    - Correction parameter value
+    """
+    v2 = v^2
+    v4 = v^4
+    L2 = L^2
+    
+    # First term: -G²M²(1-4v²)/(2L²v⁴)
+    term1 = -(G_units^2 * M^2 * (one(tpfl) - 4*v2)) / (2*L2*v4)
+    
+    # Second term: GM/(Lv²)
+    term2 = (G_units * M) / (L * v2)
+    
+    # Third term: +1
+    term3 = one(tpfl)
+    
+    return term1 + term2 + term3
+end
+
+# Function to calculate closest approach distance for linear motion
+function closest_approach_distance(spacecraft_pos, spacecraft_vel, body_pos, body_vel)
+    """
+    Calculate closest approach distance between spacecraft and celestial body
+    assuming linear motion (no gravitational deflection)
+    
+    Formula: b² = |Δx₀|² - (Δx₀ · Δv₀)²/|Δv₀|²
+    where Δx₀ = initial separation, Δv₀ = relative velocity
+    """
+    
+    # Relative position and velocity
+    delta_x0 = spacecraft_pos - body_pos
+    delta_v0 = spacecraft_vel - body_vel
+    
+    # Handle case where relative velocity is zero (no relative motion)
+    if norm(delta_v0) < tpfl(1e-15)
+        return norm(delta_x0)  # Constant separation
+    end
+    
+    # Closest approach formula
+    delta_x0_sq = dot(delta_x0, delta_x0)
+    delta_x0_dot_delta_v0 = dot(delta_x0, delta_v0)
+    delta_v0_sq = dot(delta_v0, delta_v0)
+    
+    b_squared = delta_x0_sq - (delta_x0_dot_delta_v0^2) / delta_v0_sq
+    
+    # Ensure non-negative (numerical precision issues)
+    b_squared = max(b_squared, tpfl(0.0))
+    
+    return sqrt(b_squared)
+end
+
+# Function to estimate characteristic length scales for each body using user's functions
+function estimate_length_scales(body_mass, body_position, body_velocity, spacecraft_velocity)
+    """
+    Estimate relevant length scales for GR analysis using user's closest_approach function
+    
+    Returns:
+    - impact_parameter: Closest approach distance for linear motion
+    - schwarzschild_radius: Schwarzschild radius of the body
+    - gravitational_radius: GM/c² (in geometric units, this is just GM)
+    """
+    
+    # Calculate proper closest approach distance using user's function
+    impact_parameter = closest_approach(qchip, body_position, spacecraft_velocity, body_velocity)
+    
+    # Schwarzschild radius: rs = 2GM/c² (in geometric units: rs = 2GM)
+    schwarzschild_radius = 2 * body_mass
+    
+    # Gravitational radius: GM/c² (in geometric units: GM)
+    gravitational_radius = body_mass
+    
+    return impact_parameter, schwarzschild_radius, gravitational_radius
+end
+
+#-----------------------------------------------------------------------
 #   BROYDEN OPTIMIZATION FUNCTIONS FOR FINE-TUNING
 #-----------------------------------------------------------------------
 
@@ -228,7 +319,7 @@ function fine_tune_velocity(initial_velocity, body_particle, is_newtonian::Bool,
     Ptest_template = pomin.setup_single_particle(mchip, qchip, pchip_template, tpfl)
     
     # Define miss function using your pattern
-    miss_func = missfuncconstructor_single(body_particle, Ptest_template, params, flat_space_spacecraft_final, tcl; Newt=is_newtonian)
+    miss_func = missfuncconstructor_single(body_particle, Ptest_template, params, proxima_final_position, tcl; Newt=is_newtonian)
     
     # Initial guess and function evaluation
     v0 = tpfl.(initial_velocity)
@@ -302,9 +393,9 @@ PtestN = Pchip_newt
 
 #nInt = length(Pint.m)
 
-# Get flat space spacecraft final position
+# Get Proxima's final position (target)
 XstF,XpxF,XbF,tcl_from_target = pfs
-flat_space_spacecraft_final = XstF(tcl)
+proxima_final_position = XbF(tcl)  # Proxima's final position as target
 
 #-----------------------------------------------------------------------
 #   SUN - WITH FINE-TUNING
@@ -329,8 +420,8 @@ sol = pomin.solve(Psol, params; testparticles=Pchip_sun_rel_FT)
 zendN = solN(tcl)
 zend = sol(tcl)
 
-qmissN = zendN[7:9] - flat_space_spacecraft_final
-qmiss = zend[7:9] - flat_space_spacecraft_final
+qmissN = zendN[7:9] - proxima_final_position
+qmiss = zend[7:9] - proxima_final_position
 dmissN = norm(qmissN)
 dmiss = norm(qmiss)
 
@@ -342,9 +433,14 @@ println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
 println("Relativistic miss: ", qmiss)
 println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
 
+# Calculate flat space result for comparison (trajectory with original velocity, no gravitational effects)
+qmiss_flat = proxima_final_position - proxima_final_position  # Zero by definition for flat space target
+dmiss_flat = tpfl(0.0)  # Flat space is the reference target
+
 # Store results for summary table (using proper precision type)
 miss_distances_N = tpfl.([dmissN/AU])
 miss_distances_R = tpfl.([dmiss/AU])
+miss_distances_F = tpfl.([dmiss_flat/AU])  # Flat space results (always zero by definition)
 body_names_completed = ["Sun"]
 
 #-----------------------------------------------------------------------
@@ -370,8 +466,8 @@ sol = pomin.solve(Palpha, params; testparticles=Pchip_alpha_rel_FT)
 zendN = solN(tcl)
 zend = sol(tcl)
 
-qmissN = zendN[7:9] - flat_space_spacecraft_final
-qmiss = zend[7:9] - flat_space_spacecraft_final
+qmissN = zendN[7:9] - proxima_final_position
+qmiss = zend[7:9] - proxima_final_position
 dmissN = norm(qmissN)
 dmiss = norm(qmiss)
 
@@ -386,6 +482,7 @@ println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
 # Store results for summary table
 push!(miss_distances_N, tpfl(dmissN/AU))
 push!(miss_distances_R, tpfl(dmiss/AU))
+push!(miss_distances_F, tpfl(0.0))  # Flat space reference
 push!(body_names_completed, "Alpha Centauri")
 
 #-----------------------------------------------------------------------
@@ -411,8 +508,8 @@ sol = pomin.solve(Pjup, params; testparticles=Pchip_jup_rel_FT)
 zendN = solN(tcl)
 zend = sol(tcl)
 
-qmissN = zendN[7:9] - flat_space_spacecraft_final
-qmiss = zend[7:9] - flat_space_spacecraft_final
+qmissN = zendN[7:9] - proxima_final_position
+qmiss = zend[7:9] - proxima_final_position
 dmissN = norm(qmissN)
 dmiss = norm(qmiss)
 
@@ -427,6 +524,7 @@ println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
 # Store results for summary table
 push!(miss_distances_N, tpfl(dmissN/AU))
 push!(miss_distances_R, tpfl(dmiss/AU))
+push!(miss_distances_F, tpfl(0.0))  # Flat space reference
 push!(body_names_completed, "Jupiter")
 
 #-----------------------------------------------------------------------
@@ -452,8 +550,8 @@ sol = pomin.solve(PEarth, params; testparticles=Pchip_earth_rel_FT)
 zendN = solN(tcl)
 zend = sol(tcl)
 
-qmissN = zendN[7:9] - flat_space_spacecraft_final
-qmiss = zend[7:9] - flat_space_spacecraft_final
+qmissN = zendN[7:9] - proxima_final_position
+qmiss = zend[7:9] - proxima_final_position
 dmissN = norm(qmissN)
 dmiss = norm(qmiss)
 
@@ -468,6 +566,7 @@ println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
 # Store results for summary table
 push!(miss_distances_N, tpfl(dmissN/AU))
 push!(miss_distances_R, tpfl(dmiss/AU))
+push!(miss_distances_F, tpfl(0.0))  # Flat space reference
 push!(body_names_completed, "Earth")
 
 #-----------------------------------------------------------------------
@@ -493,8 +592,8 @@ sol = pomin.solve(PProx, params; testparticles=Pchip_prox_rel_FT)
 zendN = solN(tcl)
 zend = sol(tcl)
 
-qmissN = zendN[7:9] - flat_space_spacecraft_final
-qmiss = zend[7:9] - flat_space_spacecraft_final
+qmissN = zendN[7:9] - proxima_final_position
+qmiss = zend[7:9] - proxima_final_position
 dmissN = norm(qmissN)
 dmiss = norm(qmiss)
 
@@ -509,6 +608,7 @@ println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
 # Store results for summary table
 push!(miss_distances_N, tpfl(dmissN/AU))
 push!(miss_distances_R, tpfl(dmiss/AU))
+push!(miss_distances_F, tpfl(0.0))  # Flat space reference
 push!(body_names_completed, "Proxima")
 
 #-----------------------------------------------------------------------
@@ -534,8 +634,8 @@ sol = pomin.solve(PMoon, params; testparticles=Pchip_moon_rel_FT)
 zendN = solN(tcl)
 zend = sol(tcl)
 
-qmissN = zendN[7:9] - flat_space_spacecraft_final
-qmiss = zend[7:9] - flat_space_spacecraft_final
+qmissN = zendN[7:9] - proxima_final_position
+qmiss = zend[7:9] - proxima_final_position
 dmissN = norm(qmissN)
 dmiss = norm(qmiss)
 
@@ -550,6 +650,7 @@ println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
 # Store results for summary table
 push!(miss_distances_N, tpfl(dmissN/AU))
 push!(miss_distances_R, tpfl(dmiss/AU))
+push!(miss_distances_F, tpfl(0.0))  # Flat space reference
 push!(body_names_completed, "Moon")
 
 #-----------------------------------------------------------------------
@@ -575,8 +676,8 @@ sol = pomin.solve(PMars, params; testparticles=Pchip_mars_rel_FT)
 zendN = solN(tcl)
 zend = sol(tcl)
 
-qmissN = zendN[7:9] - flat_space_spacecraft_final
-qmiss = zend[7:9] - flat_space_spacecraft_final
+qmissN = zendN[7:9] - proxima_final_position
+qmiss = zend[7:9] - proxima_final_position
 dmissN = norm(qmissN)
 dmiss = norm(qmiss)
 
@@ -591,7 +692,250 @@ println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
 # Store results for summary table
 push!(miss_distances_N, tpfl(dmissN/AU))
 push!(miss_distances_R, tpfl(dmiss/AU))
+push!(miss_distances_F, tpfl(0.0))  # Flat space reference
 push!(body_names_completed, "Mars")
+
+#-----------------------------------------------------------------------
+#
+#   HIGHER-ORDER GR EFFECTS ANALYSIS FOR ALL BODIES
+#
+#-----------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
+#   HIGHER-ORDER GR EFFECTS ANALYSIS
+#-----------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
+#   RATIO OF CLOSEST APPROACH TO IMPACT PARAMETER TERMS
+#-----------------------------------------------------------------------
+"""
+    rcb_ratio(b,v,M,tpfl=eltype(mass),G=one(tpfl))
+
+Calculate the ratio of closest approach to impact parameter for a given 
+trajectory.
+"""
+function rcb_ratio(b,v,M,tpfl=eltype(mass),G=one(tpfl))
+    l=one(tpfl)
+    TWO=tpfl(2)
+    FOUR=tpfl(4)
+    return ( l , -(G*M)/(b*v^2) , (G^2*M^2*(l-FOUR*v^2))/(TWO*b^2*v^4) )
+end #-------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
+#   CLOSEST APPROACH
+#-----------------------------------------------------------------------
+"""
+    closest_approach(xa,xb,va,vb)
+
+Calculate the closest approach between two trajectories.
+"""
+function closest_approach(xa,xb,va,vb)
+    Δx = xb-xa
+    Δv = vb-va
+    return sqrt( dot(Δx,Δx) - dot(Δx,Δv)^2/dot(Δv,Δv) )
+end #-------------------------------------------------------------------
+
+println("\n" * "="^80)
+println("HIGHER-ORDER GENERAL RELATIVISTIC EFFECTS ANALYSIS")
+println("="^80)
+println("Evaluating: -G²M²(1-4v²)/(2L²v⁴) + GM/(Lv²) + 1")
+println("This estimates the significance of higher-order GR corrections")
+println("="^80)
+
+# Collect all body data for analysis (including body velocities)
+bodies_data = [
+    ("Sun", msol, qsol, tpfl.([0.0, 0.0, 0.0]), norm(Vst)),
+    ("Alpha Centauri", malpha, qalpha, valpha, norm(Vst)),
+    ("Jupiter", mjup, qjup, vjup, norm(Vst)),
+    ("Earth", mEarth, qEarth, vEarth, norm(Vst)),
+    ("Proxima", mProx, qProx, Vpx, norm(Vst)),
+    ("Moon", mMoon, qMoon, vMoon, norm(Vst)),
+    ("Mars", mMars, qMars, vMars, norm(Vst))
+]
+
+# Storage for GR analysis results
+gr_corrections_impact = tpfl[]
+gr_corrections_grav = tpfl[]
+impact_parameters = tpfl[]
+schwarzschild_radii = tpfl[]
+gravitational_radii = tpfl[]
+
+println(@sprintf("%-15s | %-12s | %-12s | %-12s | %-12s | %-12s", 
+        "Body", "Impact (AU)", "Schw. R (AU)", "GR Corr (b)", "GR Corr (GM)", "b/rs Ratio"))
+println("-"^85)
+
+for (body_name, mass, position, body_velocity, spacecraft_speed) in bodies_data
+    # Calculate characteristic length scales using user's closest_approach function
+    b, rs, rg = estimate_length_scales(mass, position, body_velocity, Vst)
+    
+    # Calculate GR correction terms using user's rcb_ratio function
+    term1, term2, term3 = rcb_ratio(b, spacecraft_speed, mass, tpfl)
+    gr_corr_b = term1 + term2 + term3
+    
+    # Calculate GR correction using gravitational radius as length scale
+    term1_gm, term2_gm, term3_gm = rcb_ratio(rg, spacecraft_speed, mass, tpfl)
+    gr_corr_gm = term1_gm + term2_gm + term3_gm
+    
+    # Store results
+    push!(impact_parameters, b)
+    push!(schwarzschild_radii, rs)
+    push!(gravitational_radii, rg)
+    push!(gr_corrections_impact, gr_corr_b)
+    push!(gr_corrections_grav, gr_corr_gm)
+    
+    # Calculate ratio b/rs for comparison
+    b_rs_ratio = b / rs
+    
+    println(@sprintf("%-15s | %-12.3e | %-12.3e | %-12.6f | %-12.6f | %-12.3e", 
+            body_name, b/AU, rs/AU, gr_corr_b, gr_corr_gm, b_rs_ratio))
+end
+
+println("-"^85)
+
+# Calculate magnitude of GR corrections in AU
+println("\nGR CORRECTION MAGNITUDES:")
+println("=========================")
+println("Estimating the size of higher-order corrections in AU units")
+println(@sprintf("%-15s | %-15s | %-15s | %-15s | %-15s", 
+        "Body", "Linear Corr (AU)", "HO Corr (b) (AU)", "HO Corr (GM) (AU)", "Correction Ratio"))
+println("-"^90)
+
+gr_correction_magnitudes_b = tpfl[]
+gr_correction_magnitudes_gm = tpfl[]
+linear_correction_magnitudes = tpfl[]
+
+for i in 1:length(bodies_data)
+    body_name, mass, position, body_velocity, spacecraft_speed = bodies_data[i]
+    b = impact_parameters[i]
+    rs = schwarzschild_radii[i]
+    rg = gravitational_radii[i]
+    
+    # Linear GR correction estimate: GM/v²
+    linear_corr_mag = mass / (spacecraft_speed^2)
+    
+    # Calculate individual terms from the GR correction formula
+    v2 = spacecraft_speed^2
+    v4 = spacecraft_speed^4
+    
+    # Calculate individual terms using user's rcb_ratio function
+    term1_b, term2_b, term3_b = rcb_ratio(b, spacecraft_speed, mass, tpfl)
+    term1_gm, term2_gm, term3_gm = rcb_ratio(rg, spacecraft_speed, mass, tpfl)
+    
+    # Higher-order correction magnitudes (absolute value of the higher-order term)
+    ho_corr_b_mag = abs(term3_b) * b
+    ho_corr_gm_mag = abs(term3_gm) * rg
+    
+    # Store results
+    push!(linear_correction_magnitudes, linear_corr_mag)
+    push!(gr_correction_magnitudes_b, ho_corr_b_mag)
+    push!(gr_correction_magnitudes_gm, ho_corr_gm_mag)
+    
+    # Ratio of higher-order to linear corrections
+    correction_ratio = ho_corr_b_mag / linear_corr_mag
+    
+    println(@sprintf("%-15s | %-15.3e | %-15.3e | %-15.3e | %-15.3e", 
+            body_name, linear_corr_mag/AU, ho_corr_b_mag/AU, ho_corr_gm_mag/AU, correction_ratio))
+end
+
+println("-"^90)
+
+# Compare correction magnitudes to actual miss distances
+println("\nCORRECTION MAGNITUDE vs MISS DISTANCE COMPARISON:")
+println("=================================================")
+println("Comparing estimated GR correction sizes to actual trajectory miss distances")
+println(@sprintf("%-15s | %-15s | %-15s | %-15s | %-15s", 
+        "Body", "Miss Dist (AU)", "HO Corr (AU)", "Corr/Miss Ratio", "Significance"))
+println("-"^90)
+
+for i in 1:length(body_names_completed)
+    miss_dist = miss_distances_R[i]  # Use relativistic miss distance
+    ho_corr = gr_correction_magnitudes_b[i] / AU
+    
+    # Calculate ratio of correction to miss distance
+    if miss_dist > 0
+        corr_miss_ratio = ho_corr / miss_dist
+    else
+        corr_miss_ratio = Inf
+    end
+    
+    # Determine significance
+    significance = if corr_miss_ratio > 1.0
+        "Dominant"
+    elseif corr_miss_ratio > 0.1
+        "Significant"
+    elseif corr_miss_ratio > 0.01
+        "Moderate"
+    else
+        "Negligible"
+    end
+    
+    println(@sprintf("%-15s | %-15.3e | %-15.3e | %-15.3e | %-15s", 
+            body_names_completed[i], miss_dist, ho_corr, corr_miss_ratio, significance))
+end
+
+println("-"^90)
+
+# Summary of correction significance
+println("\nCORRECTION SIGNIFICANCE SUMMARY:")
+println("================================")
+dominant_count = sum([gr_correction_magnitudes_b[i]/AU / miss_distances_R[i] > 1.0 for i in 1:length(body_names_completed)])
+significant_count = sum([0.1 < gr_correction_magnitudes_b[i]/AU / miss_distances_R[i] <= 1.0 for i in 1:length(body_names_completed)])
+moderate_count = sum([0.01 < gr_correction_magnitudes_b[i]/AU / miss_distances_R[i] <= 0.1 for i in 1:length(body_names_completed)])
+negligible_count = sum([gr_correction_magnitudes_b[i]/AU / miss_distances_R[i] <= 0.01 for i in 1:length(body_names_completed)])
+
+println(@sprintf("Bodies where HO corrections are dominant (>100%% of miss): %d", dominant_count))
+println(@sprintf("Bodies where HO corrections are significant (10-100%% of miss): %d", significant_count))
+println(@sprintf("Bodies where HO corrections are moderate (1-10%% of miss): %d", moderate_count))
+println(@sprintf("Bodies where HO corrections are negligible (<1%% of miss): %d", negligible_count))
+
+# Analysis of results
+println("\nANALYSIS OF HIGHER-ORDER GR EFFECTS:")
+println("====================================")
+
+println("\nKey Insights:")
+println("- Linear Corr: First-order post-Newtonian correction estimate (GM/v²)")
+println("- HO Corr (b): Higher-order correction using impact parameter scale")
+println("- HO Corr (GM): Higher-order correction using gravitational radius scale")
+println("- Correction Ratio: Higher-order to linear correction ratio")
+println("- Values close to 1.0 in GR parameters indicate linear regime dominance")
+println("- Large correction magnitudes compared to miss distances suggest")
+println("  that higher-order effects may be important for trajectory accuracy")
+
+# Find bodies with most significant higher-order effects
+max_deviation_b = maximum(abs.(gr_corrections_impact .- 1.0))
+max_deviation_gm = maximum(abs.(gr_corrections_grav .- 1.0))
+max_idx_b = argmax(abs.(gr_corrections_impact .- 1.0))
+max_idx_gm = argmax(abs.(gr_corrections_grav .- 1.0))
+
+println(@sprintf("\nLargest deviation from linear regime (impact parameter): %.6f for %s", 
+        max_deviation_b, bodies_data[max_idx_b][1]))
+println(@sprintf("Largest deviation from linear regime (gravitational radius): %.6f for %s", 
+        max_deviation_gm, bodies_data[max_idx_gm][1]))
+
+# Velocity analysis
+v_spacecraft = norm(Vst)
+println(@sprintf("\nSpacecraft velocity: %.6f c", v_spacecraft))
+println(@sprintf("Relativistic parameter v²: %.6e", v_spacecraft^2))
+println(@sprintf("Higher-order parameter v⁴: %.6e", v_spacecraft^4))
+
+if v_spacecraft^2 < 0.01
+    println("→ Spacecraft is in mildly relativistic regime (v² < 0.01)")
+elseif v_spacecraft^2 < 0.1
+    println("→ Spacecraft is in moderately relativistic regime (0.01 < v² < 0.1)")
+else
+    println("→ Spacecraft is in highly relativistic regime (v² > 0.1)")
+end
+
+# Physical interpretation
+println("\nPHYSICAL INTERPRETATION:")
+println("========================")
+println("The correction parameter quantifies the importance of:")
+println("1. Post-Newtonian corrections (GM/Lv² term)")
+println("2. Higher-order relativistic effects (-G²M²(1-4v²)/(2L²v⁴) term)")
+println("3. Baseline unity (flat spacetime limit)")
+
+println("\nFor each body, the analysis shows whether the trajectory calculation")
+println("is dominated by linear GR effects or if higher-order terms are significant.")
 
 #-----------------------------------------------------------------------
 #   SAVE OPTIMIZED VELOCITIES FOR FUTURE USE
@@ -630,39 +974,34 @@ println("COMPREHENSIVE MISS DISTANCE SUMMARY - AFTER BROYDEN FINE-TUNING")
 println("="^100)
 using Printf
 
-# Print header
-println(@sprintf("%-15s | %-20s | %-20s | %-15s | %-15s", 
-        "Body", "Newtonian Miss (AU)", "Relativistic Miss (AU)", "N/R Ratio", "Improvement"))
-println("-"^100)
+# Print header with flat space comparison column
+println(@sprintf("%-15s | %-12s | %-12s | %-12s | %-10s | %-12s | %-12s | %-12s | %-12s", 
+        "Body", "Newt (AU)", "Rel (AU)", "Flat (AU)", "N/R Ratio", "R-F Diff (AU)", "GR Corr (b)", "GR Corr (GM)", "b/rs Ratio"))
+println("-"^140)
 
 # Print results for each body
 for i in 1:length(body_names_completed)
-    ratio = miss_distances_N[i] / miss_distances_R[i]
+    nr_ratio = miss_distances_N[i] / miss_distances_R[i]
+    rf_diff = miss_distances_R[i] - miss_distances_F[i]  # Relativistic minus flat space
+    b_rs_ratio = impact_parameters[i] / schwarzschild_radii[i]
     
-    # Determine improvement level
-    improvement = if miss_distances_N[i] < 1e-10 && miss_distances_R[i] < 1e-10
-        "Excellent"
-    elseif miss_distances_N[i] < 1e-8 && miss_distances_R[i] < 1e-8
-        "Very Good"
-    elseif miss_distances_N[i] < 1e-6 && miss_distances_R[i] < 1e-6
-        "Good"
-    else
-        "Moderate"
-    end
-    
-    println(@sprintf("%-15s | %-20.6e | %-20.6e | %-15.6f | %-15s", 
-            body_names_completed[i], miss_distances_N[i], miss_distances_R[i], ratio, improvement))
+    println(@sprintf("%-15s | %-12.6e | %-12.6e | %-12.6e | %-10.6f | %-12.6e | %-12.6f | %-12.6f | %-12.3e", 
+            body_names_completed[i], miss_distances_N[i], miss_distances_R[i], miss_distances_F[i], 
+            nr_ratio, rf_diff, gr_corrections_impact[i], gr_corrections_grav[i], b_rs_ratio))
 end
 
-println("-"^100)
+println("-"^140)
 
-# Print summary statistics
+# Print summary statistics including GR effects
 println("\nSUMMARY STATISTICS:")
 println("==================")
 println(@sprintf("Total bodies analyzed: %d", length(body_names_completed)))
 println(@sprintf("Average Newtonian miss: %.6e AU", mean(miss_distances_N)))
 println(@sprintf("Average Relativistic miss: %.6e AU", mean(miss_distances_R)))
 println(@sprintf("Average N/R ratio: %.6f", mean(miss_distances_N ./ miss_distances_R)))
+println(@sprintf("Average GR correction (impact): %.6f", mean(gr_corrections_impact)))
+println(@sprintf("Average GR correction (grav. radius): %.6f", mean(gr_corrections_grav)))
+println(@sprintf("Average b/rs ratio: %.3e", mean(impact_parameters ./ schwarzschild_radii)))
 
 # Find best and worst cases
 best_newt_idx = argmin(miss_distances_N)
@@ -706,7 +1045,7 @@ open("spacecraft_initial_data_finetuned.txt", "w") do file
     println(file, "Original velocity: ", Vst)
     println(file, "Original speed: ", norm(Vst), " c")
     println(file, "Target: Proxima Centauri")
-    println(file, "Target position: ", flat_space_spacecraft_final)
+    println(file, "Target position: ", proxima_final_position)
     
     println(file, "\nCELESTIAL BODY MASSES AND POSITIONS:")
     println(file, "====================================")
