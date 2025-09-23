@@ -2,6 +2,11 @@ using LinearAlgebra
 using DoubleFloats
 tpfl = Double64
 
+# Include relativistic tools
+include("../core/physics/Hamiltonians/RelTools.jl")
+
+
+
 #-----------------------------------------------------------------------
 #
 #   FUNCTIONS FOR TARGETING PROBLEM
@@ -142,3 +147,6 @@ XstF,XpxF,XbF,tcl = pfs
 # pfs[4] is the time to closest approach 
 
 Xpx0,Xpxb,Xst0,Vpx,Vst,tcl = ics
+
+# Store final target position
+target_position_final = XbF(tcl)
