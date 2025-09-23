@@ -114,7 +114,7 @@ vjup = tpfl.([-7.8875477321829800,
               1.0175858402135900E+01, 
               4.5538873116399600])  # in km/s, from astropy, J2000
 
-vjup *= 1000 / cMKS  # convert from km/s to units of c
+vjup *= tpfl(1000 / cMKS)  # convert from km/s to units of c
 
 γjup = one(tpfl) / sqrt(one(tpfl) - norm(vjup)^2)  # Lorentz factor
 pjup = tpfl.(mjup * γjup .* vjup)  # Jupiter momentum 
@@ -127,7 +127,7 @@ PjupN = pomin.setup_single_particle(mjup, qjup, pjupN, tpfl)
 #   INITIAL DATA SETUP FOR MOON
 #-----------------------------------------------------------------------
 
-mMoon = 7.34767309E22 / 1.988416E30     # in units of solar masses
+mMoon = tpfl(7.34767309E22) / tpfl(1.988416E30)     # in units of solar masses
 
 # Moon coordinates generated using astropy with epoch J2000
 qMoon = tpfl.([-1.886529874442160E+07, 
@@ -137,7 +137,7 @@ vMoon = tpfl.([-2.9141440121218000E+01,
                 -5.6958177245812600, 
                 -2.4819741171379700]) 
 
-vMoon *= 1000 / cMKS  # convert from km/s to units of c
+vMoon *= tpfl(1000 / cMKS)  # convert from km/s to units of c
 
 γMoon = one(tpfl) / sqrt(one(tpfl) - norm(vMoon)^2)  # Lorentz factor
 pMoon = tpfl.(mMoon * γMoon * vMoon)  # Moon momentum 
@@ -159,7 +159,7 @@ vMars = tpfl.([1.17347755650600,
                2.390740193498500E+01, 
                1.0934201867474400E+01])  # in km/s, from astropy, J2000
 
-vMars *= 1000 / cMKS  # convert from km/s to units of c
+vMars *= tpfl(1000 / cMKS)  # convert from km/s to units of c
 
 γMars = one(tpfl) / sqrt(one(tpfl) - norm(vMars)^2)  # Lorentz factor
 pMars = tpfl.(mMars * γMars * vMars)  # Mars momentum 
@@ -366,7 +366,7 @@ println(J_init_N)
 println("Jacobian condition number: ", cond(J_init_N))
 println("Jacobian determinant: ", det(J_init_N))
 
-if abs(det(J_init_N)) < 1e-10
+if abs(det(J_init_N)) < tpfl(1e-10)
     println("WARNING: Jacobian is nearly singular, using pseudoinverse")
     J_init_N_inv = pinv(J_init_N)
     println("Using modified Broyden with pseudoinverse...")
@@ -414,7 +414,7 @@ println(J_init_R)
 println("Jacobian condition number: ", cond(J_init_R))
 println("Jacobian determinant: ", det(J_init_R))
 
-if abs(det(J_init_R)) < 1e-10
+if abs(det(J_init_R)) < tpfl(1e-10)
     println("WARNING: Jacobian is nearly singular, using pseudoinverse")
     J_init_R_inv = pinv(J_init_R)
     println("Using modified Broyden with pseudoinverse...")
@@ -422,7 +422,7 @@ if abs(det(J_init_R)) < 1e-10
     v_finetuned_R = Vst - J_init_R_inv * fmR(Vst)
 else
     println("Broyden iterations (Relativistic)...")
-    v_finetuned_R = bsolve(fmR, J_init_R, fmR(Vst), Vst, 10)
+    v_finetuned_R = bsolve(fmR, J_init_R, fmR(Vst), Vst, 8)
 end
 
 # Final relativistic result

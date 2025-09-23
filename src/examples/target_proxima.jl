@@ -128,8 +128,8 @@ Xst0 = tpfl.([-2.235888445902370E+07, 8.680664864663420E+07, 2.988257878660500E+
 vst    = tpfl(0.2)*c         # Starchip velocity magnitude
 
 # Target
-b0     = 0.05*AU               # Target distance
-bv     = bconstructor((Xpx0,Xst0,Vpx),b0,pi/3) # Target displacement from Proxima
+b0     = tpfl(0.05)*AU               # Target distance
+bv     = bconstructor((Xpx0,Xst0,Vpx),b0,tpfl(pi)/tpfl(3)) # Target displacement from Proxima
 
 ics    = targprox( (Xpx0,Xst0,Vpx) , vst , bv )
 pfs    = parfuncs(ics)
