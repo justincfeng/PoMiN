@@ -150,3 +150,6 @@ Xpx0,Xpxb,Xst0,Vpx,Vst,tcl = ics
 
 # Store final target position
 target_position_final = XbF(tcl)
+
+# Store total travel distance
+ΔXst = norm(XstF(tcl) - Xst0)

@@ -2,7 +2,6 @@
 #
 #   NEWTONIAN VS RELATIVISTIC COMPARISON WITH FINE-TUNING
 #   Spacecraft trajectory to Proxima Centauri
-#   Includes Broyden optimization for both cases
 #
 #-----------------------------------------------------------------------
 
@@ -18,35 +17,116 @@ include("target_proxima.jl")
 include("../utils/broyden.jl")
 
 #-----------------------------------------------------------------------
+#   RATIO OF CLOSEST APPROACH TO IMPACT PARAMETER TERMS
+#-----------------------------------------------------------------------
+"""
+    rcb_ratio(b,v,M,tpfl=eltype(mass),G=one(tpfl))
+
+Calculate the ratio of closest approach to impact parameter for a given 
+trajectory.
+"""
+function rcb_ratio(b,v,M,tpfl=eltype(M),G=one(tpfl))
+    l=one(tpfl)
+    TWO=tpfl(2)
+    FOUR=tpfl(4)
+    return ( l , -(G*M)/(b*v^2) , (G^2*M^2*(l-FOUR*v^2))/(TWO*b^2*v^4) )
+end #-------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
+#   CLOSEST APPROACH
+#-----------------------------------------------------------------------
+"""
+    closest_approach(xa,xb,va,vb)
+
+Calculate the closest approach between two trajectories.
+"""
+function closest_approach(xa,xb,va,vb)
+    Δx = xb-xa
+    Δv = vb-va
+    return sqrt( dot(Δx,Δx) - dot(Δx,Δv)^2/dot(Δv,Δv) )
+end #-------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
+#   MISS DISTANCE DECOMPOSITION
+#-----------------------------------------------------------------------
+"""
+    miss_decomposition(miss_vector, velocity_vector)
+
+Decompose miss distance into longitudinal (along velocity) and transverse 
+(perpendicular to velocity) components.
+
+Returns: (longitudinal_miss, transverse_miss, total_miss)
+"""
+function miss_decomposition(miss_vec, vel_vec)
+    # Normalize velocity vector
+    vel_unit = vel_vec / norm(vel_vec)
+    
+    # Longitudinal component (projection onto velocity direction)
+    longitudinal = dot(miss_vec, vel_unit)
+    
+    # Transverse component (perpendicular to velocity)
+    longitudinal_vec = longitudinal * vel_unit
+    transverse_vec = miss_vec - longitudinal_vec
+    transverse = norm(transverse_vec)
+    
+    # Total miss distance
+    total = norm(miss_vec)
+    
+    return (longitudinal, transverse, total)
+end #-------------------------------------------------------------------
+
+"""
+    transverse_miss_distance(position_final, target_position, velocity_initial)
+
+Calculate the transverse miss distance for a trajectory that may stop near target.
+"""
+function transverse_miss_distance(pos_final, pos_target, vel_initial)
+    miss_vec = pos_final - pos_target
+    _, transverse, _ = miss_decomposition(miss_vec, vel_initial)
+    return transverse
+end #-------------------------------------------------------------------
+
+"""
+    longitudinal_miss_distance(position_final, target_position, velocity_initial)
+
+Calculate the longitudinal miss distance for a trajectory that may stop near target.
+"""
+function longitudinal_miss_distance(pos_final, pos_target, vel_initial)
+    miss_vec = pos_final - pos_target
+    longitudinal, _, _ = miss_decomposition(miss_vec, vel_initial)
+    return longitudinal
+end #-------------------------------------------------------------------
+
+function scattering_correction(v,L,M,tpfl=eltype(M),G=one(tpfl))
+    ν1 = one(tpfl)
+    ν2 = tpfl(2)
+    ν4 = tpfl(4)
+    ν8 = tpfl(8)
+    δϕ1 = (M * (ν1 + ν1*v^2))/(L * v^2)
+    δϕ2 = (M^2 * (ν8 - ν4*v^2 + ν1*π*(ν4 + ν2*v^2)))/(ν8 * L^2 * v^4)
+    return (δϕ1,δϕ2)
+end #-------------------------------------------------------------------
+
+function miss_estimates(ΔX,v,L,M,tpfl=eltype(M),G=one(tpfl))
+    δϕ1,δϕ2 = scattering_correction(v,L,M,tpfl,G)
+    return (ΔX*δϕ1,ΔX*δϕ2)
+end #-------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
 #   INITIAL DATA SETUP FOR SPACECRAFT
 #-----------------------------------------------------------------------
 
 # Mass and position
 mchip = tpfl(1.0E-30)
 qchip = Xst0
-vst = norm(Vst)
+vst0 = norm(Vst)
 
-γst = one(tpfl)/sqrt(one(tpfl)-(vst/c)^2)
-pchip_rel = (mchip*γst) .* Vst
-pchip_newt = mchip .* Vst
+γst0 = one(tpfl)/sqrt(one(tpfl)-(vst0/c)^2)
+pchip_rel0 = (mchip*γst0) .* Vst
+pchip_newt0 = mchip .* Vst
 
-Pchip_rel0 = pomin.setup_single_particle(mchip, qchip, pchip_rel, tpfl)
-Pchip_newt0 = pomin.setup_single_particle(mchip, qchip, pchip_newt, tpfl)
-
-
-Vchip_rel_FT  = [tpfl("-7.29280133630346695175238301027084351e-02"), 
-                 tpfl("-5.57596267171519947482140178590898884e-02"), 
-                 tpfl("-1.77686212323486749509362995970259857e-01")]
-Vchip_newt_FT = [tpfl("-7.2928011848008478283629726326358021e-02"), 
-                 tpfl("-5.57596297969013443215818900874537475e-02"), 
-                 tpfl("-1.77686212073603716257005595684594549e-01")]
-
-γchip_rel_FT = one(tpfl)/sqrt(one(tpfl)-(norm(Vchip_rel_FT))^2)
-pchip_rel_FT = (mchip*γchip_rel_FT) .* Vchip_rel_FT
-pchip_newt_FT = (mchip) .* Vchip_newt_FT
-
-Pchip_rel = pomin.setup_single_particle(mchip, qchip, pchip_rel_FT, tpfl)
-Pchip_newt = pomin.setup_single_particle(mchip, qchip, pchip_newt_FT, tpfl)
+Pchip_rel0 = pomin.setup_single_particle(mchip, qchip, pchip_rel0, tpfl)
+Pchip_newt0 = pomin.setup_single_particle(mchip, qchip, pchip_newt0, tpfl)
 
 #-----------------------------------------------------------------------
 #   INITIAL DATA SETUP FOR PROXIMA CENTAURI
@@ -57,6 +137,10 @@ mProx   = tpfl(0.1221)
 qProx   = Xpx0
 pProx   = mProx .* γVpx
 pProxN  = mProx .* Vpx
+
+bProx   = closest_approach(qProx,qchip,Vpx,Vst)
+rcbProx = rcb_ratio(bProx,vst,mProx)
+missTHProx   = miss_estimates(ΔXst,vst,bProx,mProx)
 
 # Particle object for Proxima Centauri
 PProx   = pomin.setup_single_particle(mProx, qProx, pProx, tpfl)
@@ -70,6 +154,10 @@ PProxN  = pomin.setup_single_particle(mProx, qProx, pProxN, tpfl)
 msol = tpfl(1.0)
 qsol = tpfl.([0.0, 0.0, 0.0])
 psol = tpfl.([0.0, 0.0, 0.0])
+vSol = tpfl.([0.0, 0.0, 0.0])
+
+bSol        = closest_approach(qsol,qchip,vSol,Vst)
+missTHSol   = miss_estimates(ΔXst,vst,bSol,msol)
 
 Psol = pomin.setup_single_particle(msol, qsol, psol, tpfl)
 
@@ -92,6 +180,9 @@ valpha = tpfl.([-3.11496332572849e-05,
 palpha = tpfl.(malpha * γalpha .* valpha) # Alpha momentum (relativ.)
 palphaN = malpha .* valpha                # Alpha momentum (Newtonian)
 
+bAlpha      = closest_approach(qalpha,qchip,valpha,Vst)
+missTHAlpha = miss_estimates(ΔXst,vst,bAlpha,malpha)
+
 Palpha = pomin.setup_single_particle(malpha, qalpha, palpha, tpfl)
 PalphaN = pomin.setup_single_particle(malpha, qalpha, palphaN, tpfl)
 
@@ -112,6 +203,9 @@ vEarth = tpfl.([-9.9351889046e-05,
 γEarth = one(tpfl) / sqrt(one(tpfl) - norm(vEarth)^2)  # Lorentz factor
 pEarth = tpfl.(mEarth * γEarth .* vEarth) # Earth momentum (relativ.)
 pEarthN = mEarth .* vEarth                # Earth momentum (Newtonian)
+
+bEarth      = closest_approach(qEarth,qchip,vEarth,Vst)
+missTHEarth = miss_estimates(ΔXst,vst,bEarth,mEarth)
 
 PEarth = pomin.setup_single_particle(mEarth, qEarth, pEarth, tpfl)
 PEarthN = pomin.setup_single_particle(mEarth, qEarth, pEarthN, tpfl)
@@ -134,6 +228,9 @@ vjup *= tpfl(1000 / cMKS)  # convert from km/s to units of c
 γjup = one(tpfl) / sqrt(one(tpfl) - norm(vjup)^2)  # Lorentz factor
 pjup = tpfl.(mjup * γjup .* vjup)  # Jupiter momentum 
 pjupN = mjup .* vjup                # Jupiter momentum (Newtonian)
+
+bJup      = closest_approach(qjup,qchip,vjup,Vst)
+missTHJup = miss_estimates(ΔXst,vst,bJup,mjup)
 
 Pjup = pomin.setup_single_particle(mjup, qjup, pjup, tpfl)
 PjupN = pomin.setup_single_particle(mjup, qjup, pjupN, tpfl)
@@ -158,6 +255,9 @@ vMoon *= tpfl(1000 / cMKS)  # convert from km/s to units of c
 pMoon = tpfl.(mMoon * γMoon * vMoon)  # Moon momentum 
 pMoonN = mMoon .* vMoon                # Moon momentum (Newtonian)
 
+bMoon      = closest_approach(qMoon,qchip,vMoon,Vst)
+missTHMoon = miss_estimates(ΔXst,vst,bMoon,mMoon)
+
 PMoon = pomin.setup_single_particle(mMoon, qMoon, pMoon, tpfl)
 PMoonN = pomin.setup_single_particle(mMoon, qMoon, pMoonN, tpfl)
 
@@ -180,12 +280,15 @@ vMars *= tpfl(1000 / cMKS)  # convert from km/s to units of c
 pMars = tpfl.(mMars * γMars * vMars)  # Mars momentum 
 pMarsN = mMars .* vMars                # Mars momentum (Newtonian)
 
+bMars      = closest_approach(qMars,qchip,vMars,Vst)
+missTHMars = miss_estimates(ΔXst,vst,bMars,mMars)
+
 PMars = pomin.setup_single_particle(mMars, qMars, pMars, tpfl)
 PMarsN = pomin.setup_single_particle(mMars, qMars, pMarsN, tpfl)
 
 #-----------------------------------------------------------------------
 #
-#   INITIAL RUN
+#   RUNS
 #
 #-----------------------------------------------------------------------
 
@@ -196,23 +299,25 @@ tols  = tpfl(1e-17)
 params = pomin.ParametersJulia(tspan, integrator="Vern7", 
                                      atol=tols, rtol=tols)
 
-Ptest = Pchip_rel
-PtestN = Pchip_newt
-
-#Pint = pomin.merge_particle_systems(PProx, Psol)
-#PintN = pomin.merge_particle_systems(PProxN, Psol)
-#Pint = pomin.merge_particle_systems(PProx, Psol, Palpha, Pjup)
-#PintN = pomin.merge_particle_systems(PProxN, Psol, PalphaN, PjupN)
-#Pint = pomin.merge_particle_systems(PProx, Psol, Palpha, Pjup, PEarth)
-#PintN = pomin.merge_particle_systems(PProxN, Psol, PalphaN, PjupN, PEarthN)
-#Pint = pomin.merge_particle_systems(PProx, Psol, Pjup, Palpha, PEarth, PMoon, PMars)
-#PintN = pomin.merge_particle_systems(PProxN, Psol, PjupN, PalphaN, PEarthN, PMoonN, PMarsN)
-
-#nInt = length(Pint.m)
-
-# Get flat space spacecraft final position
+# Get Proxima's final position (target)
 XstF,XpxF,XbF,tcl_from_target = pfs
-flat_space_spacecraft_final = XstF(tcl)
+qtar = XbF(tcl)
+flat_space_spacecraft_final = XstF(tcl)  # Flat space spacecraft position for comparison
+
+# Open file for miss distance output
+output_file = "miss_distance_results.txt"
+file = open(output_file, "w")
+
+# Write header information
+println(file, "="^100)
+println(file, "MISS DISTANCE ANALYSIS - FINE-TUNED INITIAL DATA (FTID)")
+println(file, "="^100)
+println(file, "Generated: ", Dates.now())
+println(file, "Target: Proxima Centauri (displaced by ", norm(bv)/AU, " AU)")
+println(file, "Integration time: ", tcl, " time units")
+println(file, "Precision: Double64")
+println(file, "="^100)
+println(file)
 
 #-----------------------------------------------------------------------
 #   SUN
@@ -225,19 +330,40 @@ sol     = pomin.solve( Psol, params; testparticles=Pchip_rel0 )
 zendN   = solN(tcl)
 zend    = sol(tcl)
 
-qmissN  = zendN[7:9] - flat_space_spacecraft_final
-dmissN  = norm(qmissN)
+qmisstarN   = zendN[7:9] - qtar
+dmisstarN_long = longitudinal_miss_distance(zendN[7:9], qtar, Vst)
+dmisstarN   = transverse_miss_distance(zendN[7:9], qtar, Vst)
 
-qmiss   = zend[7:9] - flat_space_spacecraft_final
-dmissN  = norm(qmissN)
-dmiss   = norm(qmiss)
-dmiss   = norm(qmiss)
+qmisstar    = zend[7:9] - qtar
+dmisstar_long = longitudinal_miss_distance(zend[7:9], qtar, Vst)
+dmisstar    = transverse_miss_distance(zend[7:9], qtar, Vst)
 
-println("Newtonian miss: ", qmissN)
-println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
+dmissPMcomp = missTHSol[1]
+dmissPMHO   = missTHSol[2]
 
-println("Relativistic miss: ", qmiss)
-println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
+# Store results for summary table
+dmisstar_sun = dmisstar
+dmisstarN_sun = dmisstarN
+dmissPMcomp_sun = dmissPMcomp
+dmissPMHO_sun = dmissPMHO
+
+println("SUN RESULTS:")
+println("Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println("Newtonian longitudinal: ", dmisstarN_long, " (", dmisstarN_long/AU, " AU)")
+println("PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println("PoMiN longitudinal: ", dmisstar_long, " (", dmisstar_long/AU, " AU)")
+
+println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
+println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+
+# Write to file
+println(file, "SUN RESULTS:")
+println(file, "-----------")
+println(file, "Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println(file, "PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
+println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+println(file)
 
 #-----------------------------------------------------------------------
 #   ALPHA CENTAURI
@@ -250,16 +376,40 @@ sol     = pomin.solve( Palpha, params; testparticles=Pchip_rel0 )
 zendN   = solN(tcl)
 zend    = sol(tcl)
 
-qmissN  = zendN[7:9] - flat_space_spacecraft_final
-qmiss   = zend[7:9] - flat_space_spacecraft_final
-dmissN  = norm(qmissN)
-dmiss   = norm(qmiss)
+qmisstarN   = zendN[7:9] - qtar
+dmisstarN_long = longitudinal_miss_distance(zendN[7:9], qtar, Vst)
+dmisstarN   = transverse_miss_distance(zendN[7:9], qtar, Vst)
 
-println("Newtonian miss: ", qmissN)
-println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
+qmisstar    = zend[7:9] - qtar
+dmisstar_long = longitudinal_miss_distance(zend[7:9], qtar, Vst)
+dmisstar    = transverse_miss_distance(zend[7:9], qtar, Vst)
 
-println("Relativistic miss: ", qmiss)
-println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
+dmissPMcomp = missTHAlpha[1]
+dmissPMHO   = missTHAlpha[2]
+
+# Store results for summary table
+dmisstar_alpha = dmisstar
+dmisstarN_alpha = dmisstarN
+dmissPMcomp_alpha = dmissPMcomp
+dmissPMHO_alpha = dmissPMHO
+
+println("ALPHA CENTAURI RESULTS:")
+println("Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println("Newtonian longitudinal: ", dmisstarN_long, " (", dmisstarN_long/AU, " AU)")
+println("PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println("PoMiN longitudinal: ", dmisstar_long, " (", dmisstar_long/AU, " AU)")
+
+println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
+println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+
+# Write to file
+println(file, "ALPHA CENTAURI RESULTS:")
+println(file, "----------------------")
+println(file, "Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println(file, "PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
+println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+println(file)
 
 #-----------------------------------------------------------------------
 #   JUPITER
@@ -272,16 +422,40 @@ sol     = pomin.solve( Pjup, params; testparticles=Pchip_rel0 )
 zendN   = solN(tcl)
 zend    = sol(tcl)
 
-qmissN  = zendN[7:9] - flat_space_spacecraft_final
-qmiss   = zend[7:9] - flat_space_spacecraft_final
-dmissN  = norm(qmissN)
-dmiss   = norm(qmiss)
+qmisstarN   = zendN[7:9] - qtar
+dmisstarN_long = longitudinal_miss_distance(zendN[7:9], qtar, Vst)
+dmisstarN   = transverse_miss_distance(zendN[7:9], qtar, Vst)
 
-println("Newtonian miss: ", qmissN)
-println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
+qmisstar    = zend[7:9] - qtar
+dmisstar_long = longitudinal_miss_distance(zend[7:9], qtar, Vst)
+dmisstar    = transverse_miss_distance(zend[7:9], qtar, Vst)
 
-println("Relativistic miss: ", qmiss)
-println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
+dmissPMcomp = missTHJup[1]
+dmissPMHO   = missTHJup[2]
+
+# Store results for summary table
+dmisstar_jup = dmisstar
+dmisstarN_jup = dmisstarN
+dmissPMcomp_jup = dmissPMcomp
+dmissPMHO_jup = dmissPMHO
+
+println("JUPITER RESULTS:")
+println("Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println("Newtonian longitudinal: ", dmisstarN_long, " (", dmisstarN_long/AU, " AU)")
+println("PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println("PoMiN longitudinal: ", dmisstar_long, " (", dmisstar_long/AU, " AU)")
+
+println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
+println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+
+# Write to file
+println(file, "JUPITER RESULTS:")
+println(file, "---------------")
+println(file, "Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println(file, "PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
+println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+println(file)
 
 #-----------------------------------------------------------------------
 #   EARTH
@@ -294,16 +468,40 @@ sol     = pomin.solve( PEarth, params; testparticles=Pchip_rel0 )
 zendN   = solN(tcl)
 zend    = sol(tcl)
 
-qmissN  = zendN[7:9] - flat_space_spacecraft_final
-qmiss   = zend[7:9] - flat_space_spacecraft_final
-dmissN  = norm(qmissN)
-dmiss   = norm(qmiss)
+qmisstarN   = zendN[7:9] - qtar
+dmisstarN_long = longitudinal_miss_distance(zendN[7:9], qtar, Vst)
+dmisstarN   = transverse_miss_distance(zendN[7:9], qtar, Vst)
 
-println("Newtonian miss: ", qmissN)
-println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
+qmisstar    = zend[7:9] - qtar
+dmisstar_long = longitudinal_miss_distance(zend[7:9], qtar, Vst)
+dmisstar    = transverse_miss_distance(zend[7:9], qtar, Vst)
 
-println("Relativistic miss: ", qmiss)
-println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
+dmissPMcomp = missTHEarth[1]
+dmissPMHO   = missTHEarth[2]
+
+# Store results for summary table
+dmisstar_earth = dmisstar
+dmisstarN_earth = dmisstarN
+dmissPMcomp_earth = dmissPMcomp
+dmissPMHO_earth = dmissPMHO
+
+println("EARTH RESULTS:")
+println("Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println("Newtonian longitudinal: ", dmisstarN_long, " (", dmisstarN_long/AU, " AU)")
+println("PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println("PoMiN longitudinal: ", dmisstar_long, " (", dmisstar_long/AU, " AU)")
+
+println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
+println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+
+# Write to file
+println(file, "EARTH RESULTS:")
+println(file, "-------------")
+println(file, "Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println(file, "PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
+println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+println(file)
 
 #-----------------------------------------------------------------------
 #   PROXIMA
@@ -316,16 +514,40 @@ sol     = pomin.solve( PProx, params; testparticles=Pchip_rel0 )
 zendN   = solN(tcl)
 zend    = sol(tcl)
 
-qmissN  = zendN[7:9] - flat_space_spacecraft_final
-qmiss   = zend[7:9] - flat_space_spacecraft_final
-dmissN  = norm(qmissN)
-dmiss   = norm(qmiss)
+qmisstarN   = zendN[7:9] - qtar
+dmisstarN_long = longitudinal_miss_distance(zendN[7:9], qtar, Vst)
+dmisstarN   = transverse_miss_distance(zendN[7:9], qtar, Vst)
 
-println("Newtonian miss: ", qmissN)
-println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
+qmisstar    = zend[7:9] - qtar
+dmisstar_long = longitudinal_miss_distance(zend[7:9], qtar, Vst)
+dmisstar    = transverse_miss_distance(zend[7:9], qtar, Vst)
 
-println("Relativistic miss: ", qmiss)
-println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
+dmissPMcomp = rcbProx[2]*bProx
+dmissPMHO   = rcbProx[3]*bProx
+
+# Store results for summary table
+dmisstar_prox = dmisstar
+dmisstarN_prox = dmisstarN
+dmissPMcomp_prox = dmissPMcomp
+dmissPMHO_prox = dmissPMHO
+
+println("PROXIMA RESULTS:")
+println("Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println("Newtonian longitudinal: ", dmisstarN_long, " (", dmisstarN_long/AU, " AU)")
+println("PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println("PoMiN longitudinal: ", dmisstar_long, " (", dmisstar_long/AU, " AU)")
+
+println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
+println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+
+# Write to file
+println(file, "PROXIMA RESULTS:")
+println(file, "---------------")
+println(file, "Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println(file, "PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
+println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+println(file)
 
 #-----------------------------------------------------------------------
 #   MOON
@@ -338,16 +560,40 @@ sol     = pomin.solve( PMoon, params; testparticles=Pchip_rel0 )
 zendN   = solN(tcl)
 zend    = sol(tcl)
 
-qmissN  = zendN[7:9] - flat_space_spacecraft_final
-qmiss   = zend[7:9] - flat_space_spacecraft_final
-dmissN  = norm(qmissN)
-dmiss   = norm(qmiss)
+qmisstarN   = zendN[7:9] - qtar
+dmisstarN_long = longitudinal_miss_distance(zendN[7:9], qtar, Vst)
+dmisstarN   = transverse_miss_distance(zendN[7:9], qtar, Vst)
 
-println("Newtonian miss: ", qmissN)
-println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
+qmisstar    = zend[7:9] - qtar
+dmisstar_long = longitudinal_miss_distance(zend[7:9], qtar, Vst)
+dmisstar    = transverse_miss_distance(zend[7:9], qtar, Vst)
 
-println("Relativistic miss: ", qmiss)
-println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
+dmissPMcomp = missTHMoon[1]
+dmissPMHO   = missTHMoon[2]
+
+# Store results for summary table
+dmisstar_moon = dmisstar
+dmisstarN_moon = dmisstarN
+dmissPMcomp_moon = dmissPMcomp
+dmissPMHO_moon = dmissPMHO
+
+println("MOON RESULTS:")
+println("Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println("Newtonian longitudinal: ", dmisstarN_long, " (", dmisstarN_long/AU, " AU)")
+println("PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println("PoMiN longitudinal: ", dmisstar_long, " (", dmisstar_long/AU, " AU)")
+
+println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
+println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+
+# Write to file
+println(file, "MOON RESULTS:")
+println(file, "------------")
+println(file, "Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println(file, "PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
+println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+println(file)
 
 #-----------------------------------------------------------------------
 #   MARS
@@ -360,44 +606,90 @@ sol     = pomin.solve( PMars, params; testparticles=Pchip_rel0 )
 zendN   = solN(tcl)
 zend    = sol(tcl)
 
-qmissN  = zendN[7:9] - flat_space_spacecraft_final
-qmiss   = zend[7:9] - flat_space_spacecraft_final
-dmissN  = norm(qmissN)
-dmiss   = norm(qmiss)
+qmisstarN   = zendN[7:9] - qtar
+dmisstarN_long = longitudinal_miss_distance(zendN[7:9], qtar, Vst)
+dmisstarN   = transverse_miss_distance(zendN[7:9], qtar, Vst)
 
-println("Newtonian miss: ", qmissN)
-println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
+qmisstar    = zend[7:9] - qtar
+dmisstar_long = longitudinal_miss_distance(zend[7:9], qtar, Vst)
+dmisstar    = transverse_miss_distance(zend[7:9], qtar, Vst)
 
-println("Relativistic miss: ", qmiss)
-println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
+dmissPMcomp = missTHMars[1]
+dmissPMHO   = missTHMars[2]
+
+# Store results for summary table
+dmisstar_mars = dmisstar
+dmisstarN_mars = dmisstarN
+dmissPMcomp_mars = dmissPMcomp
+dmissPMHO_mars = dmissPMHO
+
+println("MARS RESULTS:")
+println("Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println("Newtonian longitudinal: ", dmisstarN_long, " (", dmisstarN_long/AU, " AU)")
+println("PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println("PoMiN longitudinal: ", dmisstar_long, " (", dmisstar_long/AU, " AU)")
+
+println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
+println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+
+# Write to file
+println(file, "MARS RESULTS:")
+println(file, "------------")
+println(file, "Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println(file, "PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
+println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+println(file)
 
 #-----------------------------------------------------------------------
 #   COLLECT MISS DISTANCES AND CREATE TABLE
 #-----------------------------------------------------------------------
 
-# Initialize arrays to store results (add this manually after each body calculation)
-miss_distances_N = Float64[]
-miss_distances_R = Float64[]
-body_names = ["Sun", "Alpha Centauri", "Jupiter", "Earth", "Proxima", "Moon", "Mars"]
+# Collect all results for summary table
+results = [
+    ("Sun", dmisstar_sun/AU, dmisstarN_sun/AU, dmissPMcomp_sun/AU, dmissPMHO_sun/AU),
+    ("Alpha Centauri", dmisstar_alpha/AU, dmisstarN_alpha/AU, dmissPMcomp_alpha/AU, dmissPMHO_alpha/AU),
+    ("Jupiter", dmisstar_jup/AU, dmisstarN_jup/AU, dmissPMcomp_jup/AU, dmissPMHO_jup/AU),
+    ("Earth", dmisstar_earth/AU, dmisstarN_earth/AU, dmissPMcomp_earth/AU, dmissPMHO_earth/AU),
+    ("Proxima", dmisstar_prox/AU, dmisstarN_prox/AU, dmissPMcomp_prox/AU, dmissPMHO_prox/AU),
+    ("Moon", dmisstar_moon/AU, dmisstarN_moon/AU, dmissPMcomp_moon/AU, dmissPMHO_moon/AU),
+    ("Mars", dmisstar_mars/AU, dmisstarN_mars/AU, dmissPMcomp_mars/AU, dmissPMHO_mars/AU)
+]
 
-# Note: You'll need to manually add these lines after each dmissN and dmiss calculation:
-# push!(miss_distances_N, dmissN)
-# push!(miss_distances_R, dmiss)
+# Write summary table to file
+println(file, "="^100)
+println(file, "COMPREHENSIVE SUMMARY TABLE - COMMA SEPARATED VALUES")
+println(file, "="^100)
+println(file)
 
-# For now, create placeholder table structure
+# CSV Header
+println(file, "Body, Target Miss (AU), Newtonian Miss (AU), PM Miss Estimate (AU), Higher Order Miss (AU)")
+
+# CSV Data rows
+for (body, target, newtonian, pm_est, ho_est) in results
+    println(file, @sprintf("%s, %.6e, %.6e, %.6e, %.6e", body, target, newtonian, pm_est, ho_est))
+end
+
+println(file)
+println(file, "Column Definitions:")
+println(file, "- Target Miss: Distance from spacecraft to Proxima at closest approach")
+println(file, "- Newtonian Miss: Newtonian simulation miss distance to target")
+println(file, "- PM Miss Estimate: Post-Minkowskian theoretical estimate")
+println(file, "- Higher Order Miss: Higher-order relativistic corrections")
+println(file)
+println(file, "="^100)
+println(file, "ANALYSIS COMPLETE")
+println(file, "="^100)
+
+# Close the output file
+close(file)
+println("Miss distance results written to: ", output_file)
+
+# Console summary
 println("\n" * "="^80)
-println("MISS DISTANCE SUMMARY TABLE")
+println("MISS DISTANCE ANALYSIS COMPLETE")
 println("="^80)
-using Printf
-println(@sprintf("%-15s | %-18s | %-19s | %-18s | %-12s", "Body", "Newtonian Miss (AU)", "Relativistic Miss (AU)", "Newtonian/Rel Ratio", "Ratio (N/R)"))
-println("-"^80)
-
-# Uncomment and use this when you have collected the actual distances:
-# for i in 1:length(body_names)
-#     ratio = miss_distances_N[i] / miss_distances_R[i]
-#     println(@sprintf("%-15s | %-18.6e | %-19.6e | %-12.6f", 
-#             body_names[i], miss_distances_N[i], miss_distances_R[i], ratio))
-# end
-
-println("Table framework added - collect miss distances from output above")
+println("Results saved to: ", output_file)
+println("All miss distances calculated using fine-tuned velocities")
+println("Target: Proxima Centauri with ", norm(bv)/AU, " AU displacement")
 println("="^80)
