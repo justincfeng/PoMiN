@@ -17,8 +17,27 @@ time_closest_approach = pfs[4]
 
 # Mass and position
 mchip = tpfl(1.0E-30)
-qchip = Xst0
+# qchip = Xst0
+qchip = Double64[-2.23588844590237e7, 8.68066486466342e7, 2.9882578786605e7]
+
+Vchip_rel_FT  = [tpfl("-7.29280133630346695175238301027084351e-02"), 
+                 tpfl("-5.57596267171519947482140178590898884e-02"), 
+                 tpfl("-1.77686212323486749509362995970259857e-01")]
+Vchip_newt_FT = [tpfl("-7.2928011848008478283629726326358021e-02"), 
+                 tpfl("-5.57596297969013443215818900874537475e-02"), 
+                 tpfl("-1.77686212073603716257005595684594549e-01")]
+
 γst = one(tpfl) / sqrt(one(tpfl) - tpfl(0.2)^2)
+
+# Final target position minus initial spacecraft position
+
+ΔxN = [tpfl("-9.90791377535429553805304070804749628e+12"),
+       tpfl("-7.57545201007502618274337340834229983e+12"),
+       tpfl("-2.41402511341614011030784420306057395e+13")]
+
+ΔxR = [tpfl("-9.90791377535429379640585529915263168e+12"),
+       tpfl("-7.57545201007501210952698262636613967e+12"),
+       tpfl("-2.41402511341613904686121086679115484e+13")]
 
 
 #-----------------------------------------------------------------------
@@ -62,32 +81,50 @@ Pjup = pomin.setup_single_particle(mjup, qjup, pjup, tpfl)
 
 
 Jupiter_Spacecraft_angle = rad2deg(acos(dot(qjup, qchip) / (norm(qjup) * norm(qchip))))
-println("Angle between Sun-Jup and Sun-spacecraft = ", Jupiter_Spacecraft_angle, " degs")
-
+# println("Angle between Sun-Jup and Sun-spacecraft = ", Jupiter_Spacecraft_angle, " degs")
 
 #-----------------------------------------------------------------------
 #   INITIAL DATA SETUP FOR ALPHA CENTAURI A + B
 #-----------------------------------------------------------------------
 
-malpha = 2.0429
+malpha = tpfl(2.0429)
 
 # Alpha A+B barycenter position and velocity given by Kervella et al 2017
-qalpha = tpfl.([-1.045245216607860E+13, -8.74487747435090E+12, -2.442178248634550E+13])         # in geometric units
-palpha = tpfl.([-6.363558578130740E-05, 1.508126516235040E-04, 1.475021586009610E-04])          # in geometric units
+qalpha = tpfl.([-1.045245216607860E+13, 
+                -8.74487747435090E+12, 
+                -2.442178248634550E+13])         # in geometric units
+
+valpha = tpfl.([-3.11496332572849e-05,
+                 7.38228261899770e-05,
+                 7.22023391262230e-05])          # in geometric units
+
+γalpha = one(tpfl) / sqrt(one(tpfl) - norm(valpha)^2)  # Lorentz factor
+palpha = tpfl.(malpha * γalpha .* valpha) # Alpha momentum (relativ.)
+palphaN = malpha .* valpha                # Alpha momentum (Newtonian)
 
 Palpha = pomin.setup_single_particle(malpha, qalpha, palpha, tpfl)
+PalphaN = pomin.setup_single_particle(malpha, qalpha, palphaN, tpfl)
 
 #-----------------------------------------------------------------------
 #   INITIAL DATA SETUP FOR EARTH
 #-----------------------------------------------------------------------
 
-mEarth = 3.0033693739E-06
+mEarth = tpfl(3.0033693739E-06)
 
 # Earth coordinates generated using astropy with epoch J2000
-qEarth = tpfl.([-1.8667826140E+07, 8.9633743993E+07, 3.8883291714E+07])         # geometric units
-pEarth = tpfl.([-2.9839042080E-10, -5.0388889700E-11, -2.1846049145E-11])       # geometric units
+qEarth = tpfl.([-1.8667826140E+07, 
+                 8.9633743993E+07, 
+                 3.8883291714E+07])         # geometric units
+vEarth = tpfl.([-9.9351889046e-05,
+                -1.6777453395e-05,
+                -7.2738469450e-06])
+
+γEarth = one(tpfl) / sqrt(one(tpfl) - norm(vEarth)^2)  # Lorentz factor
+pEarth = tpfl.(mEarth * γEarth .* vEarth) # Earth momentum (relativ.)
+pEarthN = mEarth .* vEarth                # Earth momentum (Newtonian)
 
 PEarth = pomin.setup_single_particle(mEarth, qEarth, pEarth, tpfl)
+PEarthN = pomin.setup_single_particle(mEarth, qEarth, pEarthN, tpfl)
 
 #-----------------------------------------------------------------------
 #   SETUP MAIN PARTICLE SYSTEM
@@ -111,8 +148,21 @@ params = pomin.ParametersJulia(tspan, integrator="Vern9",
 #-----------------------------------------------------------------------
 #   EXPERIMENT INPUT PARAMETERS
 #-----------------------------------------------------------------------
-theta_tol = 0.00001
-N = 2
+target_distance = norm(ΔxR)
+target_distance_in_m = target_distance * Msol2m
+
+# size_of_target_disk_in_m = tpfl(5E8)
+# theta_tol = rad2deg(size_of_target_disk_in_m / target_distance_in_m)
+
+theta_tol = tpfl(1E-7)
+size_of_target_disk_in_m = deg2rad(theta_tol) * target_distance_in_m
+
+println("Using theta_tol = ",theta_tol)
+println("Size of target disk in m = ",size_of_target_disk_in_m)
+
+N = 900
+
+
 
 #-----------------------------------------------------------------------
 #   RUN EXPERIMENT
@@ -121,7 +171,7 @@ N = 2
 for i = 1:N
     println("\n\nTrial #",i)
 
-    (theta_deg, init_unit_vec) = generateUnitVectorWithinToleranceAngle(theta_tol, q_starchip_Func(0), q_target_Func(time_closest_approach), tpfl)
+    (theta_deg, init_unit_vec) = generateUnitVectorWithinToleranceAngle(theta_tol, Vchip_rel_FT, target_distance, tpfl)
 
     println("Initial angle from base vector = ",theta_deg, " degs")
 
