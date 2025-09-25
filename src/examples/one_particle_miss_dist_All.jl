@@ -540,6 +540,11 @@ println("PoMiN longitudinal: ", dmisstar_long, " (", dmisstar_long/AU, " AU)")
 println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
 println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
 
+println("Final positions:")
+println("  Target position: [", qtar[1]/AU, ", ", qtar[2]/AU, ", ", qtar[3]/AU, "] AU")
+println("  Spacecraft (Newtonian): [", zendN[7]/AU, ", ", zendN[8]/AU, ", ", zendN[9]/AU, "] AU")
+println("  Spacecraft (PoMiN): [", zend[7]/AU, ", ", zend[8]/AU, ", ", zend[9]/AU, "] AU")
+
 # Write to file
 println(file, "PROXIMA RESULTS:")
 println(file, "---------------")
@@ -547,6 +552,10 @@ println(file, "Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)"
 println(file, "PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
 println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
 println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+println(file, "Final positions:")
+println(file, "  Target position: [", qtar[1]/AU, ", ", qtar[2]/AU, ", ", qtar[3]/AU, "] AU")
+println(file, "  Spacecraft (Newtonian): [", zendN[7]/AU, ", ", zendN[8]/AU, ", ", zendN[9]/AU, "] AU")
+println(file, "  Spacecraft (PoMiN): [", zend[7]/AU, ", ", zend[8]/AU, ", ", zend[9]/AU, "] AU")
 println(file)
 
 #-----------------------------------------------------------------------
