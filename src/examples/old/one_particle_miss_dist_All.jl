@@ -96,7 +96,7 @@ Palpha = pomin.setup_single_particle(malpha, qalpha, palpha, tpfl)
 PalphaN = pomin.setup_single_particle(malpha, qalpha, palphaN, tpfl)
 
 #-----------------------------------------------------------------------
-#   INITIAL DATA SETUP FOR EARTH
+#   INITIAL DATA SETUP FOR EARTH (astropy, J2000)
 #-----------------------------------------------------------------------
 
 mEarth = tpfl(3.0033693739E-06)
@@ -107,7 +107,7 @@ qEarth = tpfl.([-1.8667826140E+07,
                  3.8883291714E+07])         # geometric units
 vEarth = tpfl.([-9.9351889046e-05,
                 -1.6777453395e-05,
-                -7.2738469450e-06])
+                -7.2738469450e-06])         # geometric units
 
 γEarth = one(tpfl) / sqrt(one(tpfl) - norm(vEarth)^2)  # Lorentz factor
 pEarth = tpfl.(mEarth * γEarth .* vEarth) # Earth momentum (relativ.)
@@ -117,17 +117,17 @@ PEarth = pomin.setup_single_particle(mEarth, qEarth, pEarth, tpfl)
 PEarthN = pomin.setup_single_particle(mEarth, qEarth, pEarthN, tpfl)
 
 #-----------------------------------------------------------------------
-#   INITIAL DATA SETUP FOR JUPITER (astropy)
+#   INITIAL DATA SETUP FOR JUPITER (astropy, J2000)
 #-----------------------------------------------------------------------
 
 mjup = tpfl(0.000954)  # Jupiter mass in solar masses
 qjup = tpfl.([3.99442362 * AU, 
               2.73345644 * AU, 
-              1.07451704 * AU])  # Jupiter position in geometric units (from astropy, J2000)
+              1.07451704 * AU])             # geometric units
 
 vjup = tpfl.([-7.8875477321829800, 
               1.0175858402135900E+01, 
-              4.5538873116399600])  # in km/s, from astropy, J2000
+              4.5538873116399600])  # in km/s (astropy, J2000)
 
 vjup *= tpfl(1000 / cMKS)  # convert from km/s to units of c
 
@@ -139,7 +139,7 @@ Pjup = pomin.setup_single_particle(mjup, qjup, pjup, tpfl)
 PjupN = pomin.setup_single_particle(mjup, qjup, pjupN, tpfl)
 
 #-----------------------------------------------------------------------
-#   INITIAL DATA SETUP FOR MOON
+#   INITIAL DATA SETUP FOR MOON (astropy, J2000)
 #-----------------------------------------------------------------------
 
 mMoon = tpfl(7.34767309E22 / 1.988416E30)     # in units of solar masses
@@ -150,7 +150,7 @@ qMoon = tpfl.([-1.886529874442160E+07,
                 3.883175807801640E+07])    # geometric units
 vMoon = tpfl.([-2.9141440121218000E+01, 
                 -5.6958177245812600, 
-                -2.4819741171379700]) 
+                -2.4819741171379700])  # in km/s (astropy, J2000)
 
 vMoon *= tpfl(1000 / cMKS)  # convert from km/s to units of c
 
@@ -162,7 +162,7 @@ PMoon = pomin.setup_single_particle(mMoon, qMoon, pMoon, tpfl)
 PMoonN = pomin.setup_single_particle(mMoon, qMoon, pMoonN, tpfl)
 
 #-----------------------------------------------------------------------
-#   INITIAL DATA SETUP FOR MARS
+#   INITIAL DATA SETUP FOR MARS (astropy, J2000)
 #-----------------------------------------------------------------------
 
 mMars = tpfl(3.2271058587E-07)  # Mars mass in solar masses
@@ -172,7 +172,7 @@ qMars = tpfl.([1.38356874 * AU,
 
 vMars = tpfl.([1.17347755650600, 
                2.390740193498500E+01, 
-               1.0934201867474400E+01])  # in km/s, from astropy, J2000
+               1.0934201867474400E+01])  # in km/s (astropy, J2000)
 
 vMars *= tpfl(1000 / cMKS)  # convert from km/s to units of c
 
@@ -203,139 +203,201 @@ PtestN = Pchip_newt
 #PintN = pomin.merge_particle_systems(PProxN, Psol)
 #Pint = pomin.merge_particle_systems(PProx, Psol, Palpha, Pjup)
 #PintN = pomin.merge_particle_systems(PProxN, Psol, PalphaN, PjupN)
-Pint = pomin.merge_particle_systems(PProx, Psol, Palpha, Pjup, PEarth)
-PintN = pomin.merge_particle_systems(PProxN, Psol, PalphaN, PjupN, PEarthN)
+#Pint = pomin.merge_particle_systems(PProx, Psol, Palpha, Pjup, PEarth)
+#PintN = pomin.merge_particle_systems(PProxN, Psol, PalphaN, PjupN, PEarthN)
 #Pint = pomin.merge_particle_systems(PProx, Psol, Pjup, Palpha, PEarth, PMoon, PMars)
 #PintN = pomin.merge_particle_systems(PProxN, Psol, PjupN, PalphaN, PEarthN, PMoonN, PMarsN)
 
-nInt = length(Pint.m)
+#nInt = length(Pint.m)
+
+# Get flat space spacecraft final position
+XstF,XpxF,XbF,tcl_from_target = pfs
+flat_space_spacecraft_final = XstF(tcl)
 
 #-----------------------------------------------------------------------
-#   NEWTONIAN CASE
+#   SUN
 #-----------------------------------------------------------------------
 
-# Solve
-solN        = pomin.solve(PintN, params; testparticles=PtestN, Newtonian=true)
+solN    = pomin.solve( Psol, params; testparticles=Pchip_newt0, 
+                       Newtonian=true )
+sol     = pomin.solve( Psol, params; testparticles=Pchip_rel0 )
 
-# Final positions and momenta
-zendN       = solN(tcl)
+zendN   = solN(tcl)
+zend    = sol(tcl)
 
-# Masses
-mProxN      = PintN.m[1]
-mScN        = PtestN.m[1]
+qmissN  = zendN[7:9] - flat_space_spacecraft_final
+dmissN  = norm(qmissN)
 
-# Separate interacting and test particle phase space vectors
-zendNint    = zendN[1:6*nInt]
-zendNtest   = zendN[6*nInt+1:end]
-
-# Proxima
-qProxN      = zendNint[1:3]
-pProxN      = zendNint[3*nInt+1:3*nInt+3]
-vProxN      = pProxN ./ mProxN
-
-# Target
-qtarN       = qProxN + bv
-
-# Starchip
-qScN        = zendNtest[1:3]
-pScN        = zendNtest[4:6]
-vScN        = pScN ./ mScN
-
-# Miss distance
-qmissN      = qtarN - qScN
-dmissN      = norm(qmissN)
-
-# Final target position minus initial spacecraft position
-ΔxN     = qtarN - qchip
+qmiss   = zend[7:9] - flat_space_spacecraft_final
+dmissN  = norm(qmissN)
+dmiss   = norm(qmiss)
+dmiss   = norm(qmiss)
 
 println("Newtonian miss: ", qmissN)
-println("Newtonian miss distance: ", dmissN)
-println("Newtonian final target position minus initial spacecraft position: ", ΔxN)
+println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
+
+println("Relativistic miss: ", qmiss)
+println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
 
 #-----------------------------------------------------------------------
-#   RELATIVISTIC CASE
+#   ALPHA CENTAURI
 #-----------------------------------------------------------------------
 
-# Solve
-solR = pomin.solve(Pint, params; testparticles=Ptest)
+solN    = pomin.solve( Palpha, params; testparticles=Pchip_newt0, 
+                       Newtonian=true )
+sol     = pomin.solve( Palpha, params; testparticles=Pchip_rel0 )
 
-# Final positions and momenta
-zendR = solR(tcl)
+zendN   = solN(tcl)
+zend    = sol(tcl)
 
-# Masses
-mProxR      = Pint.m[1]
-mScR        = Ptest.m[1]
+qmissN  = zendN[7:9] - flat_space_spacecraft_final
+qmiss   = zend[7:9] - flat_space_spacecraft_final
+dmissN  = norm(qmissN)
+dmiss   = norm(qmiss)
 
-# Separate interacting and test particle phase space vectors
-zendRint    = zendR[1:6*nInt]
-zendRtest   = zendR[6*nInt+1:end]
+println("Newtonian miss: ", qmissN)
+println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
 
-# Proxima
-qProxR      = zendRint[1:3]
-pProxR      = zendRint[3*nInt+1:3*nInt+3]
-vProxR      = pProxR ./ mProxR
-
-# Target
-qtarR       = qProxR + bv
-
-# Starchip
-qScR        = zendRtest[1:3]
-pScR        = zendRtest[4:6]
-vScR        = pScR ./ mScR
-
-# Miss distance
-qmissR      = qtarR - qScR
-dmissR      = norm(qmissR)
-
-# Final target position minus initial spacecraft position
-ΔxR     = qtarR - qchip
-
-println("Relativistic miss: ", qmissR)
-println("Relativistic miss distance: ", dmissR)
-println("Relativistic final target position minus initial spacecraft position: ", ΔxR)
+println("Relativistic miss: ", qmiss)
+println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
 
 #-----------------------------------------------------------------------
-#   SAVE FINAL TARGET POSITIONS TO FILE
+#   JUPITER
 #-----------------------------------------------------------------------
 
-println("Saving final target positions to Final_target_minus_initial_spacecraft.txt...")
+solN    = pomin.solve( Pjup, params; testparticles=Pchip_newt0, 
+                       Newtonian=true )
+sol     = pomin.solve( Pjup, params; testparticles=Pchip_rel0 )
 
-open("Final_target_minus_initial_spacecraft.txt", "w") do file
-    println(file, "# Final positions and target-spacecraft differences")
-    println(file, "# Generated: $(Dates.now())")
-    println(file, "")
-    println(file, "# Final target position minus initial spacecraft position")
-    println(file, "ΔxN = [tpfl(\"$(ΔxN[1])\"),")
-    println(file, "       tpfl(\"$(ΔxN[2])\"),")
-    println(file, "       tpfl(\"$(ΔxN[3])\")]")
-    println(file, "")
-    println(file, "ΔxR = [tpfl(\"$(ΔxR[1])\"),")
-    println(file, "       tpfl(\"$(ΔxR[2])\"),")
-    println(file, "       tpfl(\"$(ΔxR[3])\")]")
-    println(file, "")
-    println(file, "# Final positions at time tcl")
-    println(file, "")
-    println(file, "# Newtonian case:")
-    println(file, "qtarN = [tpfl(\"$(qtarN[1])\"),")
-    println(file, "         tpfl(\"$(qtarN[2])\"),")
-    println(file, "         tpfl(\"$(qtarN[3])\")]  # Target position")
-    println(file, "")
-    println(file, "qScN = [tpfl(\"$(qScN[1])\"),")
-    println(file, "        tpfl(\"$(qScN[2])\"),")
-    println(file, "        tpfl(\"$(qScN[3])\")]   # Spacecraft position")
-    println(file, "")
-    println(file, "# Relativistic case:")
-    println(file, "qtarR = [tpfl(\"$(qtarR[1])\"),")
-    println(file, "         tpfl(\"$(qtarR[2])\"),")
-    println(file, "         tpfl(\"$(qtarR[3])\")]  # Target position")
-    println(file, "")
-    println(file, "qScR = [tpfl(\"$(qScR[1])\"),")
-    println(file, "        tpfl(\"$(qScR[2])\"),")
-    println(file, "        tpfl(\"$(qScR[3])\")]   # Spacecraft position")
-    println(file, "")
-    println(file, "# Miss distances")
-    println(file, "dmissN = tpfl(\"$(dmissN)\")  # Newtonian miss distance")
-    println(file, "dmissR = tpfl(\"$(dmissR)\")  # Relativistic miss distance")
-end
+zendN   = solN(tcl)
+zend    = sol(tcl)
 
-println("Final target positions saved to Final_target_minus_initial_spacecraft.txt")
+qmissN  = zendN[7:9] - flat_space_spacecraft_final
+qmiss   = zend[7:9] - flat_space_spacecraft_final
+dmissN  = norm(qmissN)
+dmiss   = norm(qmiss)
+
+println("Newtonian miss: ", qmissN)
+println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
+
+println("Relativistic miss: ", qmiss)
+println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
+
+#-----------------------------------------------------------------------
+#   EARTH
+#-----------------------------------------------------------------------
+
+solN    = pomin.solve( PEarth, params; testparticles=Pchip_newt0, 
+                       Newtonian=true )
+sol     = pomin.solve( PEarth, params; testparticles=Pchip_rel0 )
+
+zendN   = solN(tcl)
+zend    = sol(tcl)
+
+qmissN  = zendN[7:9] - flat_space_spacecraft_final
+qmiss   = zend[7:9] - flat_space_spacecraft_final
+dmissN  = norm(qmissN)
+dmiss   = norm(qmiss)
+
+println("Newtonian miss: ", qmissN)
+println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
+
+println("Relativistic miss: ", qmiss)
+println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
+
+#-----------------------------------------------------------------------
+#   PROXIMA
+#-----------------------------------------------------------------------
+
+solN    = pomin.solve( PProx, params; testparticles=Pchip_newt0, 
+                       Newtonian=true )
+sol     = pomin.solve( PProx, params; testparticles=Pchip_rel0 )
+
+zendN   = solN(tcl)
+zend    = sol(tcl)
+
+qmissN  = zendN[7:9] - flat_space_spacecraft_final
+qmiss   = zend[7:9] - flat_space_spacecraft_final
+dmissN  = norm(qmissN)
+dmiss   = norm(qmiss)
+
+println("Newtonian miss: ", qmissN)
+println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
+
+println("Relativistic miss: ", qmiss)
+println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
+
+#-----------------------------------------------------------------------
+#   MOON
+#-----------------------------------------------------------------------
+
+solN    = pomin.solve( PMoon, params; testparticles=Pchip_newt0, 
+                       Newtonian=true )
+sol     = pomin.solve( PMoon, params; testparticles=Pchip_rel0 )
+
+zendN   = solN(tcl)
+zend    = sol(tcl)
+
+qmissN  = zendN[7:9] - flat_space_spacecraft_final
+qmiss   = zend[7:9] - flat_space_spacecraft_final
+dmissN  = norm(qmissN)
+dmiss   = norm(qmiss)
+
+println("Newtonian miss: ", qmissN)
+println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
+
+println("Relativistic miss: ", qmiss)
+println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
+
+#-----------------------------------------------------------------------
+#   MARS
+#-----------------------------------------------------------------------
+
+solN    = pomin.solve( PMars, params; testparticles=Pchip_newt0, 
+                       Newtonian=true )
+sol     = pomin.solve( PMars, params; testparticles=Pchip_rel0 )
+
+zendN   = solN(tcl)
+zend    = sol(tcl)
+
+qmissN  = zendN[7:9] - flat_space_spacecraft_final
+qmiss   = zend[7:9] - flat_space_spacecraft_final
+dmissN  = norm(qmissN)
+dmiss   = norm(qmiss)
+
+println("Newtonian miss: ", qmissN)
+println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
+
+println("Relativistic miss: ", qmiss)
+println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
+
+#-----------------------------------------------------------------------
+#   COLLECT MISS DISTANCES AND CREATE TABLE
+#-----------------------------------------------------------------------
+
+# Initialize arrays to store results (add this manually after each body calculation)
+miss_distances_N = Float64[]
+miss_distances_R = Float64[]
+body_names = ["Sun", "Alpha Centauri", "Jupiter", "Earth", "Proxima", "Moon", "Mars"]
+
+# Note: You'll need to manually add these lines after each dmissN and dmiss calculation:
+# push!(miss_distances_N, dmissN)
+# push!(miss_distances_R, dmiss)
+
+# For now, create placeholder table structure
+println("\n" * "="^80)
+println("MISS DISTANCE SUMMARY TABLE")
+println("="^80)
+using Printf
+println(@sprintf("%-15s | %-18s | %-19s | %-18s | %-12s", "Body", "Newtonian Miss (AU)", "Relativistic Miss (AU)", "Newtonian/Rel Ratio", "Ratio (N/R)"))
+println("-"^80)
+
+# Uncomment and use this when you have collected the actual distances:
+# for i in 1:length(body_names)
+#     ratio = miss_distances_N[i] / miss_distances_R[i]
+#     println(@sprintf("%-15s | %-18.6e | %-19.6e | %-12.6f", 
+#             body_names[i], miss_distances_N[i], miss_distances_R[i], ratio))
+# end
+
+println("Table framework added - collect miss distances from output above")
+println("="^80)

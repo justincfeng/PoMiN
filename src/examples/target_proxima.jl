@@ -5,8 +5,6 @@ tpfl = Double64
 # Include relativistic tools
 include("../core/physics/Hamiltonians/RelTools.jl")
 
-
-
 #-----------------------------------------------------------------------
 #
 #   FUNCTIONS FOR TARGETING PROBLEM
@@ -150,3 +148,6 @@ Xpx0,Xpxb,Xst0,Vpx,Vst,tcl = ics
 
 # Store final target position
 target_position_final = XbF(tcl)
+
+# Store total travel distance
+ΔXst = norm(XstF(tcl) - Xst0)
