@@ -5,8 +5,6 @@ tpfl = Double64
 # Include relativistic tools
 include("../core/physics/Hamiltonians/RelTools.jl")
 
-
-
 #-----------------------------------------------------------------------
 #
 #   FUNCTIONS FOR TARGETING PROBLEM

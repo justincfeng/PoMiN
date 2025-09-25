@@ -331,12 +331,16 @@ zendN   = solN(tcl)
 zend    = sol(tcl)
 
 qmisstarN   = zendN[7:9] - qtar
-dmisstarN_long = longitudinal_miss_distance(zendN[7:9], qtar, Vst)
-dmisstarN   = transverse_miss_distance(zendN[7:9], qtar, Vst)
+vendN       = zendN[10:12] ./ mchip
+
+dmisstarN   = closest_approach(zendN[7:9], qtar, vendN, Vpx)
+fmisstarN   = norm(qmisstarN)
 
 qmisstar    = zend[7:9] - qtar
-dmisstar_long = longitudinal_miss_distance(zend[7:9], qtar, Vst)
-dmisstar    = transverse_miss_distance(zend[7:9], qtar, Vst)
+vend        = γV2v(zend[10:12] ./ mchip)
+
+dmisstar = closest_approach(zend[7:9], qtar, vend, Vpx)
+fmisstar = norm(qmisstar)
 
 dmissPMcomp = missTHSol[1]
 dmissPMHO   = missTHSol[2]
@@ -344,14 +348,14 @@ dmissPMHO   = missTHSol[2]
 # Store results for summary table
 dmisstar_sun = dmisstar
 dmisstarN_sun = dmisstarN
+fmisstar_sun = fmisstar
+fmisstarN_sun = fmisstarN
 dmissPMcomp_sun = dmissPMcomp
 dmissPMHO_sun = dmissPMHO
 
 println("SUN RESULTS:")
-println("Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
-println("Newtonian longitudinal: ", dmisstarN_long, " (", dmisstarN_long/AU, " AU)")
-println("PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
-println("PoMiN longitudinal: ", dmisstar_long, " (", dmisstar_long/AU, " AU)")
+println("Newtonian closest approach: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println("PoMiN closest approach: ", dmisstar, " (", dmisstar/AU, " AU)")
 
 println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
 println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
@@ -359,8 +363,8 @@ println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
 # Write to file
 println(file, "SUN RESULTS:")
 println(file, "-----------")
-println(file, "Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
-println(file, "PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println(file, "Newtonian closest approach: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println(file, "PoMiN closest approach: ", dmisstar, " (", dmisstar/AU, " AU)")
 println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
 println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
 println(file)
@@ -377,12 +381,16 @@ zendN   = solN(tcl)
 zend    = sol(tcl)
 
 qmisstarN   = zendN[7:9] - qtar
-dmisstarN_long = longitudinal_miss_distance(zendN[7:9], qtar, Vst)
-dmisstarN   = transverse_miss_distance(zendN[7:9], qtar, Vst)
+vendN       = zendN[10:12] ./ mchip
+
+dmisstarN   = closest_approach(zendN[7:9], qtar, vendN, Vpx)
+fmisstarN   = norm(qmisstarN)
 
 qmisstar    = zend[7:9] - qtar
-dmisstar_long = longitudinal_miss_distance(zend[7:9], qtar, Vst)
-dmisstar    = transverse_miss_distance(zend[7:9], qtar, Vst)
+vend        = γV2v(zend[10:12] ./ mchip)
+
+dmisstar = closest_approach(zend[7:9], qtar, vend, Vpx)
+fmisstar = norm(qmisstar)
 
 dmissPMcomp = missTHAlpha[1]
 dmissPMHO   = missTHAlpha[2]
@@ -390,14 +398,14 @@ dmissPMHO   = missTHAlpha[2]
 # Store results for summary table
 dmisstar_alpha = dmisstar
 dmisstarN_alpha = dmisstarN
+fmisstar_alpha = fmisstar
+fmisstarN_alpha = fmisstarN
 dmissPMcomp_alpha = dmissPMcomp
 dmissPMHO_alpha = dmissPMHO
 
 println("ALPHA CENTAURI RESULTS:")
-println("Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
-println("Newtonian longitudinal: ", dmisstarN_long, " (", dmisstarN_long/AU, " AU)")
-println("PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
-println("PoMiN longitudinal: ", dmisstar_long, " (", dmisstar_long/AU, " AU)")
+println("Newtonian closest approach: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println("PoMiN closest approach: ", dmisstar, " (", dmisstar/AU, " AU)")
 
 println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
 println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
@@ -405,8 +413,8 @@ println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
 # Write to file
 println(file, "ALPHA CENTAURI RESULTS:")
 println(file, "----------------------")
-println(file, "Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
-println(file, "PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println(file, "Newtonian closest approach: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println(file, "PoMiN closest approach: ", dmisstar, " (", dmisstar/AU, " AU)")
 println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
 println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
 println(file)
@@ -423,12 +431,16 @@ zendN   = solN(tcl)
 zend    = sol(tcl)
 
 qmisstarN   = zendN[7:9] - qtar
-dmisstarN_long = longitudinal_miss_distance(zendN[7:9], qtar, Vst)
-dmisstarN   = transverse_miss_distance(zendN[7:9], qtar, Vst)
+vendN       = zendN[10:12] ./ mchip
+
+dmisstarN   = closest_approach(zendN[7:9], qtar, vendN, Vpx)
+fmisstarN   = norm(qmisstarN)
 
 qmisstar    = zend[7:9] - qtar
-dmisstar_long = longitudinal_miss_distance(zend[7:9], qtar, Vst)
-dmisstar    = transverse_miss_distance(zend[7:9], qtar, Vst)
+vend        = γV2v(zend[10:12] ./ mchip)
+
+dmisstar = closest_approach(zend[7:9], qtar, vend, Vpx)
+fmisstar = norm(qmisstar)
 
 dmissPMcomp = missTHJup[1]
 dmissPMHO   = missTHJup[2]
@@ -436,14 +448,14 @@ dmissPMHO   = missTHJup[2]
 # Store results for summary table
 dmisstar_jup = dmisstar
 dmisstarN_jup = dmisstarN
+fmisstar_jup = fmisstar
+fmisstarN_jup = fmisstarN
 dmissPMcomp_jup = dmissPMcomp
 dmissPMHO_jup = dmissPMHO
 
 println("JUPITER RESULTS:")
-println("Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
-println("Newtonian longitudinal: ", dmisstarN_long, " (", dmisstarN_long/AU, " AU)")
-println("PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
-println("PoMiN longitudinal: ", dmisstar_long, " (", dmisstar_long/AU, " AU)")
+println("Newtonian closest approach: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println("PoMiN closest approach: ", dmisstar, " (", dmisstar/AU, " AU)")
 
 println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
 println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
@@ -451,8 +463,8 @@ println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
 # Write to file
 println(file, "JUPITER RESULTS:")
 println(file, "---------------")
-println(file, "Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
-println(file, "PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println(file, "Newtonian closest approach: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println(file, "PoMiN closest approach: ", dmisstar, " (", dmisstar/AU, " AU)")
 println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
 println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
 println(file)
@@ -469,12 +481,16 @@ zendN   = solN(tcl)
 zend    = sol(tcl)
 
 qmisstarN   = zendN[7:9] - qtar
-dmisstarN_long = longitudinal_miss_distance(zendN[7:9], qtar, Vst)
-dmisstarN   = transverse_miss_distance(zendN[7:9], qtar, Vst)
+vendN       = zendN[10:12] ./ mchip
+
+dmisstarN   = closest_approach(zendN[7:9], qtar, vendN, Vpx)
+fmisstarN   = norm(qmisstarN)
 
 qmisstar    = zend[7:9] - qtar
-dmisstar_long = longitudinal_miss_distance(zend[7:9], qtar, Vst)
-dmisstar    = transverse_miss_distance(zend[7:9], qtar, Vst)
+vend        = γV2v(zend[10:12] ./ mchip)
+
+dmisstar = closest_approach(zend[7:9], qtar, vend, Vpx)
+fmisstar = norm(qmisstar)
 
 dmissPMcomp = missTHEarth[1]
 dmissPMHO   = missTHEarth[2]
@@ -482,14 +498,14 @@ dmissPMHO   = missTHEarth[2]
 # Store results for summary table
 dmisstar_earth = dmisstar
 dmisstarN_earth = dmisstarN
+fmisstar_earth = fmisstar
+fmisstarN_earth = fmisstarN
 dmissPMcomp_earth = dmissPMcomp
 dmissPMHO_earth = dmissPMHO
 
 println("EARTH RESULTS:")
-println("Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
-println("Newtonian longitudinal: ", dmisstarN_long, " (", dmisstarN_long/AU, " AU)")
-println("PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
-println("PoMiN longitudinal: ", dmisstar_long, " (", dmisstar_long/AU, " AU)")
+println("Newtonian closest approach: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println("PoMiN closest approach: ", dmisstar, " (", dmisstar/AU, " AU)")
 
 println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
 println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
@@ -497,8 +513,8 @@ println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
 # Write to file
 println(file, "EARTH RESULTS:")
 println(file, "-------------")
-println(file, "Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
-println(file, "PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println(file, "Newtonian closest approach: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println(file, "PoMiN closest approach: ", dmisstar, " (", dmisstar/AU, " AU)")
 println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
 println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
 println(file)
@@ -515,12 +531,16 @@ zendN   = solN(tcl)
 zend    = sol(tcl)
 
 qmisstarN   = zendN[7:9] - qtar
-dmisstarN_long = longitudinal_miss_distance(zendN[7:9], qtar, Vst)
-dmisstarN   = transverse_miss_distance(zendN[7:9], qtar, Vst)
+vendN       = zendN[10:12] ./ mchip
+
+dmisstarN   = closest_approach(zendN[7:9], qtar, vendN, Vpx)
+fmisstarN   = norm(qmisstarN)
 
 qmisstar    = zend[7:9] - qtar
-dmisstar_long = longitudinal_miss_distance(zend[7:9], qtar, Vst)
-dmisstar    = transverse_miss_distance(zend[7:9], qtar, Vst)
+vend        = γV2v(zend[10:12] ./ mchip)
+
+dmisstar = closest_approach(zend[7:9], qtar, vend, Vpx)
+fmisstar = norm(qmisstar)
 
 dmissPMcomp = rcbProx[2]*bProx
 dmissPMHO   = rcbProx[3]*bProx
@@ -528,34 +548,25 @@ dmissPMHO   = rcbProx[3]*bProx
 # Store results for summary table
 dmisstar_prox = dmisstar
 dmisstarN_prox = dmisstarN
+fmisstar_prox = fmisstar
+fmisstarN_prox = fmisstarN
 dmissPMcomp_prox = dmissPMcomp
 dmissPMHO_prox = dmissPMHO
 
 println("PROXIMA RESULTS:")
-println("Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
-println("Newtonian longitudinal: ", dmisstarN_long, " (", dmisstarN_long/AU, " AU)")
-println("PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
-println("PoMiN longitudinal: ", dmisstar_long, " (", dmisstar_long/AU, " AU)")
+println("Newtonian closest approach: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println("PoMiN closest approach: ", dmisstar, " (", dmisstar/AU, " AU)")
 
 println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
 println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
 
-println("Final positions:")
-println("  Target position: [", qtar[1]/AU, ", ", qtar[2]/AU, ", ", qtar[3]/AU, "] AU")
-println("  Spacecraft (Newtonian): [", zendN[7]/AU, ", ", zendN[8]/AU, ", ", zendN[9]/AU, "] AU")
-println("  Spacecraft (PoMiN): [", zend[7]/AU, ", ", zend[8]/AU, ", ", zend[9]/AU, "] AU")
-
 # Write to file
 println(file, "PROXIMA RESULTS:")
-println(file, "---------------")
-println(file, "Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
-println(file, "PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println(file, "-------------")
+println(file, "Newtonian closest approach: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println(file, "PoMiN closest approach: ", dmisstar, " (", dmisstar/AU, " AU)")
 println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
 println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
-println(file, "Final positions:")
-println(file, "  Target position: [", qtar[1]/AU, ", ", qtar[2]/AU, ", ", qtar[3]/AU, "] AU")
-println(file, "  Spacecraft (Newtonian): [", zendN[7]/AU, ", ", zendN[8]/AU, ", ", zendN[9]/AU, "] AU")
-println(file, "  Spacecraft (PoMiN): [", zend[7]/AU, ", ", zend[8]/AU, ", ", zend[9]/AU, "] AU")
 println(file)
 
 #-----------------------------------------------------------------------
@@ -570,12 +581,16 @@ zendN   = solN(tcl)
 zend    = sol(tcl)
 
 qmisstarN   = zendN[7:9] - qtar
-dmisstarN_long = longitudinal_miss_distance(zendN[7:9], qtar, Vst)
-dmisstarN   = transverse_miss_distance(zendN[7:9], qtar, Vst)
+vendN       = zendN[10:12] ./ mchip
+
+dmisstarN   = closest_approach(zendN[7:9], qtar, vendN, Vpx)
+fmisstarN   = norm(qmisstarN)
 
 qmisstar    = zend[7:9] - qtar
-dmisstar_long = longitudinal_miss_distance(zend[7:9], qtar, Vst)
-dmisstar    = transverse_miss_distance(zend[7:9], qtar, Vst)
+vend        = γV2v(zend[10:12] ./ mchip)
+
+dmisstar = closest_approach(zend[7:9], qtar, vend, Vpx)
+fmisstar = norm(qmisstar)
 
 dmissPMcomp = missTHMoon[1]
 dmissPMHO   = missTHMoon[2]
@@ -583,14 +598,14 @@ dmissPMHO   = missTHMoon[2]
 # Store results for summary table
 dmisstar_moon = dmisstar
 dmisstarN_moon = dmisstarN
+fmisstar_moon = fmisstar
+fmisstarN_moon = fmisstarN
 dmissPMcomp_moon = dmissPMcomp
 dmissPMHO_moon = dmissPMHO
 
 println("MOON RESULTS:")
-println("Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
-println("Newtonian longitudinal: ", dmisstarN_long, " (", dmisstarN_long/AU, " AU)")
-println("PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
-println("PoMiN longitudinal: ", dmisstar_long, " (", dmisstar_long/AU, " AU)")
+println("Newtonian closest approach: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println("PoMiN closest approach: ", dmisstar, " (", dmisstar/AU, " AU)")
 
 println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
 println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
@@ -598,8 +613,8 @@ println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
 # Write to file
 println(file, "MOON RESULTS:")
 println(file, "------------")
-println(file, "Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
-println(file, "PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println(file, "Newtonian closest approach: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println(file, "PoMiN closest approach: ", dmisstar, " (", dmisstar/AU, " AU)")
 println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
 println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
 println(file)
@@ -616,12 +631,16 @@ zendN   = solN(tcl)
 zend    = sol(tcl)
 
 qmisstarN   = zendN[7:9] - qtar
-dmisstarN_long = longitudinal_miss_distance(zendN[7:9], qtar, Vst)
-dmisstarN   = transverse_miss_distance(zendN[7:9], qtar, Vst)
+vendN       = zendN[10:12] ./ mchip
+
+dmisstarN   = closest_approach(zendN[7:9], qtar, vendN, Vpx)
+fmisstarN   = norm(qmisstarN)
 
 qmisstar    = zend[7:9] - qtar
-dmisstar_long = longitudinal_miss_distance(zend[7:9], qtar, Vst)
-dmisstar    = transverse_miss_distance(zend[7:9], qtar, Vst)
+vend        = γV2v(zend[10:12] ./ mchip)
+
+dmisstar = closest_approach(zend[7:9], qtar, vend, Vpx)
+fmisstar = norm(qmisstar)
 
 dmissPMcomp = missTHMars[1]
 dmissPMHO   = missTHMars[2]
@@ -629,26 +648,27 @@ dmissPMHO   = missTHMars[2]
 # Store results for summary table
 dmisstar_mars = dmisstar
 dmisstarN_mars = dmisstarN
+fmisstar_mars = fmisstar
+fmisstarN_mars = fmisstarN
 dmissPMcomp_mars = dmissPMcomp
 dmissPMHO_mars = dmissPMHO
 
 println("MARS RESULTS:")
-println("Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
-println("Newtonian longitudinal: ", dmisstarN_long, " (", dmisstarN_long/AU, " AU)")
-println("PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
-println("PoMiN longitudinal: ", dmisstar_long, " (", dmisstar_long/AU, " AU)")
+println("Newtonian closest approach: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println("PoMiN closest approach: ", dmisstar, " (", dmisstar/AU, " AU)")
 
 println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
-println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
+println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")  
 
 # Write to file
 println(file, "MARS RESULTS:")
 println(file, "------------")
-println(file, "Newtonian miss distance: ", dmisstarN, " (", dmisstarN/AU, " AU)")
-println(file, "PoMiN Target miss: ", dmisstar, " (", dmisstar/AU, " AU)")
+println(file, "Newtonian closest approach: ", dmisstarN, " (", dmisstarN/AU, " AU)")
+println(file, "PoMiN closest approach: ", dmisstar, " (", dmisstar/AU, " AU)")
 println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp/AU, " AU)")
 println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO/AU, " AU)")
 println(file)
+
 
 #-----------------------------------------------------------------------
 #   COLLECT MISS DISTANCES AND CREATE TABLE
@@ -656,13 +676,13 @@ println(file)
 
 # Collect all results for summary table
 results = [
-    ("Sun", dmisstar_sun/AU, dmisstarN_sun/AU, dmissPMcomp_sun/AU, dmissPMHO_sun/AU),
-    ("Alpha Centauri", dmisstar_alpha/AU, dmisstarN_alpha/AU, dmissPMcomp_alpha/AU, dmissPMHO_alpha/AU),
-    ("Jupiter", dmisstar_jup/AU, dmisstarN_jup/AU, dmissPMcomp_jup/AU, dmissPMHO_jup/AU),
-    ("Earth", dmisstar_earth/AU, dmisstarN_earth/AU, dmissPMcomp_earth/AU, dmissPMHO_earth/AU),
-    ("Proxima", dmisstar_prox/AU, dmisstarN_prox/AU, dmissPMcomp_prox/AU, dmissPMHO_prox/AU),
-    ("Moon", dmisstar_moon/AU, dmisstarN_moon/AU, dmissPMcomp_moon/AU, dmissPMHO_moon/AU),
-    ("Mars", dmisstar_mars/AU, dmisstarN_mars/AU, dmissPMcomp_mars/AU, dmissPMHO_mars/AU)
+    ("Sun", fmisstar_sun/AU, fmisstarN_sun/AU, dmisstar_sun/AU, dmisstarN_sun/AU, dmissPMcomp_sun/AU, dmissPMHO_sun/AU),
+    ("Alpha Centauri", fmisstar_alpha/AU, fmisstarN_alpha/AU, dmisstar_alpha/AU, dmisstarN_alpha/AU, dmissPMcomp_alpha/AU, dmissPMHO_alpha/AU),
+    ("Jupiter", fmisstar_jup/AU, fmisstarN_jup/AU, dmisstar_jup/AU, dmisstarN_jup/AU, dmissPMcomp_jup/AU, dmissPMHO_jup/AU),
+    ("Earth", fmisstar_earth/AU, fmisstarN_earth/AU, dmisstar_earth/AU, dmisstarN_earth/AU, dmissPMcomp_earth/AU, dmissPMHO_earth/AU),
+    ("Proxima", fmisstar_prox/AU, fmisstarN_prox/AU, dmisstar_prox/AU, dmisstarN_prox/AU, dmissPMcomp_prox/AU, dmissPMHO_prox/AU),
+    ("Moon", fmisstar_moon/AU, fmisstarN_moon/AU, dmisstar_moon/AU, dmisstarN_moon/AU, dmissPMcomp_moon/AU, dmissPMHO_moon/AU),
+    ("Mars", fmisstar_mars/AU, fmisstarN_mars/AU, dmisstar_mars/AU, dmisstarN_mars/AU, dmissPMcomp_mars/AU, dmissPMHO_mars/AU)
 ]
 
 # Write summary table to file
@@ -672,17 +692,19 @@ println(file, "="^100)
 println(file)
 
 # CSV Header
-println(file, "Body, Target Miss (AU), Newtonian Miss (AU), PM Miss Estimate (AU), Higher Order Miss (AU)")
+println(file, "Body\t\t\tEndpoint Dist PoMiN (AU)\t\t\tEndpoint Dist Newtonian (AU)\t\t\tClosest Approach PoMiN (AU)\t\t\tClosest Approach Newtonian (AU)\t\t\tPM Miss Estimate (AU)\t\t\tHigher Order Miss (AU)")
 
 # CSV Data rows
-for (body, target, newtonian, pm_est, ho_est) in results
-    println(file, @sprintf("%s, %.6e, %.6e, %.6e, %.6e", body, target, newtonian, pm_est, ho_est))
+for (body, fmiss_rel, fmiss_newt, dmiss_rel, dmiss_newt, pm_est, ho_est) in results
+    println(file, @sprintf("%s\t\t\t%.6e\t\t\t%.6e\t\t\t%.6e\t\t\t%.6e\t\t\t%.6e\t\t\t%.6e", body, fmiss_rel, fmiss_newt, dmiss_rel, dmiss_newt, pm_est, ho_est))
 end
 
 println(file)
 println(file, "Column Definitions:")
-println(file, "- Target Miss: Distance from spacecraft to Proxima at closest approach")
-println(file, "- Newtonian Miss: Newtonian simulation miss distance to target")
+println(file, "- Endpoint Dist PoMiN: Distance between spacecraft and target at final time (relativistic)")
+println(file, "- Endpoint Dist Newtonian: Distance between spacecraft and target at final time (Newtonian)")
+println(file, "- Closest Approach PoMiN: Closest approach distance using final velocities (relativistic)")
+println(file, "- Closest Approach Newtonian: Closest approach distance using final velocities (Newtonian)")
 println(file, "- PM Miss Estimate: Post-Minkowskian theoretical estimate")
 println(file, "- Higher Order Miss: Higher-order relativistic corrections")
 println(file)
