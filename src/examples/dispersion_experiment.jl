@@ -17,8 +17,8 @@ time_closest_approach = pfs[4]
 
 # Mass and position
 mchip = tpfl(1.0E-30)
-# qchip = Xst0
-qchip = Double64[-2.23588844590237e7, 8.68066486466342e7, 2.9882578786605e7]
+qchip = Xst0
+# qchip = Double64[-2.23588844590237e7, 8.68066486466342e7, 2.9882578786605e7]
 
 Vchip_rel_FT  = [tpfl("-7.29280133630346695175238301027084351e-02"), 
                  tpfl("-5.57596267171519947482140178590898884e-02"), 
@@ -26,8 +26,6 @@ Vchip_rel_FT  = [tpfl("-7.29280133630346695175238301027084351e-02"),
 Vchip_newt_FT = [tpfl("-7.2928011848008478283629726326358021e-02"), 
                  tpfl("-5.57596297969013443215818900874537475e-02"), 
                  tpfl("-1.77686212073603716257005595684594549e-01")]
-
-γst = one(tpfl) / sqrt(one(tpfl) - tpfl(0.2)^2)
 
 # Final target position minus initial spacecraft position
 
@@ -130,8 +128,7 @@ PEarthN = pomin.setup_single_particle(mEarth, qEarth, pEarthN, tpfl)
 #   SETUP MAIN PARTICLE SYSTEM
 #-----------------------------------------------------------------------
 
-main_particle_system = pomin.merge_particle_systems(Psol, PProx, Palpha, PEarth, Pjup)
-
+main_particle_system = pomin.merge_particle_systems(PProx, Psol, Palpha, Pjup, PEarth)
 
 #-----------------------------------------------------------------------
 #   INTEGRATION PARAMETERS
@@ -148,7 +145,8 @@ params = pomin.ParametersJulia(tspan, integrator="Vern9",
 #-----------------------------------------------------------------------
 #   EXPERIMENT INPUT PARAMETERS
 #-----------------------------------------------------------------------
-target_distance = norm(ΔxR)
+# target_distance = norm(ΔxR)   # for relativistic
+target_distance = norm(ΔxN)     # for Newtonian
 target_distance_in_m = target_distance * Msol2m
 
 # size_of_target_disk_in_m = tpfl(5E8)
@@ -157,10 +155,13 @@ target_distance_in_m = target_distance * Msol2m
 theta_tol = tpfl(1E-7)
 size_of_target_disk_in_m = deg2rad(theta_tol) * target_distance_in_m
 
+# baseVector = Vchip_rel_FT     # for relativistic
+baseVector = Vchip_newt_FT      # for Newtonian
+
 println("Using theta_tol = ",theta_tol)
 println("Size of target disk in m = ",size_of_target_disk_in_m)
 
-N = 900
+N = 20
 
 
 
@@ -171,33 +172,41 @@ N = 900
 for i = 1:N
     println("\n\nTrial #",i)
 
-    (theta_deg, init_unit_vec) = generateUnitVectorWithinToleranceAngle(theta_tol, Vchip_rel_FT, target_distance, tpfl)
+    (theta_deg, init_unit_vec) = generateUnitVectorWithinToleranceAngle(theta_tol, baseVector, target_distance, tpfl)
 
     println("Initial angle from base vector = ",theta_deg, " degs")
 
-    # set length of init velocity vector to be 0.2 c
-    init_vel = 0.2 * init_unit_vec
+    # set length of init velocity vector to be length of base velocity vector
+    init_vel = init_unit_vec * norm(baseVector)
 
     # Set up starchip
-    pchip = (mchip * γst) .* (init_vel)
+    γst = one(tpfl) / sqrt(one(tpfl) - (norm(init_vel))^2)
+    # pchip = mchip * γst .* init_vel     # for relativistic
+    pchip = mchip * init_vel     # for Newtonian
     Pchip = pomin.setup_single_particle(mchip, qchip, pchip, tpfl)
     test_particle_system = Pchip
 
     # run solver
     println("Running solver...")
-    sol = pomin.solve(main_particle_system, params; testparticles=test_particle_system)
+    # sol = pomin.solve(main_particle_system, params; testparticles=test_particle_system)     # for relativistic
+    sol = pomin.solve(main_particle_system, params; testparticles=test_particle_system, Newtonian=true)     # for Newtonian
 
     Zend = sol(time_closest_approach)
-    q_starchip = Zend[31:33]
-    q_proxima = Zend[4:6]
+    
+    nInt = length(main_particle_system.m)
+    ZendInt = Zend[1:6*nInt]
+    ZendTest = Zend[6*nInt+1:end]
+
+    q_starchip = ZendTest[1:3]
+    q_proxima = ZendInt[1:3]
     q_target = q_proxima + bv
     miss_dist = norm(q_starchip - q_target) / AU
 
     println("Miss distance: ",miss_dist," AU")
 
-    expected_geometric_miss_dist = deg2rad(theta_deg) * 268210   # expected miss distance in AU
+    expected_geometric_miss_dist = deg2rad(theta_deg) * target_distance / AU   # expected miss distance in AU
 
-    println("Expected miss distance based on geometry: ",expected_geometric_miss_dist)
+    println("Expected miss distance based on geometry: ",expected_geometric_miss_dist," AU")
 
     if i == 1
         open("miss_distances.csv", "w") do io
