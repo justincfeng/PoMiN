@@ -2,6 +2,9 @@ using LinearAlgebra
 using DoubleFloats
 tpfl = Double64
 
+# Include relativistic tools
+include("../core/physics/Hamiltonians/RelTools.jl")
+
 #-----------------------------------------------------------------------
 #
 #   FUNCTIONS FOR TARGETING PROBLEM
@@ -128,8 +131,8 @@ Xst0 = tpfl.([-2.235888445902370E+07, 8.680664864663420E+07, 2.988257878660500E+
 vst    = tpfl(0.2)*c         # Starchip velocity magnitude
 
 # Target
-b0     = 0.05*AU               # Target distance
-bv     = bconstructor((Xpx0,Xst0,Vpx),b0,pi/3) # Target displacement from Proxima
+b0     = tpfl(0.05)*AU               # Target distance
+bv     = bconstructor((Xpx0,Xst0,Vpx),b0,tpfl(pi)/tpfl(3)) # Target displacement from Proxima
 
 ics    = targprox( (Xpx0,Xst0,Vpx) , vst , bv )
 pfs    = parfuncs(ics)
@@ -142,3 +145,9 @@ XstF,XpxF,XbF,tcl = pfs
 # pfs[4] is the time to closest approach 
 
 Xpx0,Xpxb,Xst0,Vpx,Vst,tcl = ics
+
+# Store final target position
+target_position_final = XbF(tcl)
+
+# Store total travel distance
+ΔXst = norm(XstF(tcl) - Xst0)

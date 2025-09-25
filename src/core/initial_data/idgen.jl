@@ -342,24 +342,22 @@ function setup_scattering(m1::Real, m2::Real, p::Real, b::Real, dx::Real; c::Rea
 end #-------------------------------------------------------------------
 
 """
-    generateUnitVectorWithinToleranceAngle(theta_tol, startPt::RealVec, target::RealVec, tpfl::Type=Float64)
+    generateUnitVectorWithinToleranceAngle(theta_tol, baseVector::RealVec, targetDistance, tpfl::Type=Float64)
 
-Generates random unit vector that points from startPt to target within a given tolerance angle
+Generates random unit vector that is within tolerance angle of baseVector
 
 Arguments:
-- theta_tol: Tolerance angle.  Generated unit vector will be within this angle of the vector pointing at target
-- startPt: Starting point for unit vector that points at target
-- target: Location of target
+- theta_tol: Tolerance angle.  Generated unit vector will be within this angle of the baseVector
+- baseVector: The vector pointing to the target
+- targetDistance: Distance to the target
 - tpfl: Type for floating-point numbers (default: Float64)
 
 Returns the angle between the the unit vector and target, as well as the unit vector
 """
-function generateUnitVectorWithinToleranceAngle(theta_tol, startPt::RealVec, target::RealVec, tpfl::Type=Float64)
-    
+function generateUnitVectorWithinToleranceAngle(theta_tol, baseVector::RealVec, targetDistance, tpfl::Type=Float64)
+
     println("\nGenerating initial unit vector")
 
-    baseVector = target - startPt
-    targetDistance = norm(baseVector)
     diskRadius = targetDistance * tpfl(tan(deg2rad(theta_tol)))
     println("target distance = ", targetDistance * 1.47669196951425 * 6.6845871226706E-09, " AU")
     println("disk Radius = ", diskRadius * 1.47669196951425 * 6.6845871226706E-09, " AU")
@@ -427,6 +425,27 @@ function generateUnitVectorWithinToleranceAngle(theta_tol, startPt::RealVec, tar
 
     return theta_deg, unit_vec
 
+end
+
+"""
+    generateUnitVectorWithinToleranceAngle(theta_tol, startPt::RealVec, target::RealVec, tpfl::Type=Float64)
+
+Generates random unit vector that points from startPt to target within a given tolerance angle
+
+Arguments:
+- theta_tol: Tolerance angle.  Generated unit vector will be within this angle of the vector pointing at target
+- startPt: Starting point for unit vector that points at target
+- target: Location of target
+- tpfl: Type for floating-point numbers (default: Float64)
+
+Returns the angle between the the unit vector and target, as well as the unit vector
+"""
+function generateUnitVectorWithinToleranceAngle(theta_tol, startPt::RealVec, target::RealVec, tpfl::Type=Float64)
+
+    baseVector = target - startPt
+    targetDistance = norm(baseVector)
+
+    return generateUnitVectorWithinToleranceAngle(theta_tol, baseVector, targetDistance, tpfl)
 end
 
 """
