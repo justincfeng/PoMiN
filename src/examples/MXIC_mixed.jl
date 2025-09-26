@@ -102,7 +102,7 @@ function plot_momentum_exchange_scaling(results)
               xticks=10.0 .^ (1:2:60), yticks=10.0 .^ (-20:2:-4))
     
     plot!(p1, b_values, abs.(dp_numerical),
-          marker=:square, markersize=4, linewidth=2,
+          marker=:circle, markersize=4, linewidth=2,
           color=:red, markerstrokewidth=0,
           label="Numerical",
           linestyle=:solid)

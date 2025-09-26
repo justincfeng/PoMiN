@@ -1,6 +1,7 @@
 include("../pomin.jl")
 using LinearAlgebra
 using Plots
+using LaTeXStrings
 using DoubleFloats
 
 #-----------------------------------------------------------------------
@@ -61,8 +62,7 @@ function momentum_exchange_sweep(tpflt::Type=Double64)
         dp_analytical = pomin.HamPM.dp_scatter(p, b, m1, m2)
         
         # Calculate relative error
-        rel_error = abs(abs(dp_numerical) - abs(dp_analytical)) 
-                    / abs(dp_analytical) * 100
+        rel_error = abs(abs(dp_numerical) - abs(dp_analytical)) / abs(dp_analytical) * 100
         
         # Store results
         push!(results, (nn=nn, b=b, dp_analytical=dp_analytical, 
@@ -74,54 +74,89 @@ function momentum_exchange_sweep(tpflt::Type=Double64)
 end
 
 """
-    plot_momentum_exchange(results)
+    plot_momentum_exchange_scaling(results)
 
-Generate plots showing momentum exchange scaling and accuracy.
+Generate publication-quality momentum exchange scaling plot for Physical Review D.
 """
-function plot_momentum_exchange(results)
+function plot_momentum_exchange_scaling(results)
     # Extract data for plotting
     b_values = [r.b for r in results]
     dp_analytical = [r.dp_analytical for r in results]
     dp_numerical = [r.dp_numerical for r in results]
-    rel_errors = [r.rel_error for r in results]
+    
+    # Set publication-quality defaults
+    default(fontfamily="Computer Modern", 
+            guidefontsize=10, tickfontsize=8, legendfontsize=9,
+            linewidth=2, markersize=4, markerstrokewidth=0,
+            dpi=300, size=(400, 300))
     
     # Create log-log plot of momentum exchange vs impact parameter
-    p1 = plot(b_values, dp_analytical, 
+    p1 = plot(b_values, abs.(dp_analytical), 
               xscale=:log10, yscale=:log10,
-              marker=:circle, markersize=6, linewidth=2,
-              label="Analytical (PM Theory)",
-              xlabel="Impact Parameter b", ylabel="Momentum Exchange |Δp|",
-              title="Momentum Exchange vs Impact Parameter",
-              legend=:topright, grid=true)
+              marker=:circle, markersize=4, linewidth=2,
+              color=:black, markerstrokewidth=0,
+              label="Analytical",
+              xlabel=L"Impact parameter $b$", 
+              ylabel=L"Momentum exchange $|\Delta p|$",
+              legend=:topright, grid=true, minorgrid=false,
+              framestyle=:box,
+              xticks=10.0 .^ (1:2:60), yticks=10.0 .^ (-20:2:-4))
     
-    plot!(p1, b_values, dp_numerical,
-          marker=:square, markersize=6, linewidth=2,
-          label="Numerical (PoMiN)",
-          linestyle=:dash)
+    plot!(p1, b_values, abs.(dp_numerical),
+          marker=:circle, markersize=4, linewidth=2,
+          color=:red, markerstrokewidth=0,
+          label="Numerical",
+          linestyle=:solid)
     
     # Add 1/b reference line
     b_ref = [minimum(b_values), maximum(b_values)]
-    dp_ref = dp_analytical[1] * b_values[1] ./ b_ref  # Scale to match first point
+    dp_ref = abs(dp_analytical[1]) * b_values[1] ./ b_ref
     plot!(p1, b_ref, dp_ref,
-          linewidth=1, linestyle=:dot, color=:gray,
-          label="1/b scaling")
+          linewidth=1.5, linestyle=:dash, color=:gray,
+          label=L"$\propto b^{-1}$")
+
+    return plot(p1, left_margin=5Plots.mm, bottom_margin=5Plots.mm,
+                top_margin=2Plots.mm, right_margin=2Plots.mm)
+end
+
+"""
+    plot_momentum_exchange_error(results)
+
+Generate publication-quality relative error plot for Physical Review D.
+"""
+function plot_momentum_exchange_error(results)
+    # Extract data for plotting
+    b_values = [r.b for r in results]
+    rel_errors = [r.rel_error for r in results]
+    
+    # Set publication-quality defaults
+    default(fontfamily="Computer Modern", 
+            guidefontsize=10, tickfontsize=8, legendfontsize=9,
+            linewidth=2, markersize=4, markerstrokewidth=0,
+            dpi=300, size=(400, 300))
     
     # Create relative error plot
     p2 = plot(b_values, rel_errors,
               xscale=:log10, yscale=:log10,
-              marker=:diamond, markersize=6, linewidth=2,
-              color=:red,
-              xlabel="Impact Parameter b", ylabel="Relative Error (%)",
-              title="Numerical Accuracy vs Impact Parameter",
-              legend=false, grid=true)
+              marker=:circle, markersize=4, linewidth=2,
+              color=:steelblue, markerstrokewidth=0,
+              xlabel=L"Impact parameter $b$", 
+              ylabel="Relative error (%)",
+              legend=false, grid=true, minorgrid=false,
+              framestyle=:box,
+              xticks=10.0 .^ (1:2:60), yticks=10.0 .^ (-12:2:2))
 
-    return plot(p1, p2, layout=(2,1), size=(800, 600))
+    return plot(p2, left_margin=5Plots.mm, bottom_margin=5Plots.mm,
+                top_margin=2Plots.mm, right_margin=2Plots.mm)
 end
 
 # Run the momentum exchange sweep
 results = momentum_exchange_sweep()
 
-# Generate plots
-PLTres = plot_momentum_exchange(results)
+# Generate separate plots
+scaling_plot = plot_momentum_exchange_scaling(results)
+error_plot = plot_momentum_exchange_error(results)
 
-savefig(PLTres, "momentum_exchange_sweep.pdf")
+# Save separate plots
+savefig(scaling_plot, "momentum_exchange_scaling_massive.pdf")
+savefig(error_plot, "momentum_exchange_error_massive.pdf")
