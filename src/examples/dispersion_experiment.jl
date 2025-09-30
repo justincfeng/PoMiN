@@ -145,23 +145,23 @@ params = pomin.ParametersJulia(tspan, integrator="Vern9",
 #-----------------------------------------------------------------------
 #   EXPERIMENT INPUT PARAMETERS
 #-----------------------------------------------------------------------
-# target_distance = norm(ΔxR)   # for relativistic
-target_distance = norm(ΔxN)     # for Newtonian
+target_distance = norm(ΔxR)   # for relativistic
+# target_distance = norm(ΔxN)     # for Newtonian
 target_distance_in_m = target_distance * Msol2m
 
 # size_of_target_disk_in_m = tpfl(5E8)
 # theta_tol = rad2deg(size_of_target_disk_in_m / target_distance_in_m)
 
-theta_tol = tpfl(1E-7)
+theta_tol = tpfl(1E-5)
 size_of_target_disk_in_m = deg2rad(theta_tol) * target_distance_in_m
 
-# baseVector = Vchip_rel_FT     # for relativistic
-baseVector = Vchip_newt_FT      # for Newtonian
+baseVector = Vchip_rel_FT     # for relativistic
+# baseVector = Vchip_newt_FT      # for Newtonian
 
 println("Using theta_tol = ",theta_tol)
 println("Size of target disk in m = ",size_of_target_disk_in_m)
 
-N = 20
+N = 200
 
 
 
@@ -181,15 +181,15 @@ for i = 1:N
 
     # Set up starchip
     γst = one(tpfl) / sqrt(one(tpfl) - (norm(init_vel))^2)
-    # pchip = mchip * γst .* init_vel     # for relativistic
-    pchip = mchip * init_vel     # for Newtonian
+    pchip = mchip * γst .* init_vel     # for relativistic
+    # pchip = mchip * init_vel     # for Newtonian
     Pchip = pomin.setup_single_particle(mchip, qchip, pchip, tpfl)
     test_particle_system = Pchip
 
     # run solver
     println("Running solver...")
-    # sol = pomin.solve(main_particle_system, params; testparticles=test_particle_system)     # for relativistic
-    sol = pomin.solve(main_particle_system, params; testparticles=test_particle_system, Newtonian=true)     # for Newtonian
+    sol = pomin.solve(main_particle_system, params; testparticles=test_particle_system)     # for relativistic
+    # sol = pomin.solve(main_particle_system, params; testparticles=test_particle_system, Newtonian=true)     # for Newtonian
 
     Zend = sol(time_closest_approach)
     
