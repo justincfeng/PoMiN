@@ -1,7 +1,7 @@
 ====================================================================================================
 MISS DISTANCE ANALYSIS - FINE-TUNED INITIAL DATA (FTID)
 ====================================================================================================
-Generated: 2025-09-27T11:51:10.692
+Generated: 2025-10-01T14:17:12.691
 Target: Proxima Centauri (displaced by 5.00000000000000027755575615628922117e-02 AU)
 Integration time: 1.35858929869399063971729181215165883e+14 time units
 Precision: Double64
@@ -69,7 +69,7 @@ COMPREHENSIVE SUMMARY TABLE - COMMA SEPARATED VALUES
 
 Body			B/D_ratio		Endpt Dist PoMiN (AU)	Endpt Dist Newtonian (AU)	Closest App PoMiN (AU)	PM Miss Estimate (AU)	Higher Order Miss (AU)
 Sun			8.926179e-01			1.393122e-01			1.354194e-01			1.199786e-01			1.653598e-01			2.243105e-07
-Alpha Centauri	8.122028e-01			1.002445e-06			1.193681e-06			2.490810e-07			2.675328e-05			5.871427e-15
+Alpha Centauri			8.122028e-01			1.002445e-06			1.193681e-06			2.490810e-07			2.675328e-05			5.871427e-15
 Jupiter			8.087159e-01			1.524705e-05			1.513906e-05			7.146588e-06			3.470577e-05			9.880820e-15
 Earth			3.370195e-04			1.985084e-06			1.988337e-06			3.311147e-10			1.226868e-02			1.234768e-09
 Proxima			1.000006e+00			4.000978e-07			4.583294e-07			3.131503e-08			3.011034e-08			7.614718e-15
