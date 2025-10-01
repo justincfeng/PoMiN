@@ -22,7 +22,7 @@ include("../utils/broyden.jl")
 #-----------------------------------------------------------------------
 
 # Mass and position
-mchip = tpfl(1.0E-30)
+mchip = tpfl(1.0E-20)
 qchip = Xst0
 vst = norm(Vst)
 
