@@ -9,77 +9,28 @@ the N-body Hamiltonian in the following paper:
 https://arxiv.org/abs/0807.0214 [Ledvinka, T., Schafer, G., Bicak, J., Phys. Rev. Lett. 100, 251101 (2008)]
 
 The Hamiltonian presented in the paper above models a system of weakly
-gravitating point particles. It is fully special relativistic and includes 
-first-order effects in (Newton's constant) G from General Relativity.
+gravitating point particles. It is fully special relativistic and 
+includes first-order effects in (Newton's constant) G from general 
+relativity.
 
-Version 2.0 of PoMiN has been written in Julia.  It uses the symplectic integration 
-scheme for nonseparable Hamiltonians published by M. Tao:
+This version is a minimal Julia language refactoring of PoMiN for use in
+modeling trajectories for laser-propelled spacecraft missions to nearby 
+stellar destinations. A more complete version of the Julia language 
+refactoring of PoMiN will be released at a later date.
 
-https://arxiv.org/abs/1609.02212 [Tao, M., Phys. Rev. E 94, 043303 (2016)]
-
-A 4th order Runge-Kutta integrator is also included as an option.  RK4 was the
-integrator used by version 1 of PoMiN.  RK4 sometimes displays better accuracy than
-the symplectic method, although it does not conserve energy (on average) like the
-symplectic method does.
-
-In addition to handling ultra-relativistic particle interactions via gravity,  
-PoMiN accurately reproduces light deflection angles in gravitational fields.  
-
-For more details, including validation tests, see our PoMiN paper:
+The original C language code is described in the paper:
 
 https://arxiv.org/abs/1805.00813 [Feng, J., Baumann, M., Hall, B., Doss, J., Spencer, L., Matzner, R., Ap. J. 859, 130 (2018)]
 
+## Usage
 
-## Input
+Example scripts are provided in the src/examples directory. To run them,
+first install Julia, then execute a command of the form:
 
-Input must be read from a CSV file with one line in the following format:
+    > julia MXIC_massive.jl
 
-    description,start-time,end-time,timestep,iterations,courant-number,gravitational-constant,number-of-particles,mass_1,qx_1,qy_1,qz_1,px_1,py_1,pz_1,mass_2,qx_2,...
-
-
-    INPUT,                  TYPE,    DESCRIPTION  
-    description,            string,  ignored by program--except it cannot be empty  
-    start-time,             float,   time to start at (physics time)  
-    end-time,               float,   time to end at (physics time)  
-    timestep,               float,   (maximum) length of each computational iteration  
-    iterations,             integer, upper bound of iterations (0 = unbounded)  
-    courant-number,         float,   adaptive-timestep parameter (0 = off)  
-    gravitational-constant, float,   you know: G  
-    number-of-particles     integer, number of interacting particles
-    mass_1,                 float,   mass of particle 1  
-    qx_1,                   float,   x-position of particle 1  
-    ...,                    ...,     ...  
-    py_3,                   float,   y-momentum of particle 3  
-    ...,                    ...,     ...  
-
-The speed of light c is assumed to have a value of 1.
-
-Any particle given a mass of 0 will move at the speed of light, as dictated by the
-physics.  Therefore, light can be included in the simulation simply by adding one 
-or more massless bodies and assigning their energies appropriately using E=hf.
-
-The 'number-of-particles' parameter is the number of fully interacting particles in the 
-system. Any additional particles in the input line after the first 'number-of-particles' 
-particles will be treated as test particles. Set 'number-of-particles' to zero if all
-particles in the input line are fully interacting particles (no test particles).
-
-The 'courant-number' parameter is the ratio of the change in distance between the
-two closest particles (in a single timestep) to the distance between those
-particles. A positive 'courant-number' turns on adaptive timestepping and computes
-the timestep using the distances between all particles, including test particles. 
-Setting 'courant-number' to zero turns off adaptive timestepping. A negative 
-'courant-number' turns on adaptive timestepping, but computes the timestep (with 
-the absolute value of 'courant-number') using only the distances between fully 
-interacting particles.
-
-
-## Output
-
-Output is written to stdout (except for errors, which are written to stderr) in
-this form:
-
-    iteration_#,time,qx_1,qy_1,qz_1,px_1,py_1,pz_1,qx_2,qy_2,...
-
+to run the MXIC_massive.jl script.
+    
 ## License
 
 This program is licensed under the MIT License. See LICENSE file.

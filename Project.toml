@@ -1,7 +1,7 @@
 name = "pomin"
 uuid = "c0229db0-a712-49ac-9113-be0d1581ecaa"
 authors = ["Justin C. Feng"]
-version = "0.1.0"
+version = "2.0.0"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"

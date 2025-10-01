@@ -1,1 +1,0 @@
-include("../source/gwsc.jl")
