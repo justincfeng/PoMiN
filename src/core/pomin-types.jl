@@ -33,12 +33,6 @@ constants = tpnum(Float64)  # Returns (0.0, 1.0, 2.0, ..., 9.0)
 # Generate BigFloat constants
 constants = tpnum(BigFloat)  # Returns (0, 1, 2, ..., 9) as BigFloat
 ```
-
-# Notes
-This utility function is used throughout PoMiN to generate type-consistent
-numeric constants, enabling support for different precision arithmetic
-(Float64, BigFloat, DoubleFloats, etc.) in post-Minkowskian calculations.
-If the input type is not a subtype of Real, it defaults to Float64.
 """
 function tpnum(tpfl::Type)
     if tpfl <: Real
@@ -64,11 +58,6 @@ Datatype representing a collection of particles in the N-body system.
 - `q::Array{RealVec}`: Array of position vectors for each particle
 - `p::Array{RealVec}`: Array of momentum vectors for each particle
 
-# Notes
-This structure is used to store the physical properties and state of all
-particles in the post-Minkowskian N-body simulation. Each particle has a
-mass, position vector, and momentum vector in the relativistic
-framework.
 """
 struct Particles
     m::RealVec
@@ -97,12 +86,6 @@ N-body integration.
 - `tspan::Any`: Time span (initial_time, final_time)
 - `iter::Int`:  Total number or maximum number of iterations
 
-# Notes
-This structure encapsulates all the numerical parameters needed to
-configure the integration of Hamilton's equations in the
-post-Minkowskian approximation. The choice between RK4 and
-OrdinaryDiffEq.jl integrators allows for different balances between
-speed and accuracy.
 """
 mutable struct Parameters
     d::Int             # Number of spatial dimensions (typically 3)
@@ -228,11 +211,6 @@ Mutable datatype for storing integration solutions (only used when RK4 integrato
 - `z::Array{RealVec,1}`: Vector recording phase space coordinates at each timestep
 - `zaux::Array{RealVec,1}`: Auxiliary array for intermediate calculations
 
-# Notes
-This mutable structure is used to store the time evolution of the N-body system
-when using the custom RK4 integrator. The phase space coordinates `z` contain
-both positions and momenta for all particles at each recorded timestep.
-The structure is mutable to allow efficient updating during integration.
 """
 mutable struct soln
     d::Int                         # number of dimensions

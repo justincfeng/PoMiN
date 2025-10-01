@@ -54,7 +54,6 @@ function setup_single_particle(m::Real, q::Vector, p::Vector, tpfl::Type=Float64
         # but convert mass and position to target type
         m_converted = tpfl(m)
         q_converted = convert(Vector{tpfl}, q)
-        # Don't convert p if it contains dual numbers - preserve for differentiation
         return Particles([m_converted], [q_converted], [p])
     else
         # Normal case: convert everything to target type
@@ -88,7 +87,6 @@ function add_particle(system::Particles, m::Real, q::Vector, p::Vector)
         # For ForwardDiff compatibility: preserve dual number type in momentum
         m_new = convert(tpfl, m)
         q_new = convert(Vector{tpfl}, q)
-        # Don't convert p if it contains dual numbers
         p_new = p
     else
         # Normal case: convert everything to system type
