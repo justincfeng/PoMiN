@@ -184,6 +184,62 @@ PMars = pomin.setup_single_particle(mMars, qMars, pMars, tpfl)
 PMarsN = pomin.setup_single_particle(mMars, qMars, pMarsN, tpfl)
 
 #-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR SATURN (astropy)
+#-----------------------------------------------------------------------
+
+msat = tpfl(2.8580186070E-04)  # Saturn mass in solar masses
+qsat = tpfl.([6.39746581 * AU, 6.17261843 * AU, 2.27352919 * AU])  # Saturn position (from astropy, J2000)
+
+vsat = tpfl.([-7.43065090211421, 6.07453927847295, 2.82866371955069])  # in km/s, from astropy, J2000
+
+vsat *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γsat = one(tpfl) / sqrt(one(tpfl) - norm(vsat)^2)  # Lorentz factor
+psat = tpfl.(msat * γsat * vsat)  # Saturn momentum 
+psatN = tpfl.(msat * vsat)  # Saturn momentum (Newtonian)
+
+Psat = pomin.setup_single_particle(msat, qsat, psat, tpfl)
+PsatN = pomin.setup_single_particle(msat, qsat, psatN, tpfl)
+
+#-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR URANUS (astropy)
+#-----------------------------------------------------------------------
+
+mura = tpfl(4.3655971838E-05)  # Uranus mass in solar masses
+qura = tpfl.([14.42492323 * AU, -12.50957585 * AU, -5.68307867 * AU])  # Uranus position (from astropy, J2000)
+
+vura = tpfl.([4.47766858168836, 4.23819078660419, 1.79025711087577])  # in km/s, from astropy, J2000
+
+vura *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γura = one(tpfl) / sqrt(one(tpfl) - norm(vura)^2)  # Lorentz factor
+pura = tpfl.(mura * γura * vura)  # Uranus momentum 
+puraN = tpfl.(mura * vura)  # Uranus momentum (Newtonian)
+
+Pura = pomin.setup_single_particle(mura, qura, pura, tpfl)
+PuraN = pomin.setup_single_particle(mura, qura, puraN, tpfl)
+
+
+#-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR NEPTUNE (astropy)
+#-----------------------------------------------------------------------
+
+mnep = tpfl(5.1500729193E-05)  # Neptune mass in solar masses
+qnep = tpfl.([16.80488861 * AU, -22.98266294 * AU, -9.82533302 * AU])  # Neptune position (from astropy, J2000)
+
+vnep = tpfl.([4.47766858168836, 2.86649605143262, 1.06159081571836])  # in km/s, from astropy, J2000
+
+vnep *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γnep = one(tpfl) / sqrt(one(tpfl) - norm(vnep)^2)  # Lorentz factor
+pnep = tpfl.(mnep * γnep * vnep)  # Neptune momentum 
+pnepN = tpfl.(mnep * vnep)  # Neptune momentum (Newtonian)
+
+Pnep = pomin.setup_single_particle(mnep, qnep, pnep, tpfl)
+PnepN = pomin.setup_single_particle(mnep, qnep, pnepN, tpfl)
+
+
+#-----------------------------------------------------------------------
 #
 #   INITIAL RUN
 #
@@ -233,6 +289,8 @@ dmissN  = norm(qmissN)
 dmiss   = norm(qmiss)
 dmiss   = norm(qmiss)
 
+println("SUN")
+
 println("Newtonian miss: ", qmissN)
 println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
 
@@ -254,6 +312,8 @@ qmissN  = zendN[7:9] - flat_space_spacecraft_final
 qmiss   = zend[7:9] - flat_space_spacecraft_final
 dmissN  = norm(qmissN)
 dmiss   = norm(qmiss)
+
+println("ALPHA CENTAURI")
 
 println("Newtonian miss: ", qmissN)
 println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
@@ -277,6 +337,8 @@ qmiss   = zend[7:9] - flat_space_spacecraft_final
 dmissN  = norm(qmissN)
 dmiss   = norm(qmiss)
 
+println("JUPITER")
+
 println("Newtonian miss: ", qmissN)
 println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
 
@@ -298,6 +360,8 @@ qmissN  = zendN[7:9] - flat_space_spacecraft_final
 qmiss   = zend[7:9] - flat_space_spacecraft_final
 dmissN  = norm(qmissN)
 dmiss   = norm(qmiss)
+
+println("EARTH")
 
 println("Newtonian miss: ", qmissN)
 println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
@@ -321,6 +385,8 @@ qmiss   = zend[7:9] - flat_space_spacecraft_final
 dmissN  = norm(qmissN)
 dmiss   = norm(qmiss)
 
+println("PROXIMA CENTAURI")
+
 println("Newtonian miss: ", qmissN)
 println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
 
@@ -342,6 +408,8 @@ qmissN  = zendN[7:9] - flat_space_spacecraft_final
 qmiss   = zend[7:9] - flat_space_spacecraft_final
 dmissN  = norm(qmissN)
 dmiss   = norm(qmiss)
+
+println("MOON")
 
 println("Newtonian miss: ", qmissN)
 println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
@@ -365,11 +433,90 @@ qmiss   = zend[7:9] - flat_space_spacecraft_final
 dmissN  = norm(qmissN)
 dmiss   = norm(qmiss)
 
+println("MARS")
+
 println("Newtonian miss: ", qmissN)
 println("Newtonian miss distance: ", dmissN, " (", dmissN/AU, " AU)")
 
 println("Relativistic miss: ", qmiss)
 println("Relativistic miss distance: ", dmiss, " (", dmiss/AU, " AU)")
+
+
+#-----------------------------------------------------------------------
+#   SATURN
+#-----------------------------------------------------------------------
+
+solN = pomin.solve(PsatN, params; testparticles=Pchip_newt0,
+    Newtonian=true)
+sol = pomin.solve(Psat, params; testparticles=Pchip_rel0)
+
+zendN = solN(tcl)
+zend = sol(tcl)
+
+qmissN = zendN[7:9] - flat_space_spacecraft_final
+qmiss = zend[7:9] - flat_space_spacecraft_final
+dmissN = norm(qmissN)
+dmiss = norm(qmiss)
+
+println("SATURN")
+
+println("Newtonian miss: ", qmissN)
+println("Newtonian miss distance: ", dmissN, " (", dmissN / AU, " AU)")
+
+println("Relativistic miss: ", qmiss)
+println("Relativistic miss distance: ", dmiss, " (", dmiss / AU, " AU)")
+
+
+#-----------------------------------------------------------------------
+#   URANUS
+#-----------------------------------------------------------------------
+
+solN = pomin.solve(PuraN, params; testparticles=Pchip_newt0,
+    Newtonian=true)
+sol = pomin.solve(Pura, params; testparticles=Pchip_rel0)
+
+zendN = solN(tcl)
+zend = sol(tcl)
+
+qmissN = zendN[7:9] - flat_space_spacecraft_final
+qmiss = zend[7:9] - flat_space_spacecraft_final
+dmissN = norm(qmissN)
+dmiss = norm(qmiss)
+
+println("URANUS")
+
+println("Newtonian miss: ", qmissN)
+println("Newtonian miss distance: ", dmissN, " (", dmissN / AU, " AU)")
+
+println("Relativistic miss: ", qmiss)
+println("Relativistic miss distance: ", dmiss, " (", dmiss / AU, " AU)")
+
+
+#-----------------------------------------------------------------------
+#   NEPTUNE
+#-----------------------------------------------------------------------
+
+solN = pomin.solve(PnepN, params; testparticles=Pchip_newt0,
+    Newtonian=true)
+sol = pomin.solve(Pnep, params; testparticles=Pchip_rel0)
+
+zendN = solN(tcl)
+zend = sol(tcl)
+
+qmissN = zendN[7:9] - flat_space_spacecraft_final
+qmiss = zend[7:9] - flat_space_spacecraft_final
+dmissN = norm(qmissN)
+dmiss = norm(qmiss)
+
+println("NEPTUNE")
+
+println("Newtonian miss: ", qmissN)
+println("Newtonian miss distance: ", dmissN, " (", dmissN / AU, " AU)")
+
+println("Relativistic miss: ", qmiss)
+println("Relativistic miss distance: ", dmiss, " (", dmiss / AU, " AU)")
+
+
 
 #-----------------------------------------------------------------------
 #   COLLECT MISS DISTANCES AND CREATE TABLE
