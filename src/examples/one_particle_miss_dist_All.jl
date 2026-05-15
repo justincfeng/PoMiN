@@ -310,6 +310,120 @@ missTHMars = miss_estimates(ΔXst,vst,bMars,mMars)
 PMars = pomin.setup_single_particle(mMars, qMars, pMars, tpfl)
 PMarsN = pomin.setup_single_particle(mMars, qMars, pMarsN, tpfl)
 
+
+#-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR SATURN (astropy)
+#-----------------------------------------------------------------------
+
+msat = tpfl(2.8580186070E-04)  # Saturn mass in solar masses
+qsat = tpfl.([6.39746581 * AU, 6.17261843 * AU, 2.27352919 * AU])  # Saturn position (from astropy, J2000)
+
+vsat = tpfl.([-7.43065090211421, 6.07453927847295, 2.82866371955069])  # in km/s, from astropy, J2000
+
+vsat *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γsat = one(tpfl) / sqrt(one(tpfl) - norm(vsat)^2)  # Lorentz factor
+psat = tpfl.(msat * γsat * vsat)  # Saturn momentum 
+psatN = tpfl.(msat * vsat)  # Saturn momentum (Newtonian)
+
+bsat = closest_approach(qsat, qchip, vsat, Vst)
+ΔXsati = norm(qsat - qchip)
+missTHsat = miss_estimates(ΔXst, vst, bsat, msat)
+
+Psat = pomin.setup_single_particle(msat, qsat, psat, tpfl)
+PsatN = pomin.setup_single_particle(msat, qsat, psatN, tpfl)
+
+#-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR URANUS (astropy)
+#-----------------------------------------------------------------------
+
+mura = tpfl(4.3655971838E-05)  # Uranus mass in solar masses
+qura = tpfl.([14.42492323 * AU, -12.50957585 * AU, -5.68307867 * AU])  # Uranus position (from astropy, J2000)
+
+vura = tpfl.([4.47766858168836, 4.23819078660419, 1.79025711087577])  # in km/s, from astropy, J2000
+
+vura *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γura = one(tpfl) / sqrt(one(tpfl) - norm(vura)^2)  # Lorentz factor
+pura = tpfl.(mura * γura * vura)  # Uranus momentum 
+puraN = tpfl.(mura * vura)  # Uranus momentum (Newtonian)
+
+bura = closest_approach(qura, qchip, vura, Vst)
+ΔXurai = norm(qura - qchip)
+missTHura = miss_estimates(ΔXst, vst, bura, mura)
+
+Pura = pomin.setup_single_particle(mura, qura, pura, tpfl)
+PuraN = pomin.setup_single_particle(mura, qura, puraN, tpfl)
+
+
+#-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR NEPTUNE (astropy)
+#-----------------------------------------------------------------------
+
+mnep = tpfl(5.1500729193E-05)  # Neptune mass in solar masses
+qnep = tpfl.([16.80488861 * AU, -22.98266294 * AU, -9.82533302 * AU])  # Neptune position (from astropy, J2000)
+
+vnep = tpfl.([4.47766858168836, 2.86649605143262, 1.06159081571836])  # in km/s, from astropy, J2000
+
+vnep *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γnep = one(tpfl) / sqrt(one(tpfl) - norm(vnep)^2)  # Lorentz factor
+pnep = tpfl.(mnep * γnep * vnep)  # Neptune momentum 
+pnepN = tpfl.(mnep * vnep)  # Neptune momentum (Newtonian)
+
+bnep = closest_approach(qnep, qchip, vnep, Vst)
+ΔXnepi = norm(qnep - qchip)
+missTHnep = miss_estimates(ΔXst, vst, bnep, mnep)
+
+Pnep = pomin.setup_single_particle(mnep, qnep, pnep, tpfl)
+PnepN = pomin.setup_single_particle(mnep, qnep, pnepN, tpfl)
+
+
+#-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR MERCURY (astropy)
+#-----------------------------------------------------------------------
+
+mmer = tpfl(1.6600955494E-07)  # Mercury mass in solar masses
+qmer = tpfl.([-0.13722823 * AU, -0.40324004 * AU, -0.2014116 * AU])  # Mercury position (from astropy, J2000)
+
+vmer = tpfl.([37.00431459347800, -8.54144972113162, -8.39841407185172])  # in km/s, from astropy, J2000
+
+vmer *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γmer = one(tpfl) / sqrt(one(tpfl) - norm(vmer)^2)  # Lorentz factor
+pmer = tpfl.(mmer * γmer * vmer)  # Mercury momentum 
+pmerN = tpfl.(mmer * vmer)  # Mercury momentum (Newtonian)
+
+bmer = closest_approach(qmer, qchip, vmer, Vst)
+ΔXmeri = norm(qmer - qchip)
+missTHmer = miss_estimates(ΔXst, vst, bmer, mmer)
+
+Pmer = pomin.setup_single_particle(mmer, qmer, pmer, tpfl)
+PmerN = pomin.setup_single_particle(mmer, qmer, pmerN, tpfl)
+
+#-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR VENUS (astropy)
+#-----------------------------------------------------------------------
+
+mven = tpfl(2.4477294443E-06)  # Venus mass in solar masses
+qven = tpfl.([-0.72543825 * AU, -0.04892344 * AU, 0.02371797 * AU])  # Venus position (from astropy, J2000)
+
+vven = tpfl.([1.39008280677734, -32.02933697915230, -14.49688208380790])  # in km/s, from astropy, J2000
+
+vven *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γven = one(tpfl) / sqrt(one(tpfl) - norm(vven)^2)  # Lorentz factor
+pven = tpfl.(mven * γven * vven)  # Venus momentum 
+pvenN = tpfl.(mven * vven)  # Venus momentum (Newtonian)
+
+bven = closest_approach(qven, qchip, vven, Vst)
+ΔXveni = norm(qven - qchip)
+missTHven = miss_estimates(ΔXst, vst, bven, mven)
+
+Pven = pomin.setup_single_particle(mven, qven, pven, tpfl)
+PvenN = pomin.setup_single_particle(mven, qven, pvenN, tpfl)
+
+
 #-----------------------------------------------------------------------
 #
 #   RUNS
@@ -400,7 +514,7 @@ println(file)
 #   ALPHA CENTAURI
 #-----------------------------------------------------------------------
 
-solN    = pomin.solve( Palpha, params; testparticles=Pchip_newt0, 
+solN    = pomin.solve( PalphaN, params; testparticles=Pchip_newt0, 
                        Newtonian=true )
 sol     = pomin.solve( Palpha, params; testparticles=Pchip_rel0 )
 
@@ -455,7 +569,7 @@ println(file)
 #   JUPITER
 #-----------------------------------------------------------------------
 
-solN    = pomin.solve( Pjup, params; testparticles=Pchip_newt0, 
+solN    = pomin.solve( PjupN, params; testparticles=Pchip_newt0, 
                        Newtonian=true )
 sol     = pomin.solve( Pjup, params; testparticles=Pchip_rel0 )
 
@@ -508,7 +622,7 @@ println(file)
 #   EARTH
 #-----------------------------------------------------------------------
 
-solN    = pomin.solve( PEarth, params; testparticles=Pchip_newt0, 
+solN    = pomin.solve( PEarthN, params; testparticles=Pchip_newt0, 
                        Newtonian=true )
 sol     = pomin.solve( PEarth, params; testparticles=Pchip_rel0 )
 
@@ -561,7 +675,7 @@ println(file)
 #   PROXIMA
 #-----------------------------------------------------------------------
 
-solN    = pomin.solve( PProx, params; testparticles=Pchip_newt0, 
+solN    = pomin.solve( PProxN, params; testparticles=Pchip_newt0, 
                        Newtonian=true )
 sol     = pomin.solve( PProx, params; testparticles=Pchip_rel0 )
 
@@ -614,7 +728,7 @@ println(file)
 #   MOON
 #-----------------------------------------------------------------------
 
-solN    = pomin.solve( PMoon, params; testparticles=Pchip_newt0, 
+solN    = pomin.solve( PMoonN, params; testparticles=Pchip_newt0, 
                        Newtonian=true )
 sol     = pomin.solve( PMoon, params; testparticles=Pchip_rel0 )
 
@@ -667,7 +781,7 @@ println(file)
 #   MARS
 #-----------------------------------------------------------------------
 
-solN    = pomin.solve( PMars, params; testparticles=Pchip_newt0, 
+solN    = pomin.solve( PMarsN, params; testparticles=Pchip_newt0, 
                        Newtonian=true )
 sol     = pomin.solve( PMars, params; testparticles=Pchip_rel0 )
 
@@ -718,6 +832,276 @@ println(file)
 
 
 #-----------------------------------------------------------------------
+#   SATURN
+#-----------------------------------------------------------------------
+
+solN = pomin.solve(PsatN, params; testparticles=Pchip_newt0,
+    Newtonian=true)
+sol = pomin.solve(Psat, params; testparticles=Pchip_rel0)
+
+zendN = solN(tcl)
+zend = sol(tcl)
+
+qmisstarN = zendN[7:9] - qtar
+vendN = zendN[10:12] ./ mchip
+
+dmisstarN = closest_approach(zendN[7:9], qtar, vendN, Vpx)
+fmisstarN = norm(qmisstarN)
+
+qmisstar = zend[7:9] - qtar
+vend = γV2v(zend[10:12] ./ mchip)
+
+dmisstar = closest_approach(zend[7:9], qtar, vend, Vpx)
+fmisstar = norm(qmisstar)
+
+dmissPMcomp = missTHsat[1]
+dmissPMHO = missTHsat[2]
+
+# Store results for summary table
+bratio_sat = bsat / ΔXsati
+dmisstar_sat = dmisstar
+dmisstarN_sat = dmisstarN
+fmisstar_sat = fmisstar
+fmisstarN_sat = fmisstarN
+dmissPMcomp_sat = dmissPMcomp
+dmissPMHO_sat = dmissPMHO
+
+println("SATURN RESULTS:")
+println("Impact parameter: ", bsat, " (", bsat / AU, " AU)")
+println("Initial distance: ", ΔXsati, " (", ΔXsati / AU, " AU)")
+println("Newtonian closest approach: ", dmisstarN, " (", dmisstarN / AU, " AU)")
+println("PoMiN closest approach: ", dmisstar, " (", dmisstar / AU, " AU)")
+println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp / AU, " AU)")
+println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO / AU, " AU)")
+
+# Write to file
+println(file, "SATURN RESULTS:")
+println(file, "------------")
+println(file, "Newtonian closest approach: ", dmisstarN, " (", dmisstarN / AU, " AU)")
+println(file, "PoMiN closest approach: ", dmisstar, " (", dmisstar / AU, " AU)")
+println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp / AU, " AU)")
+println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO / AU, " AU)")
+println(file, "Impact parameter: ", bsat, " (", bsat / AU, " AU)")
+println(file)
+
+
+#-----------------------------------------------------------------------
+#   URANUS
+#-----------------------------------------------------------------------
+
+solN = pomin.solve(PuraN, params; testparticles=Pchip_newt0,
+    Newtonian=true)
+sol = pomin.solve(Pura, params; testparticles=Pchip_rel0)
+
+zendN = solN(tcl)
+zend = sol(tcl)
+
+qmisstarN = zendN[7:9] - qtar
+vendN = zendN[10:12] ./ mchip
+
+dmisstarN = closest_approach(zendN[7:9], qtar, vendN, Vpx)
+fmisstarN = norm(qmisstarN)
+
+qmisstar = zend[7:9] - qtar
+vend = γV2v(zend[10:12] ./ mchip)
+
+dmisstar = closest_approach(zend[7:9], qtar, vend, Vpx)
+fmisstar = norm(qmisstar)
+
+dmissPMcomp = missTHura[1]
+dmissPMHO = missTHura[2]
+
+# Store results for summary table
+bratio_ura = bura / ΔXurai
+dmisstar_ura = dmisstar
+dmisstarN_ura = dmisstarN
+fmisstar_ura = fmisstar
+fmisstarN_ura = fmisstarN
+dmissPMcomp_ura = dmissPMcomp
+dmissPMHO_ura = dmissPMHO
+
+println("URANUS RESULTS:")
+println("Impact parameter: ", bura, " (", bura / AU, " AU)")
+println("Initial distance: ", ΔXurai, " (", ΔXurai / AU, " AU)")
+println("Newtonian closest approach: ", dmisstarN, " (", dmisstarN / AU, " AU)")
+println("PoMiN closest approach: ", dmisstar, " (", dmisstar / AU, " AU)")
+println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp / AU, " AU)")
+println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO / AU, " AU)")
+
+# Write to file
+println(file, "URANUS RESULTS:")
+println(file, "------------")
+println(file, "Newtonian closest approach: ", dmisstarN, " (", dmisstarN / AU, " AU)")
+println(file, "PoMiN closest approach: ", dmisstar, " (", dmisstar / AU, " AU)")
+println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp / AU, " AU)")
+println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO / AU, " AU)")
+println(file, "Impact parameter: ", bura, " (", bura / AU, " AU)")
+println(file)
+
+
+#-----------------------------------------------------------------------
+#   NEPTUNE
+#-----------------------------------------------------------------------
+
+solN = pomin.solve(PnepN, params; testparticles=Pchip_newt0,
+    Newtonian=true)
+sol = pomin.solve(Pnep, params; testparticles=Pchip_rel0)
+
+zendN = solN(tcl)
+zend = sol(tcl)
+
+qmisstarN = zendN[7:9] - qtar
+vendN = zendN[10:12] ./ mchip
+
+dmisstarN = closest_approach(zendN[7:9], qtar, vendN, Vpx)
+fmisstarN = norm(qmisstarN)
+
+qmisstar = zend[7:9] - qtar
+vend = γV2v(zend[10:12] ./ mchip)
+
+dmisstar = closest_approach(zend[7:9], qtar, vend, Vpx)
+fmisstar = norm(qmisstar)
+
+dmissPMcomp = missTHnep[1]
+dmissPMHO = missTHnep[2]
+
+# Store results for summary table
+bratio_nep = bnep / ΔXnepi
+dmisstar_nep = dmisstar
+dmisstarN_nep = dmisstarN
+fmisstar_nep = fmisstar
+fmisstarN_nep = fmisstarN
+dmissPMcomp_nep = dmissPMcomp
+dmissPMHO_nep = dmissPMHO
+
+println("NEPTUNE RESULTS:")
+println("Impact parameter: ", bnep, " (", bnep / AU, " AU)")
+println("Initial distance: ", ΔXnepi, " (", ΔXnepi / AU, " AU)")
+println("Newtonian closest approach: ", dmisstarN, " (", dmisstarN / AU, " AU)")
+println("PoMiN closest approach: ", dmisstar, " (", dmisstar / AU, " AU)")
+println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp / AU, " AU)")
+println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO / AU, " AU)")
+
+# Write to file
+println(file, "NEPTUNE RESULTS:")
+println(file, "------------")
+println(file, "Newtonian closest approach: ", dmisstarN, " (", dmisstarN / AU, " AU)")
+println(file, "PoMiN closest approach: ", dmisstar, " (", dmisstar / AU, " AU)")
+println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp / AU, " AU)")
+println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO / AU, " AU)")
+println(file, "Impact parameter: ", bnep, " (", bnep / AU, " AU)")
+println(file)
+
+
+#-----------------------------------------------------------------------
+#   MERCURY
+#-----------------------------------------------------------------------
+
+solN = pomin.solve(PmerN, params; testparticles=Pchip_newt0,
+    Newtonian=true)
+sol = pomin.solve(Pmer, params; testparticles=Pchip_rel0)
+
+zendN = solN(tcl)
+zend = sol(tcl)
+
+qmisstarN = zendN[7:9] - qtar
+vendN = zendN[10:12] ./ mchip
+
+dmisstarN = closest_approach(zendN[7:9], qtar, vendN, Vpx)
+fmisstarN = norm(qmisstarN)
+
+qmisstar = zend[7:9] - qtar
+vend = γV2v(zend[10:12] ./ mchip)
+
+dmisstar = closest_approach(zend[7:9], qtar, vend, Vpx)
+fmisstar = norm(qmisstar)
+
+dmissPMcomp = missTHmer[1]
+dmissPMHO = missTHmer[2]
+
+# Store results for summary table
+bratio_mer = bmer / ΔXmeri
+dmisstar_mer = dmisstar
+dmisstarN_mer = dmisstarN
+fmisstar_mer = fmisstar
+fmisstarN_mer = fmisstarN
+dmissPMcomp_mer = dmissPMcomp
+dmissPMHO_mer = dmissPMHO
+
+println("MERCURY RESULTS:")
+println("Impact parameter: ", bmer, " (", bmer / AU, " AU)")
+println("Initial distance: ", ΔXmeri, " (", ΔXmeri / AU, " AU)")
+println("Newtonian closest approach: ", dmisstarN, " (", dmisstarN / AU, " AU)")
+println("PoMiN closest approach: ", dmisstar, " (", dmisstar / AU, " AU)")
+println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp / AU, " AU)")
+println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO / AU, " AU)")
+
+# Write to file
+println(file, "MERCURY RESULTS:")
+println(file, "------------")
+println(file, "Newtonian closest approach: ", dmisstarN, " (", dmisstarN / AU, " AU)")
+println(file, "PoMiN closest approach: ", dmisstar, " (", dmisstar / AU, " AU)")
+println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp / AU, " AU)")
+println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO / AU, " AU)")
+println(file, "Impact parameter: ", bmer, " (", bmer / AU, " AU)")
+println(file)
+
+
+#-----------------------------------------------------------------------
+#   VENUS
+#-----------------------------------------------------------------------
+
+solN = pomin.solve(PvenN, params; testparticles=Pchip_newt0,
+    Newtonian=true)
+sol = pomin.solve(Pven, params; testparticles=Pchip_rel0)
+
+zendN = solN(tcl)
+zend = sol(tcl)
+
+qmisstarN = zendN[7:9] - qtar
+vendN = zendN[10:12] ./ mchip
+
+dmisstarN = closest_approach(zendN[7:9], qtar, vendN, Vpx)
+fmisstarN = norm(qmisstarN)
+
+qmisstar = zend[7:9] - qtar
+vend = γV2v(zend[10:12] ./ mchip)
+
+dmisstar = closest_approach(zend[7:9], qtar, vend, Vpx)
+fmisstar = norm(qmisstar)
+
+dmissPMcomp = missTHven[1]
+dmissPMHO = missTHven[2]
+
+# Store results for summary table
+bratio_ven = bven / ΔXveni
+dmisstar_ven = dmisstar
+dmisstarN_ven = dmisstarN
+fmisstar_ven = fmisstar
+fmisstarN_ven = fmisstarN
+dmissPMcomp_ven = dmissPMcomp
+dmissPMHO_ven = dmissPMHO
+
+println("VENUS RESULTS:")
+println("Impact parameter: ", bven, " (", bven / AU, " AU)")
+println("Initial distance: ", ΔXveni, " (", ΔXveni / AU, " AU)")
+println("Newtonian closest approach: ", dmisstarN, " (", dmisstarN / AU, " AU)")
+println("PoMiN closest approach: ", dmisstar, " (", dmisstar / AU, " AU)")
+println("PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp / AU, " AU)")
+println("Higher order miss distance: ", dmissPMHO, " (", dmissPMHO / AU, " AU)")
+
+# Write to file
+println(file, "VENUS RESULTS:")
+println(file, "------------")
+println(file, "Newtonian closest approach: ", dmisstarN, " (", dmisstarN / AU, " AU)")
+println(file, "PoMiN closest approach: ", dmisstar, " (", dmisstar / AU, " AU)")
+println(file, "PM Miss estimate: ", dmissPMcomp, " (", dmissPMcomp / AU, " AU)")
+println(file, "Higher order miss distance: ", dmissPMHO, " (", dmissPMHO / AU, " AU)")
+println(file, "Impact parameter: ", bven, " (", bven / AU, " AU)")
+println(file)
+
+
+#-----------------------------------------------------------------------
 #   COLLECT MISS DISTANCES AND CREATE TABLE
 #-----------------------------------------------------------------------
 
@@ -729,7 +1113,12 @@ results = [
     ("Earth", bratio_earth, fmisstar_earth/AU, fmisstarN_earth/AU, dmisstar_earth/AU, dmissPMcomp_earth/AU, (dmissPMHO_earth/AU)),
     ("Proxima", bratio_prox, fmisstar_prox/AU, fmisstarN_prox/AU, dmisstar_prox/AU, dmissPMcomp_prox/AU, dmissPMHO_prox/AU),
     ("Moon", bratio_moon, fmisstar_moon/AU, fmisstarN_moon/AU, dmisstar_moon/AU, dmissPMcomp_moon/AU, dmissPMHO_moon/AU),
-    ("Mars", bratio_mars, fmisstar_mars/AU, fmisstarN_mars/AU, dmisstar_mars/AU, dmissPMcomp_mars/AU, dmissPMHO_mars/AU)
+    ("Mars", bratio_mars, fmisstar_mars/AU, fmisstarN_mars/AU, dmisstar_mars/AU, dmissPMcomp_mars/AU, dmissPMHO_mars/AU),
+    ("Saturn", bratio_sat, fmisstar_sat / AU, fmisstarN_sat / AU, dmisstar_sat / AU, dmissPMcomp_sat / AU, dmissPMHO_sat / AU),
+    ("Uranus", bratio_ura, fmisstar_ura / AU, fmisstarN_ura / AU, dmisstar_ura / AU, dmissPMcomp_ura / AU, dmissPMHO_ura / AU),
+    ("Neptune", bratio_nep, fmisstar_nep / AU, fmisstarN_nep / AU, dmisstar_nep / AU, dmissPMcomp_nep / AU, dmissPMHO_nep / AU),
+    ("Mercury", bratio_mer, fmisstar_mer / AU, fmisstarN_mer / AU, dmisstar_mer / AU, dmissPMcomp_mer / AU, dmissPMHO_mer / AU),
+    ("Venus", bratio_ven, fmisstar_ven / AU, fmisstarN_ven / AU, dmisstar_ven / AU, dmissPMcomp_ven / AU, dmissPMHO_ven / AU)
 ]
 
 # Write summary table to file
