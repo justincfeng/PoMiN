@@ -1,6 +1,7 @@
 include("../pomin.jl")
 using .pomin
 using DelimitedFiles
+using Dates
 
 include("../core/initial_data/idgen.jl")
 
@@ -79,7 +80,7 @@ Pjup = pomin.setup_single_particle(mjup, qjup, pjup, tpfl)
 
 
 Jupiter_Spacecraft_angle = rad2deg(acos(dot(qjup, qchip) / (norm(qjup) * norm(qchip))))
-# println("Angle between Sun-Jup and Sun-spacecraft = ", Jupiter_Spacecraft_angle, " degs")
+println("Angle between Sun-Jup and Sun-spacecraft = ", Jupiter_Spacecraft_angle, " degs")
 
 #-----------------------------------------------------------------------
 #   INITIAL DATA SETUP FOR ALPHA CENTAURI A + B
@@ -124,11 +125,94 @@ pEarthN = mEarth .* vEarth                # Earth momentum (Newtonian)
 PEarth = pomin.setup_single_particle(mEarth, qEarth, pEarth, tpfl)
 PEarthN = pomin.setup_single_particle(mEarth, qEarth, pEarthN, tpfl)
 
+
+#-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR SATURN (astropy)
+#-----------------------------------------------------------------------
+
+msat = tpfl(2.8580186070E-04)  # Saturn mass in solar masses
+qsat = tpfl.([6.39746581 * AU, 6.17261843 * AU, 2.27352919 * AU])  # Saturn position (from astropy, J2000)
+
+vsat = tpfl.([-7.43065090211421, 6.07453927847295, 2.82866371955069])  # in km/s, from astropy, J2000
+
+vsat *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γsat = one(tpfl) / sqrt(one(tpfl) - norm(vsat)^2)  # Lorentz factor
+psat = tpfl.(msat * γsat * vsat)  # Saturn momentum 
+psatN = tpfl.(msat * vsat)  # Saturn momentum (Newtonian)
+
+Psat = pomin.setup_single_particle(msat, qsat, psat, tpfl)
+PsatN = pomin.setup_single_particle(msat, qsat, psatN, tpfl)
+
+Saturn_Spacecraft_angle = rad2deg(acos(dot(qsat, qchip) / (norm(qsat) * norm(qchip))))
+println("Angle between Sun-Sat and Sun-spacecraft = ", Saturn_Spacecraft_angle, " degs")
+
+
+#-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR VENUS (astropy)
+#-----------------------------------------------------------------------
+
+mven = tpfl(2.4477294443E-06)  # Venus mass in solar masses
+qven = tpfl.([-0.72543825 * AU, -0.04892344 * AU, 0.02371797 * AU])  # Venus position (from astropy, J2000)
+
+vven = tpfl.([1.39008280677734, -32.02933697915230, -14.49688208380790])  # in km/s, from astropy, J2000
+
+vven *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γven = one(tpfl) / sqrt(one(tpfl) - norm(vven)^2)  # Lorentz factor
+pven = tpfl.(mven * γven * vven)  # Venus momentum 
+pvenN = tpfl.(mven * vven)  # Venus momentum (Newtonian)
+
+Pven = pomin.setup_single_particle(mven, qven, pven, tpfl)
+PvenN = pomin.setup_single_particle(mven, qven, pvenN, tpfl)
+
+Venus_Spacecraft_angle = rad2deg(acos(dot(qven, qchip) / (norm(qven) * norm(qchip))))
+println("Angle between Sun-Ven and Sun-spacecraft = ", Venus_Spacecraft_angle, " degs")
+
+
+#-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR URANUS (astropy)
+#-----------------------------------------------------------------------
+
+mura = tpfl(4.3655971838E-05)  # Uranus mass in solar masses
+qura = tpfl.([14.42492323 * AU, -12.50957585 * AU, -5.68307867 * AU])  # Uranus position (from astropy, J2000)
+
+vura = tpfl.([4.47766858168836, 4.23819078660419, 1.79025711087577])  # in km/s, from astropy, J2000
+
+vura *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γura = one(tpfl) / sqrt(one(tpfl) - norm(vura)^2)  # Lorentz factor
+pura = tpfl.(mura * γura * vura)  # Uranus momentum 
+puraN = tpfl.(mura * vura)  # Uranus momentum (Newtonian)
+
+Pura = pomin.setup_single_particle(mura, qura, pura, tpfl)
+PuraN = pomin.setup_single_particle(mura, qura, puraN, tpfl)
+
+
+#-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR NEPTUNE (astropy)
+#-----------------------------------------------------------------------
+
+mnep = tpfl(5.1500729193E-05)  # Neptune mass in solar masses
+qnep = tpfl.([16.80488861 * AU, -22.98266294 * AU, -9.82533302 * AU])  # Neptune position (from astropy, J2000)
+
+vnep = tpfl.([4.47766858168836, 2.86649605143262, 1.06159081571836])  # in km/s, from astropy, J2000
+
+vnep *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γnep = one(tpfl) / sqrt(one(tpfl) - norm(vnep)^2)  # Lorentz factor
+pnep = tpfl.(mnep * γnep * vnep)  # Neptune momentum 
+pnepN = tpfl.(mnep * vnep)  # Neptune momentum (Newtonian)
+
+Pnep = pomin.setup_single_particle(mnep, qnep, pnep, tpfl)
+PnepN = pomin.setup_single_particle(mnep, qnep, pnepN, tpfl)
+
+
 #-----------------------------------------------------------------------
 #   SETUP MAIN PARTICLE SYSTEM
 #-----------------------------------------------------------------------
 
-main_particle_system = pomin.merge_particle_systems(PProx, Psol, Palpha, Pjup, PEarth)
+main_particle_system = pomin.merge_particle_systems(PProx, Psol, Pjup, Psat, Pven, Palpha, Pura, Pnep)
 
 #-----------------------------------------------------------------------
 #   INTEGRATION PARAMETERS
@@ -152,7 +236,7 @@ target_distance_in_m = target_distance * Msol2m
 # size_of_target_disk_in_m = tpfl(5E8)
 # theta_tol = rad2deg(size_of_target_disk_in_m / target_distance_in_m)
 
-theta_tol = tpfl(1E-5)
+theta_tol = tpfl(1E-6)
 size_of_target_disk_in_m = deg2rad(theta_tol) * target_distance_in_m
 
 baseVector = Vchip_rel_FT     # for relativistic
@@ -161,7 +245,7 @@ baseVector = Vchip_rel_FT     # for relativistic
 println("Using theta_tol = ",theta_tol)
 println("Size of target disk in m = ",size_of_target_disk_in_m)
 
-N = 200
+N = 50
 
 
 
@@ -169,8 +253,11 @@ N = 200
 #   RUN EXPERIMENT
 #-----------------------------------------------------------------------
 
+
 for i = 1:N
     println("\n\nTrial #",i)
+    start_time = Dates.now()
+    println("\nstart time = ", start_time)
 
     (theta_deg, init_unit_vec) = generateUnitVectorWithinToleranceAngle(theta_tol, baseVector, target_distance, tpfl)
 
@@ -217,5 +304,7 @@ for i = 1:N
             writedlm(io, [ theta_deg miss_dist expected_geometric_miss_dist], ',')
         end
     end
-
+    end_time = Dates.now()
+    println("\nend time = ", end_time)
+    println("elapsed time for this trial = ", end_time - start_time)
 end
