@@ -21,6 +21,8 @@ include("../utils/broyden.jl")
 #   INITIAL DATA SETUP FOR SPACECRAFT
 #-----------------------------------------------------------------------
 
+print("Assigning initial positions and momenta...")
+
 # Mass and position
 mchip = tpfl(1.0E-33)
 qchip = Xst0
@@ -168,6 +170,85 @@ pMarsN = mMars .* vMars                # Mars momentum (Newtonian)
 PMars = pomin.setup_single_particle(mMars, qMars, pMars, tpfl)
 PMarsN = pomin.setup_single_particle(mMars, qMars, pMarsN, tpfl)
 
+
+#-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR SATURN (astropy)
+#-----------------------------------------------------------------------
+
+msat = tpfl(2.8580186070E-04)  # Saturn mass in solar masses
+qsat = tpfl.([6.39746581 * AU, 6.17261843 * AU, 2.27352919 * AU])  # Saturn position (from astropy, J2000)
+
+vsat = tpfl.([-7.43065090211421, 6.07453927847295, 2.82866371955069])  # in km/s, from astropy, J2000
+
+vsat *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γsat = one(tpfl) / sqrt(one(tpfl) - norm(vsat)^2)  # Lorentz factor
+psat = tpfl.(msat * γsat * vsat)  # Saturn momentum 
+psatN = tpfl.(msat * vsat)  # Saturn momentum (Newtonian)
+
+Psat = pomin.setup_single_particle(msat, qsat, psat, tpfl)
+PsatN = pomin.setup_single_particle(msat, qsat, psatN, tpfl)
+
+
+#-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR VENUS (astropy)
+#-----------------------------------------------------------------------
+
+mven = tpfl(2.4477294443E-06)  # Venus mass in solar masses
+qven = tpfl.([-0.72543825 * AU, -0.04892344 * AU, 0.02371797 * AU])  # Venus position (from astropy, J2000)
+
+vven = tpfl.([1.39008280677734, -32.02933697915230, -14.49688208380790])  # in km/s, from astropy, J2000
+
+vven *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γven = one(tpfl) / sqrt(one(tpfl) - norm(vven)^2)  # Lorentz factor
+pven = tpfl.(mven * γven * vven)  # Venus momentum 
+pvenN = tpfl.(mven * vven)  # Venus momentum (Newtonian)
+
+Pven = pomin.setup_single_particle(mven, qven, pven, tpfl)
+PvenN = pomin.setup_single_particle(mven, qven, pvenN, tpfl)
+
+
+#-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR URANUS (astropy)
+#-----------------------------------------------------------------------
+
+mura = tpfl(4.3655971838E-05)  # Uranus mass in solar masses
+qura = tpfl.([14.42492323 * AU, -12.50957585 * AU, -5.68307867 * AU])  # Uranus position (from astropy, J2000)
+
+vura = tpfl.([4.47766858168836, 4.23819078660419, 1.79025711087577])  # in km/s, from astropy, J2000
+
+vura *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γura = one(tpfl) / sqrt(one(tpfl) - norm(vura)^2)  # Lorentz factor
+pura = tpfl.(mura * γura * vura)  # Uranus momentum 
+puraN = tpfl.(mura * vura)  # Uranus momentum (Newtonian)
+
+Pura = pomin.setup_single_particle(mura, qura, pura, tpfl)
+PuraN = pomin.setup_single_particle(mura, qura, puraN, tpfl)
+
+
+#-----------------------------------------------------------------------
+#   INITIAL DATA SETUP FOR NEPTUNE (astropy)
+#-----------------------------------------------------------------------
+
+mnep = tpfl(5.1500729193E-05)  # Neptune mass in solar masses
+qnep = tpfl.([16.80488861 * AU, -22.98266294 * AU, -9.82533302 * AU])  # Neptune position (from astropy, J2000)
+
+vnep = tpfl.([4.47766858168836, 2.86649605143262, 1.06159081571836])  # in km/s, from astropy, J2000
+
+vnep *= tpfl(1000 / cMKS)  # convert from km/s to units of c
+
+γnep = one(tpfl) / sqrt(one(tpfl) - norm(vnep)^2)  # Lorentz factor
+pnep = tpfl.(mnep * γnep * vnep)  # Neptune momentum 
+pnepN = tpfl.(mnep * vnep)  # Neptune momentum (Newtonian)
+
+Pnep = pomin.setup_single_particle(mnep, qnep, pnep, tpfl)
+PnepN = pomin.setup_single_particle(mnep, qnep, pnepN, tpfl)
+
+
+println("...done")
+
 #-----------------------------------------------------------------------
 #
 #   INITIAL RUN
@@ -188,16 +269,27 @@ PtestN = Pchip_newt
 #PintN = pomin.merge_particle_systems(PProxN, Psol)
 #Pint = pomin.merge_particle_systems(PProx, Psol, Palpha, Pjup)
 #PintN = pomin.merge_particle_systems(PProxN, Psol, PalphaN, PjupN)
-Pint = pomin.merge_particle_systems(PProx, Psol, Palpha, Pjup, PEarth)
-PintN = pomin.merge_particle_systems(PProxN, Psol, PalphaN, PjupN, PEarthN)
+# Pint = pomin.merge_particle_systems(PProx, Psol, Palpha, Pjup, PEarth)
+# PintN = pomin.merge_particle_systems(PProxN, Psol, PalphaN, PjupN, PEarthN)
 #Pint = pomin.merge_particle_systems(PProx, Psol, Pjup, Palpha, PEarth, PMoon, PMars)
 #PintN = pomin.merge_particle_systems(PProxN, Psol, PjupN, PalphaN, PEarthN, PMoonN, PMarsN)
+# Pint = pomin.merge_particle_systems(PProx, Psol, Pjup, Psat, Pven, Palpha)
+# PintN = pomin.merge_particle_systems(PProxN, Psol, PjupN, PsatN, PvenN, PalphaN)
+# Pint = pomin.merge_particle_systems(PProx, Psol, Pjup, Psat, Pven, Palpha, Pura)
+# PintN = pomin.merge_particle_systems(PProxN, Psol, PjupN, PsatN, PvenN, PalphaN, PuraN)
+Pint = pomin.merge_particle_systems(PProx, Psol, Pjup, Psat, Pven, Palpha, Pura, Pnep)
+PintN = pomin.merge_particle_systems(PProxN, Psol, PjupN, PsatN, PvenN, PalphaN, PuraN, PnepN)
+
 
 nInt = length(Pint.m)
+
+println("N = ",nInt+1," bodies")
 
 #-----------------------------------------------------------------------
 #   NEWTONIAN CASE
 #-----------------------------------------------------------------------
+
+print("Running PoMiN solver for Newtonian case...")
 
 # Solve
 solN        = pomin.solve(PintN, params; testparticles=PtestN, Newtonian=true)
@@ -234,9 +326,13 @@ dmissN      = norm(qmissN)
 δVN = qmissN ./ tcl
 vcorrN = Vst .+ δVN 
 
+println("...done")
+
 #-----------------------------------------------------------------------
 #   RELATIVISTIC CASE
 #-----------------------------------------------------------------------
+
+print("Running PoMiN solver for relativistic case...")
 
 # Solve
 solR = pomin.solve(Pint, params; testparticles=Ptest)
@@ -272,6 +368,8 @@ dmissR      = norm(qmissR)
 # Velocity correction
 δVR = qmissR ./ tcl
 vcorrR = Vst .+ δVR
+
+println("...done")
 
 #-----------------------------------------------------------------------
 #
@@ -320,11 +418,15 @@ end #-------------------------------------------------------------------
 #   TEST MISS FUNCTION CONSTRUCTOR
 #-----------------------------------------------------------------------
 
+print("Constructing and running miss function for Newtonian case...")
 fmN = missfuncconstructor(PintN,PtestN,params,bv,tcl;Newt=true)
-fmR = missfuncconstructor(Pint,Ptest,params,bv,tcl;Newt=false)
-
 fmNVst = fmN(Vst)
+println("...done")
+
+print("Constructing and running miss function for relativistic case...")
+fmR = missfuncconstructor(Pint,Ptest,params,bv,tcl;Newt=false)
 fmRVst = fmR(Vst)
+println("...done")
 
 fmNcheck = fmNVst - qmissN
 fmRcheck = fmRVst - qmissR
@@ -374,10 +476,11 @@ if abs(det(J_init_N)) < tpfl(1e-10)
     v_finetuned_N = Vst - J_init_N_inv * fmN(Vst)
 else
     println("Broyden iterations (Newtonian)...")
-    v_finetuned_N = bsolve(fmN, J_init_N, fmN(Vst), Vst, 10)
+    v_finetuned_N = bsolve(fmN, J_init_N, fmN(Vst), Vst, 7)
 end
 
 # Final Newtonian result
+println("Calculating final result for Newtonian case")
 f_final_N = fmN(v_finetuned_N)
 miss_final_N = norm(f_final_N) / AU
 
@@ -385,6 +488,7 @@ println("Fine-tuned miss distance (Newtonian): $(miss_final_N) AU")
 println("Improvement factor (Newtonian): $(dmissN / norm(f_final_N))")
 
 # Compute fine-tuned trajectory for Newtonian case
+println("Finding fine-tuned trajectory for Newtonian case")
 pvft_N = mchip .* v_finetuned_N  # Newtonian momentum
 Ptestft_N = pomin.setup_single_particle(mchip, qchip, pvft_N, tpfl)
 sol_ft_N = pomin.solve(PintN, params; testparticles=Ptestft_N, Newtonian=true)
@@ -422,10 +526,11 @@ if abs(det(J_init_R)) < tpfl(1e-10)
     v_finetuned_R = Vst - J_init_R_inv * fmR(Vst)
 else
     println("Broyden iterations (Relativistic)...")
-    v_finetuned_R = bsolve(fmR, J_init_R, fmR(Vst), Vst, 8)
+    v_finetuned_R = bsolve(fmR, J_init_R, fmR(Vst), Vst, 7)
 end
 
 # Final relativistic result
+println("Calculating final result for relativistic case")
 f_final_R = fmR(v_finetuned_R)
 miss_final_R = norm(f_final_R) / AU
 
@@ -433,6 +538,7 @@ println("Fine-tuned miss distance (Relativistic): $(miss_final_R) AU")
 println("Improvement factor (Relativistic): $(dmissR / norm(f_final_R))")
 
 # Compute fine-tuned trajectory for relativistic case
+println("Finding fine-tuned trajectory for relativistic case")
 v_magft_R = norm(v_finetuned_R)
 γft_R = one(tpfl)/sqrt(one(tpfl)-(v_magft_R/c)^2)
 pvft_R = (mchip*γft_R) .* v_finetuned_R
