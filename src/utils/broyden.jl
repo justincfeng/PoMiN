@@ -36,8 +36,9 @@ function bsolve( F::Function , J::RealVec , f0::RealVec , x0::RealVec ,
                  nb::Int=24 )
     tpfl = typeof(x0[1])
 
+    println(stderr,"Inverting the Jacobian")
     Ji = inv(J)
-    println("Ji=",Ji)
+    println("J_inverse=",Ji)
     F0 = f0
 
     p = dot(F0,F0)
