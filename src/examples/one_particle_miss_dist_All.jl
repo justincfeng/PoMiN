@@ -1107,18 +1107,18 @@ println(file)
 
 # Collect all results for summary table
 results = [
-    ("Sun", bratio_sun, fmisstar_sun/AU, fmisstarN_sun/AU, dmisstar_sun/AU, dmissPMcomp_sun/AU, (dmissPMHO_sun/AU)),
-    ("Alpha Centauri", bratio_alpha, fmisstar_alpha/AU, fmisstarN_alpha/AU, dmisstar_alpha/AU, dmissPMcomp_alpha/AU, (dmissPMHO_alpha/AU)),
-    ("Jupiter", bratio_jup, fmisstar_jup/AU, fmisstarN_jup/AU, dmisstar_jup/AU, dmissPMcomp_jup/AU, dmissPMHO_jup/AU),
-    ("Earth", bratio_earth, fmisstar_earth/AU, fmisstarN_earth/AU, dmisstar_earth/AU, dmissPMcomp_earth/AU, (dmissPMHO_earth/AU)),
-    ("Proxima", bratio_prox, fmisstar_prox/AU, fmisstarN_prox/AU, dmisstar_prox/AU, dmissPMcomp_prox/AU, dmissPMHO_prox/AU),
-    ("Moon", bratio_moon, fmisstar_moon/AU, fmisstarN_moon/AU, dmisstar_moon/AU, dmissPMcomp_moon/AU, dmissPMHO_moon/AU),
-    ("Mars", bratio_mars, fmisstar_mars/AU, fmisstarN_mars/AU, dmisstar_mars/AU, dmissPMcomp_mars/AU, dmissPMHO_mars/AU),
-    ("Saturn", bratio_sat, fmisstar_sat / AU, fmisstarN_sat / AU, dmisstar_sat / AU, dmissPMcomp_sat / AU, dmissPMHO_sat / AU),
-    ("Uranus", bratio_ura, fmisstar_ura / AU, fmisstarN_ura / AU, dmisstar_ura / AU, dmissPMcomp_ura / AU, dmissPMHO_ura / AU),
-    ("Neptune", bratio_nep, fmisstar_nep / AU, fmisstarN_nep / AU, dmisstar_nep / AU, dmissPMcomp_nep / AU, dmissPMHO_nep / AU),
-    ("Mercury", bratio_mer, fmisstar_mer / AU, fmisstarN_mer / AU, dmisstar_mer / AU, dmissPMcomp_mer / AU, dmissPMHO_mer / AU),
-    ("Venus", bratio_ven, fmisstar_ven / AU, fmisstarN_ven / AU, dmisstar_ven / AU, dmissPMcomp_ven / AU, dmissPMHO_ven / AU)
+    ("Sun", bratio_sun, fmisstar_sun/AU, fmisstarN_sun/AU, dmisstar_sun/AU, dmisstarN_sun/AU, dmissPMcomp_sun/AU, (dmissPMHO_sun/AU)),
+    ("Alpha Centauri", bratio_alpha, fmisstar_alpha/AU, fmisstarN_alpha/AU, dmisstar_alpha/AU, dmisstarN_alpha/AU, dmissPMcomp_alpha/AU, (dmissPMHO_alpha/AU)),
+    ("Jupiter", bratio_jup, fmisstar_jup/AU, fmisstarN_jup/AU, dmisstar_jup/AU, dmisstarN_jup/AU, dmissPMcomp_jup/AU, dmissPMHO_jup/AU),
+    ("Earth", bratio_earth, fmisstar_earth/AU, fmisstarN_earth/AU, dmisstar_earth/AU, dmisstarN_earth/AU, dmissPMcomp_earth/AU, (dmissPMHO_earth/AU)),
+    ("Proxima", bratio_prox, fmisstar_prox/AU, fmisstarN_prox/AU, dmisstar_prox/AU, dmisstarN_prox/AU, dmissPMcomp_prox/AU, dmissPMHO_prox/AU),
+    ("Moon", bratio_moon, fmisstar_moon/AU, fmisstarN_moon/AU, dmisstar_moon/AU, dmisstarN_moon/AU, dmissPMcomp_moon/AU, dmissPMHO_moon/AU),
+    ("Mars", bratio_mars, fmisstar_mars/AU, fmisstarN_mars/AU, dmisstar_mars/AU, dmisstarN_mars/AU, dmissPMcomp_mars/AU, dmissPMHO_mars/AU),
+    ("Saturn", bratio_sat, fmisstar_sat / AU, fmisstarN_sat / AU, dmisstar_sat / AU, dmisstarN_sat / AU, dmissPMcomp_sat / AU, dmissPMHO_sat / AU),
+    ("Uranus", bratio_ura, fmisstar_ura / AU, fmisstarN_ura / AU, dmisstar_ura / AU, dmisstarN_ura / AU, dmissPMcomp_ura / AU, dmissPMHO_ura / AU),
+    ("Neptune", bratio_nep, fmisstar_nep / AU, fmisstarN_nep / AU, dmisstar_nep / AU, dmisstarN_nep / AU, dmissPMcomp_nep / AU, dmissPMHO_nep / AU),
+    ("Mercury", bratio_mer, fmisstar_mer / AU, fmisstarN_mer / AU, dmisstar_mer / AU, dmisstarN_mer / AU, dmissPMcomp_mer / AU, dmissPMHO_mer / AU),
+    ("Venus", bratio_ven, fmisstar_ven / AU, fmisstarN_ven / AU, dmisstar_ven / AU, dmisstarN_ven / AU, dmissPMcomp_ven / AU, dmissPMHO_ven / AU)
 ]
 
 # Write summary table to file
@@ -1128,11 +1128,11 @@ println(file, "="^100)
 println(file)
 
 # CSV Header
-println(file, "Body\t\t\tB/D_ratio\t\tEndpt Dist PoMiN (AU)\tEndpt Dist Newtonian (AU)\tClosest App PoMiN (AU)\tPM Miss Estimate (AU)\tHigher Order Miss (AU)")
+println(file, "Body\t\tB/D_ratio\t\tEndpt Dist PoMiN (AU)\t\tEndpt Dist Newtonian (AU)\t\tClosest App PoMiN (AU)\t\tClosest App Newtonian (AU)\t\tPM Miss Estimate (AU)\t\tHigher Order Miss (AU)")
 
 # CSV Data rows
-for (body, bratio, fmiss_rel, fmiss_newt, dmiss_rel, pm_est, ho_est) in results
-    println(file, @sprintf("%s\t\t\t%.6e\t\t\t%.6e\t\t\t%.6e\t\t\t%.6e\t\t\t%.6e\t\t\t%.6e", body, bratio, fmiss_rel, fmiss_newt, dmiss_rel, pm_est, ho_est))
+for (body, bratio, fmiss_rel, fmiss_newt, dmiss_rel, dmiss_newt, pm_est, ho_est) in results
+    println(file, @sprintf("%s\t\t%.6e\t\t%.6e\t\t%.6e\t\t%.6e\t\t%.6e\t\t%.6e\t\t%.6e", body, bratio, fmiss_rel, fmiss_newt, dmiss_rel, dmiss_newt, pm_est, ho_est))
 end
 
 println(file)
@@ -1142,6 +1142,7 @@ println(file, "- B/D_ratio: Ratio of impact parameter to initial distance betwee
 println(file, "- Endpoint Dist PoMiN: Distance between spacecraft and target at final time (relativistic)")
 println(file, "- Endpoint Dist Newtonian: Distance between spacecraft and target at final time (Newtonian)")
 println(file, "- Closest Approach PoMiN: Closest approach distance using final velocities (relativistic)")
+println(file, "- Closest Approach Newtonian: Closest approach distance using final velocities (Newtonian)")
 println(file, "- PM Miss Estimate: Post-Minkowskian theoretical estimate")
 println(file, "- Higher Order Miss: Higher-order relativistic corrections")
 println(file)
